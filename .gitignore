@@ -1,0 +1,9 @@
+node_modules
+desktop.ini
+.DS_Store
+.npm
+.env
+*.log
+ca.pem
+logs
+.vercel
