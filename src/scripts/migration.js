@@ -3,11 +3,12 @@ const db = require('../database/db');
 tables = {
     users: `CREATE TABLE IF NOT EXISTS users(
         user_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-        google_id VARCHAR,
+        google_id VARCHAR(255) UNIQUE,
+        username VARCHAR(32),
         email VARCHAR(345) UNIQUE NOT NULL,
-        verified BOOLEAN NOT NULL,
-        password VARCHAR NOT NULL,
-        phone_no VARCHAR(16) NOT NULL
+        verified BOOLEAN NOT NULL DEFAULT FALSE,
+        password VARCHAR,
+        phone_no VARCHAR(16) NOT NULL DEFAULT ''
     );`,
     orders: `CREATE TABLE IF NOT EXISTS orders(
         order_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -32,7 +33,6 @@ tables = {
         order_id UUID REFERENCES orders(order_id) ON DELETE CASCADE,
         menu_id SERIAL REFERENCES menus(menu_id) ON DELETE CASCADE,
         quantity INTEGER NOT NULL CHECK (quantity>0),
-
         PRIMARY KEY (order_id,menu_id)
     );`,
     carts: `CREATE TABLE IF NOT EXISTS carts(
@@ -74,7 +74,7 @@ async function main() {
         await client.query(`CREATE EXTENSION IF NOT EXISTS "pgcrypto";`);
 
         for (const i in tables) {
-            await client.query(`DROP TABLE IF EXISTS ${i};`)
+            await client.query(`DROP TABLE IF EXISTS ${i} CASCADE;`)
                 .then(() => console.log(`Table ${i} has been dropped`))
                 .catch((e) => console.log(`Error dropping table ${i}:\n ${e}`));
         }

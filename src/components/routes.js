@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 const endpoints = path.join(__dirname, 'endpoints');
+console.log(endpoints)
 const names = fs.readdirSync(endpoints);
 const router = express.Router();
 
