@@ -1,16 +1,16 @@
 const db = require('../database/db');
 
 tables = {
-    user: `CREATE TABLE IF NOT EXISTS user(
-        user_id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    users: `CREATE TABLE IF NOT EXISTS users(
+        user_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
         google_id VARCHAR,
         email VARCHAR(345) UNIQUE NOT NULL,
         verified BOOLEAN NOT NULL,
         password VARCHAR NOT NULL,
-        phone_no VARCHAR(16) NOT NULL,
+        phone_no VARCHAR(16) NOT NULL
     );`,
-    order: `CREATE TABLE IF NOT EXISTS order(
-        order_id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    orders: `CREATE TABLE IF NOT EXISTS orders(
+        order_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
         total_price DECIMAL(9,2) NOT NULL CHECK (total_price >= 0),
         location VARCHAR,
         date TIMESTAMP NOT NULL DEFAULT NOW(),
@@ -18,47 +18,47 @@ tables = {
         fulfilled BOOLEAN NOT NULL DEFAULT false,
         note VARCHAR(300),
         has_fee BOOLEAN NOT NULL,
-        customer_id UUID REFERENCES user(user_id) ON DELETE CASCADE,
+        customer_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
         is_takeaway BOOLEAN
     );`,
-    menu: `CREATE TABLE IF NOT EXISTS menu(
+    menus: `CREATE TABLE IF NOT EXISTS menus(
         menu_id SERIAL PRIMARY KEY,
         name VARCHAR NOT NULL,
         image_url VARCHAR,
         price DECIMAL(8,2) NOT NULL CHECK (price >= 0),
         is_available BOOLEAN NOT NULL DEFAULT true
     );`,
-    order_item: `CREATE TABLE IF NOT EXISTS order_item(
-        order_id UUID REFERENCES order(order_id) ON DELETE CASCADE,
-        menu_id SERIAL REFERENCES menu(menu_id) ON DELETE CASCADE,
+    order_items: `CREATE TABLE IF NOT EXISTS order_items(
+        order_id UUID REFERENCES orders(order_id) ON DELETE CASCADE,
+        menu_id SERIAL REFERENCES menus(menu_id) ON DELETE CASCADE,
         quantity INTEGER NOT NULL CHECK (quantity>0),
 
         PRIMARY KEY (order_id,menu_id)
     );`,
-    cart: `CREATE TABLE IF NOT EXISTS cart(
-        customer_id UUID REFERENCES user(user_id) ON DELETE CASCADE,
-        menu_id SERIAL REFERENCES menu(menu_id) ON DELETE CASCADE,
+    carts: `CREATE TABLE IF NOT EXISTS carts(
+        customer_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
+        menu_id SERIAL REFERENCES menus(menu_id) ON DELETE CASCADE,
         quantity INTEGER NOT NULL CHECK (quantity>0),
 
         PRIMARY KEY (customer_id,menu_id)
     );`,
-    admin: `CREATE TABLE IF NOT EXISTS admin(
-        admin_id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    admins: `CREATE TABLE IF NOT EXISTS admins(
+        admin_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
         email VARCHAR(345) UNIQUE NOT NULL,
         verified BOOLEAN NOT NULL,
         password VARCHAR NOT NULL,
         super_admin BOOLEAN NOT NULL DEFAULT false,
         last_logged_in TIMESTAMP NOT NULL DEFAULT NOW()
     );`,
-    restaurant_schedule: `CREATE TABLE IF NOT EXISTS restaurant_schedule(
+    restaurant_schedules: `CREATE TABLE IF NOT EXISTS restaurant_schedules(
         day VARCHAR(10) NOT NULL PRIMARY KEY,
         open_time TIME NOT NULL,
         close_time TIME NOT NULL,
         open BOOLEAN NOT NULL DEFAULT TRUE
     );`,
-    restaurant_data: `CREATE TABLE IF NOT EXISTS restaurant_data(
+    restaurant_datas: `CREATE TABLE IF NOT EXISTS restaurant_datas(
         key VARCHAR NOT NULL PRIMARY KEY,
-        value VARCHAR NOT NULL PRIMARY KEY
+        value VARCHAR NOT NULL
     );`,
     earnings: `CREATE TABLE IF NOT EXISTS earnings(
         date DATE PRIMARY KEY,
@@ -71,10 +71,10 @@ tables = {
 
 async function main() {
     await db.connect().then(async (client) => {
-        await client.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`);
+        await client.query(`CREATE EXTENSION IF NOT EXISTS "pgcrypto";`);
 
         for (const i in tables) {
-            await client.query(`DROP TABLE IF EXISTS ${i}`)
+            await client.query(`DROP TABLE IF EXISTS ${i};`)
                 .then(() => console.log(`Table ${i} has been dropped`))
                 .catch((e) => console.log(`Error dropping table ${i}:\n ${e}`));
         }
@@ -88,6 +88,8 @@ async function main() {
 
         console.log("Successfully Remigrated");
     }).catch((err) => console.log(err));
+
+    process.exit(0);
 }
 
 main();
