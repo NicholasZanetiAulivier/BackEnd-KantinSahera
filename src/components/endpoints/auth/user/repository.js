@@ -24,14 +24,14 @@ async function findEmail(email) {
 }
 
 async function createUser(user) {
-    const {username, email, password} = user;
+    const { username, email, password } = user;
 
     let res, clientref;
 
     await db.connect().then(async (client) => {
         clientref = client;
         await client.query(
-            'INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING username',
+            'INSERT INTO users (username, email, password) VALUES ($1, $2, $3)',
             [username, email, password]
         ).then(result => {
             res = result

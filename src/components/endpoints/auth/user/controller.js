@@ -1,13 +1,13 @@
 const { errorResponder, errors } = require('../../../../core/errors');
 const validate = require('../../../middlewares/validator')
 const service = require('./service');
-const {hashPassword, passwordMatched} = require('../../../../utils/password')
+const { hashPassword, passwordMatched } = require('../../../../utils/password')
 
 async function register(req, res, next) {
     try {
-        const {username, email, password, confirm_password} = req.body;
+        const { username, email, password, confirm_password } = req.body;
 
-        const {error, value} = validate.register(req.body);
+        const { error, value } = validate.register(req.body);
 
         // console.log(error)
         if (error) {
@@ -24,10 +24,10 @@ async function register(req, res, next) {
 
         const hashedPassword = await hashPassword(password);
 
-        const result = await service.createUser({username, email, hashedPassword});
+        const result = await service.createUser({ username, email, hashedPassword });
 
         if (result) {
-            return res.status(201).json({message: "Akun user berhasil dibuat."});
+            return res.status(201).json({ message: "Akun user berhasil dibuat." });
         }
     } catch (err) {
         return next(err);

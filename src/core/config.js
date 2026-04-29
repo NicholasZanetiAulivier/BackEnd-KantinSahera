@@ -10,6 +10,10 @@ module.exports = {
         port: process.env.APP_PORT || 5000,
         name: process.env.APP_NAME || "API",
     },
+    secret: {
+        user: process.env.USER_SECRET_KEY,
+        admin: process.env.ADMIN_SECRET_KEY,
+    },
     database: {
         user: process.env.USER,
         password: process.env.PASSWORD,
