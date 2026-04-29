@@ -36,7 +36,19 @@ async function register(req, res, next) {
 
 async function login(req, res, next) {
     try {
-        const {email, password} = req.body;
+        const { email, password } = req.body;
+
+        const { error, value } = validate.register(req.body);
+
+        if (error) {
+            const invalidField = error.details[0].context.key;
+
+            if (invalidField === 'password'){
+                throw errorResponder(errors.BAD_REQUEST, "Password harus berupa alfanumerik!");
+            } else if (invalidField === 'email'){
+                throw errorResponder(errors.BAD_REQUEST, "Format email tidak valid!");
+            }
+        }
         
         const user = await service.emailExists(email);
 
