@@ -1,3 +1,4 @@
+const { changeUsername } = require('./controller');
 const repository = require('./repository');
 
 async function findByEmail(email) {
@@ -14,7 +15,16 @@ async function createUser(user) {
     return res;
 }
 
+async function changeUsernameWhereEmail(user) {
+    const {username, email} = user;
+
+    const res = await repository.changeUsernameWhereEmail(username, email);
+
+    return res;
+}
+
 module.exports = {
     findByEmail,
     createUser,
+    changeUsernameWhereEmail,
 }

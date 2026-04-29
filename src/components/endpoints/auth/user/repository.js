@@ -42,7 +42,29 @@ async function createUser(username, email, passwordHash) {
     return res;
 }
 
+async function changeUsernameWhereEmail(username, email) {
+        let res, clientref;
+
+    await db.connect().then(async (client) => {
+        clientref = client;
+        await client.query(
+            'UPDATE users SET username = $1 WHERE email = $2',
+            [username, email]
+        ).then(result => {
+            res = result
+        }).catch((err) => {
+            console.log(err);
+            throw errorResponder(errors.DB, "Error nice GODJOB");
+        }).finally(() => {
+            clientref.release();
+        });
+    });
+
+    return res;
+}
+
 module.exports = {
     findByEmail,
     createUser,
+    changeUsernameWhereEmail,
 }

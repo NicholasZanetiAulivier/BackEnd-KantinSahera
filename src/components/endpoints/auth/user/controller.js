@@ -91,6 +91,7 @@ async function login(req, res, next) {
 
 async function changeUsername(req, res, next) {
     try {
+        console.log('curr attached user ', req.user)
         const {username} = req.body;
 
         const { error, value } = validate.username(req.body);
@@ -110,7 +111,13 @@ async function changeUsername(req, res, next) {
             }
         }
 
-        return res.status(204).send();
+        const result = await service.changeUsernameWhereEmail({username, email: req.user.email});
+
+        console.log(result);
+
+        if (result.rowCount > 0) return res.status(204).send();
+        else if (result.rowCount === 0) throw errorResponder(errors.NOT_FOUND, "Email yang diberikan tidak ada!");
+        else throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Terjadi error saat percobaan perubahan username!");
     } catch (err) {
         return next(err);
     }
