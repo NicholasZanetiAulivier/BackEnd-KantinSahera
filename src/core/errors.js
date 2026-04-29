@@ -49,6 +49,16 @@ const errors = {
         status: 409,
         code: 'DB_DUPLICATE_CONFLICT_ERROR',
     },
+    INVALID_CREDENTIALS: {
+        description: 'Invalid credentials',
+        status: 401,
+        code: 'INVALID_CREDENTIALS_ERROR',
+    },
+    TOKEN_EXPIRED: {
+        description: 'Provided token has expired!',
+        status: 403,
+        code: 'TOKEN_EXPIRED_ERROR',
+    },
 };
 
 

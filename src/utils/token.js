@@ -15,18 +15,25 @@ async function refreshUserJwt(user) {
     }, config.secret.user, { expiresIn: '7d' })
 }
 
-async function generateUserJwt(admin) {
+async function generateAdminJwt(admin) {
     return jwt.sign({
-        username: admin.username || 'Tanpa Nama',
+        username: admin.username || 'Admin',
         email: admin.email,
         super_admin: admin.super_admin,
     }, config.secret.admin, { expiresIn: '15m' })
 }
 
-async function refreshUserJwt(user) {
+async function refreshAdminJwt(admin) {
     return jwt.sign({
-        username: user.username || 'Tanpa Nama',
-        email: user.email,
+        username: admin.username || 'Admin',
+        email: admin.email,
         super_admin: admin.super_admin,
     }, config.secret.admin, { expiresIn: '7d' })
+}
+
+module.exports = {
+    generateUserJwt,
+    refreshUserJwt,
+    generateAdminJwt,
+    refreshAdminJwt,
 }

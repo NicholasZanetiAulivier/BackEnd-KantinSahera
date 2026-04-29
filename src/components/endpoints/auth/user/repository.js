@@ -1,15 +1,13 @@
 const { errorResponder, errors } = require('../../../../core/errors');
 const db = require('../../../../database/db');
 
-// Yea ok we need to tidy this up
-
 async function findEmail(email) {
     let res, clientref;
 
     await db.connect().then(async (client) => {
         clientref = client;
         await client.query(
-            'SELECT email FROM users WHERE email = $1',
+            'SELECT user_id, google_id, email, username, password FROM users WHERE email = $1',
             [email]
         ).then(result => {
             res = result
@@ -23,16 +21,14 @@ async function findEmail(email) {
     return res;
 }
 
-async function createUser(user) {
-    const { username, email, password } = user;
-
+async function createUser(username, email, passwordHash) {
     let res, clientref;
 
     await db.connect().then(async (client) => {
         clientref = client;
         await client.query(
-            'INSERT INTO users (username, email, password) VALUES ($1, $2, $3)',
-            [username, email, password]
+            'INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING email',
+            [username, email, passwordHash]
         ).then(result => {
             res = result
         }).catch((err) => {
