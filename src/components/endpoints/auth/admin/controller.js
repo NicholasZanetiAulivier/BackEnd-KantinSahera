@@ -2,11 +2,11 @@ const { errorResponder, errors } = require('../../../../core/errors');
 const validate = require('../../../middlewares/validator')
 const service = require('./service');
 const { hashPassword, passwordMatched } = require('../../../../utils/password');
-const { generateUserJwt, refreshUserJwt } = require('../../../../utils/token');
+const { generateAdminJwt, refreshAdminJwt } = require('../../../../utils/token');
 
 async function register(req, res, next) {
     try {
-        const { username, email, password, confirm_password } = req.body;
+        const { email, password, confirm_password } = req.body;
 
         const { error, value } = validate.register(req.body);
 
@@ -22,12 +22,12 @@ async function register(req, res, next) {
 
         const passwordHash = await hashPassword(password);
 
-        const result = await service.createUser({ username, email, passwordHash });
+        const result = await service.createAdmin({ email, passwordHash });
 
         if (result.rowCount > 0) {
-            return res.status(201).json({ message: "Akun user berhasil dibuat." });
+            return res.status(201).json({ message: "Akun admin berhasil dibuat." });
         } else {
-            throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Gagal membuat akun user");
+            throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Gagal membuat akun admin");
         }
     } catch (err) {
         return next(err);
@@ -50,18 +50,17 @@ async function login(req, res, next) {
             }
         }
 
-        const user = await service.findByEmail(email);
+        const admin = await service.findByEmail(email);
 
-        if (!user) {
+        if (!admin) {
             throw errorResponder(errors.INVALID_CREDENTIALS, "Email atau kata sandi salah!");
         }
 
-        const passwordValid = await passwordMatched(password, user.password);
+        const passwordValid = await passwordMatched(password, admin.password);
 
         if (passwordValid) {
-            // destructure object so only username and email is sent
-            const { username, email } = user;
-            const token = await generateUserJwt({ username, email });
+            const { username, email, super_admin } = admin;
+            const token = await generateAdminJwt({ username, email, super_admin });
 
             if (!token) {
                 throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Proses login gagal!");

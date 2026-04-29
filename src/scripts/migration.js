@@ -1,4 +1,5 @@
 const db = require('../database/db');
+const { hashPassword } = require('../utils/password');
 
 tables = {
     users: `CREATE TABLE IF NOT EXISTS users(
@@ -45,7 +46,7 @@ tables = {
     admins: `CREATE TABLE IF NOT EXISTS admins(
         admin_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
         email VARCHAR(345) UNIQUE NOT NULL,
-        verified BOOLEAN NOT NULL,
+        verified BOOLEAN NOT NULL DEFAULT FALSE,
         password VARCHAR NOT NULL,
         super_admin BOOLEAN NOT NULL DEFAULT false,
         last_logged_in TIMESTAMP NOT NULL DEFAULT NOW()
@@ -85,6 +86,10 @@ async function main() {
                 .then(() => console.log(`Table ${tableName} successfully created`))
                 .catch((e) => console.log(`Error creating table ${tableName}:\n ${e}`));
         }
+
+        await client.query(`INSERT INTO admins (email, password, super_admin) VALUES ($1,$2,$3)`, ["super@gmail.com", await hashPassword("admin"), true])
+            .then(() => console.log("Added super admin!"))
+            .catch((e) => console.log("Failed to add super admin"));//Temp, move to seeder if needed
 
         console.log("Successfully Remigrated");
     }).catch((err) => console.log(err));

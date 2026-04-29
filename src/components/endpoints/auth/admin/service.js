@@ -6,15 +6,15 @@ async function findByEmail(email) {
     return res.rows[0];
 }
 
-async function createUser(user) {
-    const { username, email, passwordHash } = user;
+async function createAdmin(admin) {
+    const { email, passwordHash } = admin;
 
-    const res = await repository.createUser(username, email, passwordHash);
+    const res = await repository.createAdmin(email, passwordHash);
 
     return res;
 }
 
 module.exports = {
     findByEmail,
-    createUser,
+    createAdmin,
 }

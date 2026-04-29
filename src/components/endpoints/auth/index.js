@@ -1,10 +1,11 @@
 const express = require('express');
 
-const userAuthRouter = require('./user/index');
+const userAuthRouter = require('./user');
+const adminAuthRouter = require('./admin');
 
 const route = express.Router();
 
-// why am i doing this? because your fs wont read nested folders
 route.use('/user', userAuthRouter);
+route.use('/admin', adminAuthRouter);
 
 module.exports = route;
