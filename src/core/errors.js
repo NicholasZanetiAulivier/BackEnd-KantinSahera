@@ -54,6 +54,11 @@ const errors = {
         status: 403,
         code: 'TOKEN_EXPIRED_ERROR',
     },
+    UNPROCESSABLE_ENTITY: {
+        description: 'Unprocessable entity',
+        status: 422,
+        code: 'UNPROCESSABLE_ENTITY_ERROR',
+    },
 };
 
 
