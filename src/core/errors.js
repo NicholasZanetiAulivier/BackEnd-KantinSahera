@@ -34,6 +34,21 @@ const errors = {
         status: 500,
         code: 'DB_ERROR',
     },
+    VALIDATION: {
+        description: 'Invalid request',
+        status: 400,
+        code: 'VALIDATION_ERROR',
+    },
+    BAD_REQUEST: {
+        description: 'Bad request',
+        status: 400,
+        code: 'BAD_REQUEST_ERROR',
+    },
+    DB_DUPLICATE_CONFLICT: {
+        description: 'Duplicate conflict. Resource already exists',
+        status: 409,
+        code: 'DB_DUPLICATE_CONFLICT_ERROR',
+    },
 };
 
 

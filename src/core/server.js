@@ -36,6 +36,11 @@ module.exports = (app) => {
 
     app.use(compression());
 
+    // to silence the 404 favicon.ico
+    app.get('/favicon.ico', (req, res, next) => {
+        return res.status(204).end();
+    })
+    
     //Main Router
     app.use(config.api.prefix, router);
 
