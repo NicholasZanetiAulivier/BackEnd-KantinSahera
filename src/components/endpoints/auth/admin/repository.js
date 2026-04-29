@@ -7,7 +7,7 @@ async function findByEmail(email) {
     await db.connect().then(async (client) => {
         clientref = client;
         await client.query(
-            'SELECT user_id, google_id, email, username, password FROM users WHERE email = $1',
+            'SELECT admin_id, email, password, super_admin FROM admins WHERE email = $1',
             [email]
         ).then(result => {
             res = result
@@ -21,14 +21,14 @@ async function findByEmail(email) {
     return res;
 }
 
-async function createUser(username, email, passwordHash) {
+async function createAdmin(email, passwordHash) {
     let res, clientref;
 
     await db.connect().then(async (client) => {
         clientref = client;
         await client.query(
-            'INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING email',
-            [username, email, passwordHash]
+            'INSERT INTO admins (email, password) VALUES ($1, $2 ) RETURNING email',
+            [email, passwordHash]
         ).then(result => {
             res = result
         }).catch((err) => {
@@ -44,5 +44,5 @@ async function createUser(username, email, passwordHash) {
 
 module.exports = {
     findByEmail,
-    createUser,
+    createAdmin,
 }

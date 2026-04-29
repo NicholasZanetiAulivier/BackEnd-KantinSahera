@@ -19,11 +19,6 @@ const errors = {
         status: 500,
         code: 'INVALID_ARGUMENT',
     },
-    INVALID_CREDENTIALS: {
-        description: 'Invalid credentials',
-        status: 403,
-        code: 'INVALID_CREDENTIALS_ERROR',
-    },
     INVALID_TOKEN: {
         description: "Invalid token",
         status: 403,
