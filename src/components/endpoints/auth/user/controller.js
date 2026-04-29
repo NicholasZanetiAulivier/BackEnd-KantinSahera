@@ -10,6 +10,7 @@ async function register(req, res, next) {
 
         const { error, value } = validate.register(req.body);
 
+        // TO-DO: Implement more concise validation error messages
         if (error) {
             throw errorResponder(errors.BAD_REQUEST, error.details[0].message)
         }
@@ -38,15 +39,27 @@ async function login(req, res, next) {
     try {
         const { email, password } = req.body;
 
-        const { error, value } = validate.register(req.body);
+        const { error, value } = validate.login(req.body);
+
+        let invalidField = null;
 
         if (error) {
-            const invalidField = error.details[0].context.key;
+            invalidField = error.details[0].context.key;
+        }
 
-            if (invalidField === 'password') {
-                throw errorResponder(errors.BAD_REQUEST, "Password harus berupa alfanumerik!");
-            } else if (invalidField === 'email') {
-                throw errorResponder(errors.BAD_REQUEST, "Format email tidak valid!");
+        if (invalidField === 'password') {
+            if (error.details[0].type === 'any.required'){
+                throw errorResponder(errors.BAD_REQUEST, "Password wajib ada!")
+            } else {
+                // asumsi password ada tapi format invalid
+                throw errorResponder(errors.UNPROCESSABLE_ENTITY, "Password harus berupa alfanumerik!");
+            }
+
+        } else if (invalidField === 'email') {
+            if (error.details[0].type === 'any.required'){
+                throw errorResponder(errors.BAD_REQUEST, "Email wajib ada!")
+            } else {
+                throw errorResponder(errors.UNPROCESSABLE_ENTITY, "Format email tidak valid!");
             }
         }
 
@@ -76,7 +89,36 @@ async function login(req, res, next) {
     }
 }
 
+async function changeUsername(req, res, next) {
+    try {
+        const {username} = req.body;
+
+        const { error, value } = validate.username(req.body);
+
+        let invalidField = null;
+
+        if (error) {
+            invalidField = error.details[0].context.key;
+        }
+
+        // TO-DO: Implement more concise validation error messages
+        if (invalidField === 'username') {
+            if (error.details[0].type === 'any.required'){
+                throw errorResponder(errors.BAD_REQUEST, "Username (nama tampilan) pengguna wajib ada!")
+            } else {
+                throw errorResponder(errors.UNPROCESSABLE_ENTITY, "Format username tidak valid!");
+            }
+        }
+
+        return res.status(204).send();
+    } catch (err) {
+        return next(err);
+    }
+}
+
+
 module.exports = {
     register,
     login,
+    changeUsername,
 }

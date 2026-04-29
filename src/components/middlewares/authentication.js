@@ -1,11 +1,11 @@
 const passport = require('passport');
-const passportJwt = require('passport-jwt');
-const JwtStrategy = passportJwt.Strategy;
-const ExtractJwt = passportJwt.ExtractJwt;
 const config = require('../../core/config');
 const userService = require('../../components/endpoints/auth/user/service');
 const adminService = require('../../components/endpoints/auth/admin/service');
 const { errorResponder, errors } = require('../../core/errors');
+const { Strategy: JwtStrategy, ExtractJwt } = require('passport-jwt');
+const config = require('../../core/config');
+const userService = require('../../components/endpoints/auth/user/service');
 
 passport.use(
     'user',
@@ -17,8 +17,9 @@ passport.use(
 
         async (payload, done) => {
             try {
-                const user = await userService.findByEmail(payload.email);
-                return done(null, user || false);
+                // destructure to return non sensitive data
+                const {username, email} = await userService.findByEmail(payload.email);
+                return done(null, {username, email} || false);
             } catch (err) {
                 return done(err, false);
             }
