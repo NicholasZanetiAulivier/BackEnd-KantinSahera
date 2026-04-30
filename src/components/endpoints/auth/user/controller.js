@@ -1,4 +1,4 @@
-const { errorResponder, errors } = require('../../../../core/errors');
+const { errorResponder, errors, processJoiValidationError } = require('../../../../core/errors');
 const validate = require('../../../middlewares/validator')
 const service = require('./service');
 const { hashPassword, passwordMatched } = require('../../../../utils/password');
@@ -10,10 +10,7 @@ async function register(req, res, next) {
 
         const { error, value } = validate.register(req.body);
 
-        // TO-DO: Implement more concise validation error messages
-        if (error) {
-            throw errorResponder(errors.BAD_REQUEST, error.details[0].message)
-        }
+        processJoiValidationError(error);
 
         const emailExists = await service.findByEmail(email);
 
@@ -43,25 +40,7 @@ async function login(req, res, next) {
 
         let invalidField = null;
 
-        if (error) {
-            invalidField = error.details[0].context.key;
-        }
-
-        if (invalidField === 'password') {
-            if (error.details[0].type === 'any.required'){
-                throw errorResponder(errors.BAD_REQUEST, "Password wajib ada!")
-            } else {
-                // asumsi password ada tapi format invalid
-                throw errorResponder(errors.UNPROCESSABLE_ENTITY, "Password harus berupa alfanumerik!");
-            }
-
-        } else if (invalidField === 'email') {
-            if (error.details[0].type === 'any.required'){
-                throw errorResponder(errors.BAD_REQUEST, "Email wajib ada!")
-            } else {
-                throw errorResponder(errors.UNPROCESSABLE_ENTITY, "Format email tidak valid!");
-            }
-        }
+        processJoiValidationError(error);
 
         const user = await service.findByEmail(email);
 
@@ -96,16 +75,7 @@ async function changeProfile(req, res, next) {
 
         const { error, value } = validate.profile(req.body);
 
-        // let invalidField = null;
-
-        // if (error) {
-        //     invalidField = error.details[0].context.key;
-        // }
-
-        // TO-DO: Implement more concise validation error messages
-        if (error) {
-            throw errorResponder(errors.BAD_REQUEST, error.details[0].message)
-        }
+        processJoiValidationError(error);
 
         const result = await service.changeProfileWhereEmail({username, profile_image_url, phone_number, email: req.user.email});
 

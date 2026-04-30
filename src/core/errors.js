@@ -84,7 +84,21 @@ function errorResponder(type, message = "") {
     return error;
 }
 
+function processJoiValidationError(error) {
+    if (error) {
+        const errorType = error.details[0].type;
+        if (errorType === 'any.required' || errorType === 'any.only'
+        ) {
+            throw errorResponder(errors.BAD_REQUEST, error.details[0].message);
+        } else {
+            // anggap ini field ada tapi tidak lolos validasi
+            throw errorResponder(errors.UNPROCESSABLE_ENTITY, error.details[0].message);
+        }
+    }
+}
+
 module.exports = {
     errorResponder,
-    errors
+    errors,
+    processJoiValidationError
 };
