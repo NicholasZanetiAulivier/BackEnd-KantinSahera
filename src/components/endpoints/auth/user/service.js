@@ -15,16 +15,23 @@ async function createUser(user) {
     return res;
 }
 
-async function changeProfileWhereEmail(user) {
-    const {username, profile_image_url, phone_number, email} = user;
+async function changeProfileWhereId(user) {
+    const {username, profile_image_url, phone_number, user_id} = user;
 
-    const res = await repository.changeProfileWhereEmail({ username, profile_image_url, phone_no: phone_number }, email);
+    const res = await repository.changeProfileWhereId({ username, profile_image_url, phone_no: phone_number }, user_id);
 
     return res;
+}
+
+async function getProfileById(id) {
+    const res = await repository.getProfileById(id);
+
+    return res.rows[0];
 }
 
 module.exports = { 
     findByEmail,
     createUser,
-    changeProfileWhereEmail,
+    changeProfileWhereId,
+    getProfileById,
 }

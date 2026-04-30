@@ -17,7 +17,7 @@ passport.use(
             try {
                 // destructure to return non sensitive data
                 const {user_id, username, email} = await userService.findByEmail(payload.email);
-                return done(null, {user_id: 'user-' + user_id, username, email} || false);
+                return done(null, {user_id: config.keys_prefix.user_id + user_id, username, email} || false);
             } catch (err) {
                 return done(err, false);
             }
@@ -37,7 +37,7 @@ passport.use(
             try {
                 const {admin_id, email, super_admin} = await adminService.findByEmail(payload.email); 
                 
-                return done(null, {admin_id: 'admin-' + admin_id, email, super_admin} || false);
+                return done(null, {admin_id: config.keys_prefix.admin_id + admin_id, email, super_admin} || false);
             } catch (err) {
                 return done(err, false);
             }
@@ -60,7 +60,7 @@ passport.use(
                 if (!(admin.super_admin && payload.super_admin)) 
                     throw errorResponder(errors.INVALID_CREDENTIALS, "Admin bukan super admin!");
 
-                return done(null, {admin_id: 'admin-' + admin_id, email: email, super_admin: super_admin} || false);
+                return done(null, {admin_id: config.keys_prefix.admin_id + admin_id, email: email, super_admin: super_admin} || false);
             } catch (err) {
                 return done(err, false);
             }
@@ -72,8 +72,27 @@ const passportUserJwt = passport.authenticate('user', { session: false });
 const passportAdminJwt = passport.authenticate('admin', { session: false });
 const passportSuperJwt = passport.authenticate('superadmin', { session: false });
 
+function parseUserId(userId){
+    const id = userId.split(config.keys_prefix.user_id);
+    console.log(id);
+    const idWithoutPrefix = id[1] || null;
+    
+    if (idWithoutPrefix) return idWithoutPrefix;
+    else throw errorResponder(errors.BAD_ID);
+}
+
+function parseAdminId(adminId){
+    const id = userId.split(config.keys_prefix.admin_id);
+    const idWithoutPrefix = id[1] || null;
+    
+    if (idWithoutPrefix) return idWithoutPrefix;
+    else throw errorResponder(errors.BAD_ID);
+}
+
 module.exports = {
     passportUserJwt,
     passportAdminJwt,
     passportSuperJwt,
+    parseUserId,
+    parseAdminId,
 };

@@ -24,4 +24,8 @@ module.exports = {
         // connectionString: process.env.CONNECTION_STRING,
         ssl: process.env.SSL_REQUIRE == 1 ? true : false,
     },
+    keys_prefix: {
+        user_id: 'user-',
+        admin_id: 'admin-'
+    }
 };

@@ -39,6 +39,11 @@ const errors = {
         status: 400,
         code: 'BAD_REQUEST_ERROR',
     },
+    BAD_ID: {
+        description: 'ID yang diberikan bukan ID valid!',
+        status: 400,
+        code: 'BAD_ID'
+    },
     DB_DUPLICATE_CONFLICT: {
         description: 'Duplicate conflict. Resource already exists',
         status: 409,
