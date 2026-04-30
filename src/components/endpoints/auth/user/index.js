@@ -6,6 +6,6 @@ const route = express.Router();
 
 route.post('/register', controller.register);
 route.post('/login', controller.login);
-route.patch('/change-username', passportUserJwt, controller.changeUsername);
+route.patch('/change-profile', passportUserJwt, controller.changeProfile);
 
 module.exports = route;

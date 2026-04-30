@@ -32,7 +32,6 @@ async function createUser(username, email, passwordHash) {
         ).then(result => {
             res = result
         }).catch((err) => {
-            console.log(err);
             throw errorResponder(errors.DB, "Error nice GODJOB");
         }).finally(() => {
             clientref.release();
@@ -42,18 +41,32 @@ async function createUser(username, email, passwordHash) {
     return res;
 }
 
-async function changeUsernameWhereEmail(username, email) {
-        let res, clientref;
+async function changeProfileWhereEmail(profile, email) {
+    let res, clientref;
+
+    const profileValues = Object.values(profile); 
+
+    let count = 1
+    let clauses = [];
+
+    for (const key in profile) {
+        clauses.push((key + ' = ' + '$' + count.toString()));
+        count++;
+    }
+
+    const clausesStr = clauses.join(", "); 
 
     await db.connect().then(async (client) => {
         clientref = client;
+
         await client.query(
-            'UPDATE users SET username = $1 WHERE email = $2',
-            [username, email]
+            `UPDATE users SET ${clausesStr}
+                WHERE email = $${count}`,
+            [...profileValues, email]
+
         ).then(result => {
             res = result
         }).catch((err) => {
-            console.log(err);
             throw errorResponder(errors.DB, "Error nice GODJOB");
         }).finally(() => {
             clientref.release();
@@ -66,5 +79,5 @@ async function changeUsernameWhereEmail(username, email) {
 module.exports = {
     findByEmail,
     createUser,
-    changeUsernameWhereEmail,
+    changeProfileWhereEmail,
 }
