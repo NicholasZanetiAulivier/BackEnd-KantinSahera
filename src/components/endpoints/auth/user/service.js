@@ -15,16 +15,16 @@ async function createUser(user) {
     return res;
 }
 
-async function changeUsernameWhereEmail(user) {
-    const {username, email} = user;
+async function changeProfileWhereEmail(user) {
+    const {username, profile_image_url, phone_number, email} = user;
 
-    const res = await repository.changeUsernameWhereEmail(username, email);
+    const res = await repository.changeProfileWhereEmail({ username, profile_image_url, phone_no: phone_number }, email);
 
     return res;
 }
 
-module.exports = {
+module.exports = { 
     findByEmail,
     createUser,
-    changeUsernameWhereEmail,
+    changeProfileWhereEmail,
 }

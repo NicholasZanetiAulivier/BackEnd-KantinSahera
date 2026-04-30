@@ -9,7 +9,8 @@ tables = {
         email VARCHAR(345) UNIQUE NOT NULL,
         verified BOOLEAN NOT NULL DEFAULT FALSE,
         password VARCHAR,
-        phone_no VARCHAR(16) NOT NULL DEFAULT ''
+        phone_no VARCHAR(16),
+        profile_image_url VARCHAR(2048)
     );`,
     orders: `CREATE TABLE IF NOT EXISTS orders(
         order_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,

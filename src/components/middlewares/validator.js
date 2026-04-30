@@ -18,12 +18,14 @@ const loginSchema = Joi.object({
     password: Joi.string().required().pattern(new RegExp('^[a-zA-Z0-9]{3,30}$')),
 })
 
-const usernameSchema = Joi.object({
+const profileSchema = Joi.object({
     username: Joi.string().min(1).max(32).trim(),
+    profile_image_url: Joi.string().uri(),
+    phone_number: Joi.string().pattern(new RegExp('^(\\+62|62|0)[8123456789][0-9]{8,13}$')).trim(),
 });
 
 module.exports = {
     register: validator(registerSchema),
     login: validator(loginSchema),
-    username: validator(usernameSchema),
+    profile: validator(profileSchema),
 }

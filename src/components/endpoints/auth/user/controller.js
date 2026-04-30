@@ -89,29 +89,25 @@ async function login(req, res, next) {
     }
 }
 
-async function changeUsername(req, res, next) {
+async function changeProfile(req, res, next) {
     try {
         console.log('curr attached user ', req.user)
-        const {username} = req.body;
+        const { username, profile_image_url, phone_number } = req.body;
 
-        const { error, value } = validate.username(req.body);
+        const { error, value } = validate.profile(req.body);
 
-        let invalidField = null;
+        // let invalidField = null;
 
-        if (error) {
-            invalidField = error.details[0].context.key;
-        }
+        // if (error) {
+        //     invalidField = error.details[0].context.key;
+        // }
 
         // TO-DO: Implement more concise validation error messages
-        if (invalidField === 'username') {
-            if (error.details[0].type === 'any.required'){
-                throw errorResponder(errors.BAD_REQUEST, "Username (nama tampilan) pengguna wajib ada!")
-            } else {
-                throw errorResponder(errors.UNPROCESSABLE_ENTITY, "Format username tidak valid!");
-            }
+        if (error) {
+            throw errorResponder(errors.BAD_REQUEST, error.details[0].message)
         }
 
-        const result = await service.changeUsernameWhereEmail({username, email: req.user.email});
+        const result = await service.changeProfileWhereEmail({username, profile_image_url, phone_number, email: req.user.email});
 
         console.log(result);
 
@@ -127,5 +123,5 @@ async function changeUsername(req, res, next) {
 module.exports = {
     register,
     login,
-    changeUsername,
+    changeProfile,
 }
