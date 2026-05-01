@@ -8,9 +8,9 @@ async function findByEmail(email) {
 }
 
 async function createUser(user) {
-    const { username, email, passwordHash } = user;
+    const { username, email, phone_no, passwordHash } = user;
 
-    const res = await repository.createUser(username, email, passwordHash);
+    const res = await repository.createUser(username, email, phone_no, passwordHash);
 
     return res;
 }

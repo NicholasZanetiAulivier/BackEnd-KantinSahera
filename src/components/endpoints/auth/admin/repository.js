@@ -7,7 +7,7 @@ async function findByEmail(email) {
     await db.connect().then(async (client) => {
         clientref = client;
         await client.query(
-            'SELECT admin_id, email, password, super_admin FROM admins WHERE email = $1',
+            'SELECT admin_id, email, password, super_admin, verified FROM admins WHERE email = $1',
             [email]
         ).then(result => {
             res = result

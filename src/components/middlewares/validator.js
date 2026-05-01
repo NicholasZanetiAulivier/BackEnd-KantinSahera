@@ -29,9 +29,15 @@ const otpSchema = Joi.string().length(6).pattern(/^[0-9]+$/).required().messages
       'any.required': 'Kode OTP wajib ada!'
 })
 
+const phoneNumberSchema = Joi.string().pattern(new RegExp('^(\\+62|62|0)[8123456789][0-9]{8,13}$')).trim()
+    .messages({
+    'string.pattern.base': 'Format nomor HP harus merupakan nomor Indonesia yang valid, dimulai dari +62 atau 08 tanpa spasi!'
+})
+
 const registerSchema = Joi.object({
     username: usernameSchema,
     email: emailSchema,
+    phone_number: phoneNumberSchema,
     password: passwordSchema,
     confirm_password: Joi.string().required().valid(Joi.ref("password")).messages({
         'any.only': "Password dan konfirmasi password tidak sesuai!"
@@ -48,10 +54,7 @@ const profileSchema = Joi.object({
     profile_image_url: Joi.string().uri().messages({
         'string.uri': "URL gambar tidak valid!",
     }),
-    phone_number: Joi.string().pattern(new RegExp('^(\\+62|62|0)[8123456789][0-9]{8,13}$')).trim()
-    .messages({
-        'string.pattern.base': 'Format nomor HP harus merupakan nomor Indonesia yang valid, dimulai dari +62 atau 08!'
-    }),
+    phone_number: phoneNumberSchema,
 });
 
 const verifyOtpSchema = Joi.object({
