@@ -34,5 +34,10 @@ module.exports = {
         host: process.env.STMP_HOST,
         email: process.env.STMP_USER,
         password: process.env.STMP_PASS,
+    },
+    base_url: {
+        frontend_admin: process.env.FE_ADMIN_BASE_URL,
+        frontend_user: process.env.FE_USER_BASE_URL,
+        backend: process.env.BE_BASE_URL
     }
 };
