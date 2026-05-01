@@ -1,5 +1,6 @@
 const { errorResponder, errors } = require('../../../../core/errors');
 const db = require('../../../../database/db');
+const logger = require('../../../../core/logger')('user-repository');
 
 async function findByEmail(email) {
     let res, clientref;
@@ -12,7 +13,8 @@ async function findByEmail(email) {
         ).then(result => {
             res = result
         }).catch((err) => {
-            throw errorResponder(errors.DB, "Error nice GODJOB");
+            logger.error({err}, 'Terjadi error database di modul user!');
+            throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
         }).finally(() => {
             clientref.release();
         });
@@ -32,7 +34,8 @@ async function createUser(username, email, phone_no, passwordHash) {
         ).then(result => {
             res = result
         }).catch((err) => {
-            throw errorResponder(errors.DB, "Error nice GODJOB");
+            logger.error({err}, 'Terjadi error database di modul user!');
+            throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
         }).finally(() => {
             clientref.release();
         });
@@ -67,7 +70,8 @@ async function changeProfileWhereId(profile, user_id) {
         ).then(result => {
             res = result
         }).catch((err) => {
-            throw errorResponder(errors.DB, "Error nice GODJOB");
+            logger.error({err}, 'Terjadi error database di modul user!');
+            throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
         }).finally(() => {
             clientref.release();
         });
@@ -86,8 +90,8 @@ async function getProfileById(id) {
         ).then(result => {
             res = result
         }).catch((err) => {
-            console.log(err);
-            throw errorResponder(errors.DB, "Error nice GODJOB");
+            logger.error({err}, 'Terjadi error database di modul user!');
+            throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
         }).finally(() => {
             clientref.release();
         });

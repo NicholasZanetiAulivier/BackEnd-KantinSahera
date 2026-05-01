@@ -10,5 +10,7 @@ route.patch('/profile', passportUserJwt, controller.changeProfile);
 route.get('/profile', passportUserJwt, controller.getProfile);
 route.post('/otp/request', controller.requestUserOtp);
 route.post('/otp', controller.verifyUserOtp);
+// route.get('/google');
+// route.get('/google/callback');
 
 module.exports = route;

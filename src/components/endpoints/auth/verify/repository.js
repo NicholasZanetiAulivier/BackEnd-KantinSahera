@@ -20,8 +20,8 @@ async function saveOTP(email, otp) {
         ).then(result => {
             res = result
         }).catch((err) => {
-            logger.error({err}, 'Terjadi error query SQL!');
-            throw errorResponder(errors.DB, "Error nice GODJOB");
+            logger.error({err}, 'Terjadi error database di verifikasi!');
+            throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
         }).finally(() => {
             clientref.release();
         });
@@ -41,8 +41,8 @@ async function findOTP(email) {
         ).then(result => {
             res = result
         }).catch((err) => {
-            logger.error({err}, 'Terjadi error query SQL!');
-            throw errorResponder(errors.DB, "Error nice GODJOB");
+            logger.error({err}, 'Terjadi error database di verifikasi!');
+            throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
         }).finally(() => {
             clientref.release();
         });
@@ -63,8 +63,8 @@ async function deleteOTP(email) {
             res = result
         }).catch((err) => {
             console.log(err);
-            logger.error({err}, 'Terjadi error query SQL!');
-            throw errorResponder(errors.DB, "Error nice GODJOB");
+            logger.error({err}, 'Terjadi error database di verifikasi!');
+            throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
         }).finally(() => {
             clientref.release();
         });
@@ -92,8 +92,8 @@ async function setAdminVerified(email) {
         }
         catch (err) {
             await client.query('ROLLBACK');
-            logger.error({err}, 'Terjadi error query SQL!');
-            throw errorResponder(errors.DB, "Error nice GODJOB");
+            logger.error({err}, 'Terjadi error database di verifikasi!');
+            throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
         } finally {
             clientref.release();
         }
@@ -121,8 +121,8 @@ async function setUserVerified(email) {
         }
         catch (err) {
             await client.query('ROLLBACK');
-            logger.error({err}, 'Terjadi error query SQL!');
-            throw errorResponder(errors.DB, "Error nice GODJOB");
+            logger.error({err}, 'Terjadi error database di modul verifikasi!');
+            throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
         } finally {
             clientref.release();
         }
