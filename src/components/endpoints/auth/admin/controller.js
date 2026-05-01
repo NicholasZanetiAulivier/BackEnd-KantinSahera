@@ -45,9 +45,10 @@ async function login(req, res, next) {
 
         const passwordValid = await passwordMatched(password, admin.password);
 
+        admin.password = null;
+
         if (passwordValid) {
-            const { username, email, super_admin } = admin;
-            const token = await generateAdminJwt({ username, email, super_admin });
+            const token = await generateAdminJwt(admin);
 
             if (!token) {
                 throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Proses login gagal!");

@@ -7,7 +7,7 @@ const { parseUserId } = require('../../../middlewares/authentication');
 
 async function register(req, res, next) {
     try {
-        const { username, email, password, confirm_password } = req.body;
+        const { username, email, phone_number, password, confirm_password } = req.body;
 
         const { error, value } = validate.register(req.body);
 
@@ -21,7 +21,7 @@ async function register(req, res, next) {
 
         const passwordHash = await hashPassword(password);
 
-        const result = await service.createUser({ username, email, passwordHash });
+        const result = await service.createUser({ username, email, phone_no: phone_number, passwordHash });
 
         if (result.rowCount > 0)
             return res.status(201).json({ message: "Akun user berhasil dibuat." });
@@ -48,10 +48,11 @@ async function login(req, res, next) {
 
         const passwordValid = await passwordMatched(password, user.password);
 
+        user.password = null;
+
         if (passwordValid) {
             // destructure object so only username and email is sent
-            const { username, email } = user;
-            const token = await generateUserJwt({ username, email });
+            const token = await generateUserJwt(user);
 
             if (!token) {
                 throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Proses login gagal!");

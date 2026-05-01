@@ -4,6 +4,7 @@ const userService = require('../../components/endpoints/auth/user/service');
 const adminService = require('../../components/endpoints/auth/admin/service');
 const { errorResponder, errors } = require('../../core/errors');
 const { Strategy: JwtStrategy, ExtractJwt } = require('passport-jwt');
+const { userPayload, adminPayload } = require('../../utils/jwt-payload');
 
 passport.use(
     'user',
@@ -15,9 +16,8 @@ passport.use(
 
         async (payload, done) => {
             try {
-                // destructure to return non sensitive data
-                const {user_id, username, email} = await userService.findByEmail(payload.email);
-                return done(null, {user_id: config.keys_prefix.user_id + user_id, username, email} || false);
+                const user = userPayload(await userService.findByEmail(payload.email));
+                return done(null, user || false);
             } catch (err) {
                 return done(err, false);
             }
@@ -35,9 +35,9 @@ passport.use(
 
         async (payload, done) => {
             try {
-                const {admin_id, email, super_admin} = await adminService.findByEmail(payload.email); 
+                const admin = adminPayload(await adminService.findByEmail(payload.email)); 
                 
-                return done(null, {admin_id: config.keys_prefix.admin_id + admin_id, email, super_admin} || false);
+                return done(null, admin || false);
             } catch (err) {
                 return done(err, false);
             }
@@ -55,12 +55,12 @@ passport.use(
 
         async (payload, done) => {
             try {
-                const {admin_id, email, super_admin} = await adminService.findByEmail(payload.email);
+                const admin = adminPayload(await adminService.findByEmail(payload.email));
 
                 if (!(admin.super_admin && payload.super_admin)) 
                     throw errorResponder(errors.INVALID_CREDENTIALS, "Admin bukan super admin!");
 
-                return done(null, {admin_id: config.keys_prefix.admin_id + admin_id, email: email, super_admin: super_admin} || false);
+                return done(null, admin || false);
             } catch (err) {
                 return done(err, false);
             }
