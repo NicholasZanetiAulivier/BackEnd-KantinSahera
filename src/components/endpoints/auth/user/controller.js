@@ -25,8 +25,6 @@ async function register(req, res, next) {
 
         if (result.rowCount > 0)
             return res.status(201).json({ message: "Akun user berhasil dibuat." });
-        else 
-            throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Gagal membuat akun user");
     } catch (err) {
         return next(err);
     }
@@ -82,9 +80,8 @@ async function changeProfile(req, res, next) {
 
         console.log(result);
 
-        if (result.rowCount > 0) return res.status(204).send();
+        if (result.rowCount > 0) return res.status(204).end();
         else if (result.rowCount === 0) throw errorResponder(errors.NOT_FOUND, "Email yang diberikan tidak ada!");
-        else throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Terjadi error saat percobaan perubahan username!");
     } catch (err) {
         return next(err);
     }
@@ -97,7 +94,6 @@ async function getProfile(req, res, next) {
         const profile = await service.getProfileById(id);
 
         if (profile) return res.status(200).json(profile);
-        else throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Gagal memperoleh biodata user!");
     } catch (err) {
         return next(err);
     }

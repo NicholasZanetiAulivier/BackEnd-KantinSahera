@@ -22,11 +22,8 @@ async function register(req, res, next) {
 
         const result = await service.createAdmin({ email, passwordHash });
 
-        if (result.rowCount > 0) {
+        if (result.rowCount > 0) 
             return res.status(201).json({ message: "Akun admin berhasil dibuat." });
-        } else {
-            throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Gagal membuat akun admin");
-        }
     } catch (err) {
         return next(err);
     }

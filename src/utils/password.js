@@ -1,7 +1,7 @@
 const bcrypt = require('bcrypt');
 
 async function hashPassword(plaintextPassword) {
-  const saltRounds = 8;
+  const saltRounds = 12;
 
   const hashedPassword = await new Promise((resolve, reject) => {
     bcrypt.hash(plaintextPassword, saltRounds, (err, hash) => {

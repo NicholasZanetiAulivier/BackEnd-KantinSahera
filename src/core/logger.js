@@ -23,7 +23,7 @@ module.exports = (appName) =>
             timestamp: pino.stdTimeFunctions.isoTime,
             level: 'info',
             redact: {
-                paths: ['password', '*.password', 'token', 'authorization'],
+                paths: ['password', '*.password', 'token', 'auth'],
                 censor: '[REDACTED]',
             },
         },

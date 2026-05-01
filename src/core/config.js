@@ -27,5 +27,10 @@ module.exports = {
     keys_prefix: {
         user_id: 'user-',
         admin_id: 'admin-'
+    },
+    otp_sender: {
+        host: process.env.STMP_HOST,
+        email: process.env.STMP_USER,
+        password: process.env.STMP_PASS,
     }
 };

@@ -69,6 +69,13 @@ tables = {
 
         CHECK (amount>=0 AND transaction_count>=0)
     );`,
+    account_otps: `CREATE TABLE IF NOT EXISTS account_otps(
+        created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+        expires_at TIMESTAMP NOT NULL,
+        otp VARCHAR NOT NULL,
+        email VARCHAR(345) UNIQUE NOT NULL,
+        PRIMARY KEY(email)
+    );`
 }
 
 async function main() {
