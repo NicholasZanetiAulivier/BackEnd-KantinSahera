@@ -24,15 +24,15 @@ const passwordSchema = Joi.string().required().pattern(new RegExp('^[a-zA-Z0-9]{
 })
 
 const otpSchema = Joi.string().length(6).pattern(/^[0-9]+$/).required().messages({
-      'string.length': 'Kode OTP harus berupa angka enam digit!',
-      'string.pattern.base': 'Kode OTP harus berupa angka!',
-      'any.required': 'Kode OTP wajib ada!'
+    'string.length': 'Kode OTP harus berupa angka enam digit!',
+    'string.pattern.base': 'Kode OTP harus berupa angka!',
+    'any.required': 'Kode OTP wajib ada!'
 })
 
 const phoneNumberSchema = Joi.string().pattern(new RegExp('^(\\+62|62|0)[8123456789][0-9]{8,13}$')).trim()
     .messages({
-    'string.pattern.base': 'Format nomor HP harus merupakan nomor Indonesia yang valid, dimulai dari +62 atau 08 tanpa spasi!'
-})
+        'string.pattern.base': 'Format nomor HP harus merupakan nomor Indonesia yang valid, dimulai dari +62 atau 08 tanpa spasi!'
+    })
 
 const registerSchema = Joi.object({
     username: usernameSchema,
@@ -45,7 +45,7 @@ const registerSchema = Joi.object({
 });
 
 const loginSchema = Joi.object({
-    email: emailSchema,   
+    email: emailSchema,
     password: passwordSchema,
 })
 
@@ -62,10 +62,27 @@ const verifyOtpSchema = Joi.object({
     otp_code: otpSchema,
 })
 
+/* Schema untuk menu */
+const menuSchema = Joi.object({
+    name: Joi.string().trim(true).min(1).required().messages({
+        'string.min': "Nama tidak boleh kurang dari 1 karakter!",
+        'string.empty': "Nama tidak boleh kosong"
+    }),
+    image_url: Joi.string().uri().messages({
+        'string.uri': "Image URL harus berupa URL yang valid"
+    }),
+    price: Joi.number().precision(2).min(0).required().messages({
+        'number.min': "Harga harus berupa angka positif",
+        'number.precision': "Harga harus memiliki angka desimal 2 posisi di belakang koma"
+    })
+})
+
 module.exports = {
     register: validator(registerSchema),
     login: validator(loginSchema),
     profile: validator(profileSchema),
     email: validator(emailSchema),
     verifyOtp: validator(verifyOtpSchema),
+
+    menu: validator(menuSchema),
 }

@@ -35,8 +35,8 @@ passport.use(
 
         async (payload, done) => {
             try {
-                const admin = adminPayload(await adminService.findByEmail(payload.email)); 
-                
+                const admin = adminPayload(await adminService.findByEmail(payload.email));
+
                 return done(null, admin || false);
             } catch (err) {
                 return done(err, false);
@@ -57,7 +57,7 @@ passport.use(
             try {
                 const admin = adminPayload(await adminService.findByEmail(payload.email));
 
-                if (!(admin.super_admin && payload.super_admin)) 
+                if (!(super_admin && payload.super_admin))
                     throw errorResponder(errors.INVALID_CREDENTIALS, "Admin bukan super admin!");
 
                 return done(null, admin || false);
@@ -72,19 +72,19 @@ const passportUserJwt = passport.authenticate('user', { session: false });
 const passportAdminJwt = passport.authenticate('admin', { session: false });
 const passportSuperJwt = passport.authenticate('superadmin', { session: false });
 
-function parseUserId(userId){
+function parseUserId(userId) {
     const id = userId.split(config.keys_prefix.user_id);
     console.log(id);
     const idWithoutPrefix = id[1] || null;
-    
+
     if (idWithoutPrefix) return idWithoutPrefix;
     else throw errorResponder(errors.BAD_ID, "ID payload bukan ID User yang valid!");
 }
 
-function parseAdminId(adminId){
+function parseAdminId(adminId) {
     const id = userId.split(config.keys_prefix.admin_id);
     const idWithoutPrefix = id[1] || null;
-    
+
     if (idWithoutPrefix) return idWithoutPrefix;
     else throw errorResponder(errors.BAD_ID, "ID payload bukan ID Admin yang valid!");
 }
