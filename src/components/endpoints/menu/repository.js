@@ -1,5 +1,75 @@
 const { errorResponder, errors } = require('../../../core/errors');
 const db = require('../../../database/db');
+const logger = require('../../../core/logger')('menu-repository')
+
+
+async function getMenuByIDs(ids) {
+    let res, clientref;
+
+    prepared = []
+    for (let i = 1; i < ids.length + 1; i++) {
+        prepared.push("$" + i);
+    }
+
+    await db.connect().then(async (client) => {
+        clientref = client;
+        await client.query(
+            `SELECT * FROM menus WHERE menu_id in (${prepared.join(",")})`,
+            ids
+        ).then(result => {
+            res = result
+        }).catch((err) => {
+            logger.error(err);
+            throw errorResponder(errors.DB, "Can't pull from DB");
+        }).finally(() => {
+            clientref.release();
+        });
+    });
+
+    return res;
+}
+
+async function getMenuBySearch(offset, limit, search) {
+
+    let query = "SELECT * FROM menus";
+    let add = [];
+    let c = 1;
+    if (search) {
+        query += " WHERE name ~ $" + c++;
+        add.push(search);
+    }
+    if (limit) {
+        query += " LIMIT $" + c++;
+        add.push(new Number(limit));
+    }
+    if (offset) {
+        query += " OFFSET $" + c++;
+        add.push(new Number(offset));
+    }
+
+    console.log(query);
+    console.log(add);
+
+    let res, clientref;
+
+    await db.connect().then(async (client) => {
+        clientref = client;
+        await client.query(
+            query + ';',
+            add
+        ).then(result => {
+            res = result
+        }).catch((err) => {
+            logger.error(err);
+            throw errorResponder(errors.DB, "Can't pull from DB");
+        }).finally(() => {
+            clientref.release();
+        });
+    });
+
+    return res;
+}
+
 
 async function createMenu(name, image_url, price) {
     let res, clientref;
@@ -21,6 +91,7 @@ async function createMenu(name, image_url, price) {
         ).then(result => {
             res = result
         }).catch((err) => {
+            logger.error(err);
             throw errorResponder(errors.DB, "Can't insert to DB");
         }).finally(() => {
             clientref.release();
@@ -56,18 +127,42 @@ async function editMenu(id, data) {
         ).then(result => {
             res = result
         }).catch((err) => {
+            logger.error(err);
             throw errorResponder(errors.DB, "Can't update DB");
         }).finally(() => {
             clientref.release();
         });
     });
 
+    return res;
+}
+
+async function deleteMenu(id) {
+    let res, clientref;
+
+    await db.connect().then(async (client) => {
+        clientref = client;
+        await client.query(
+            "DELETE FROM menus WHERE menu_id = $1",
+            [id]
+        ).then(result => {
+            res = result
+        }).catch((err) => {
+            logger.error(err);
+            throw errorResponder(errors.DB, "Can't update DB");
+        }).finally(() => {
+            clientref.release();
+        });
+    });
 
     return res;
 }
 
 
 module.exports = {
+    getMenuByIDs,
+    getMenuBySearch,
     createMenu,
     editMenu,
+    deleteMenu
 }

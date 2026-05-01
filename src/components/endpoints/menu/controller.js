@@ -1,7 +1,30 @@
 const { errorResponder, errors, processJoiValidationError } = require('../../../core/errors');
 const service = require('./service');
 const validate = require('../../middlewares/validator');
+const { checkInteger } = require('../../../utils/checks');
 
+async function getMenu(req, res, next) {
+    try {
+
+        let { offset, limit, search, id } = req.query;
+
+        if (offset) checkInteger(offset, 0, 'Offset');
+        if (limit) checkInteger(limit, 0, 'Limit');
+        let result;
+        if (id) {
+            id = id.trim().split(" ");
+            for (let i of id) {
+                checkInteger(i, 1, "ID");
+            }
+            result = await service.getMenuByIDs(id);
+        } else {
+            result = await service.getMenuBySearch(offset, limit, search);
+        }
+        return res.status(200).json({ data: result, offset, limit }).send();
+    } catch (err) {
+        return next(err);
+    }
+}
 async function createMenu(req, res, next) {
     try {
 
@@ -23,12 +46,7 @@ async function editMenu(req, res, next) {
         const id = new Number(req.params.id);
 
 
-        if (Number.isNaN(id))
-            throw errorResponder(errors.BAD_ID, "ID tidak dapat diproses");
-        if (id < 1)
-            throw errorResponder(errors.BAD_ID, "ID harus berupa angka positif > 1");
-        if (Number.isInteger(id))
-            throw errorResponder(errors.BAD_ID, "ID harus berupa angka bulat");
+        checkInteger(id, 1, 'ID');
 
         processJoiValidationError(error);
 
@@ -39,8 +57,23 @@ async function editMenu(req, res, next) {
     }
 }
 
+async function deleteMenu(req, res, next) {
+    try {
+        const id = new Number(req.params.id);
+
+        checkInteger(id, 1, "ID");
+
+        await service.deleteMenu(id);
+        return res.status(204).send();
+    } catch (err) {
+        next(err);
+    }
+}
+
 
 module.exports = {
+    getMenu,
     createMenu,
     editMenu,
+    deleteMenu
 }
