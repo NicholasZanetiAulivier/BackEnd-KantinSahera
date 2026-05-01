@@ -1,4 +1,3 @@
-const { changeUsername } = require('./controller');
 const repository = require('./repository');
 
 async function findByEmail(email) {
@@ -16,7 +15,7 @@ async function createUser(user) {
 }
 
 async function changeProfileWhereId(user) {
-    const {username, profile_image_url, phone_number, user_id} = user;
+    const { username, profile_image_url, phone_number, user_id } = user;
 
     const res = await repository.changeProfileWhereId({ username, profile_image_url, phone_no: phone_number }, user_id);
 
@@ -29,7 +28,7 @@ async function getProfileById(id) {
     return res.rows[0];
 }
 
-module.exports = { 
+module.exports = {
     findByEmail,
     createUser,
     changeProfileWhereId,
