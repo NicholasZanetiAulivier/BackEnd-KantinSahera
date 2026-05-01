@@ -6,41 +6,45 @@ const validator = (schema) => (payload) => schema.validate(payload, { stripUnkno
 // username ======= nama tampilan
 // password harus alphanumeric, min 3 char max 30 char (validation level)
 // why password is required here? because google auth doesnt need our login/register form
+const emailSchema = Joi.string().required().email().trim().messages({
+    'any.required': "Email wajib ada!",
+    'string.email': "Format email tidak valid!"
+})
+
+const usernameSchema = Joi.string().min(1).max(32).trim().messages({
+    'string.min': "Username tidak boleh kurang dari 1 karakter!",
+    'string.empty': "Username tidak boleh kosong!",
+    'string.max': "Panjang username tidak boleh lebih dari 32 karakter!"
+})
+
+const passwordSchema = Joi.string().required().pattern(new RegExp('^[a-zA-Z0-9]{3,30}$')).messages({
+    'any.required': "Password wajib ada!",
+    'string.pattern.base': "Password harus berupa alphanumeric!",
+    'any.only': "Password dan confirm password tidak sesuai!"
+})
+
+const otpSchema = Joi.string().length(6).pattern(/^[0-9]+$/).required().messages({
+      'string.length': 'Kode OTP harus berupa angka enam digit!',
+      'string.pattern.base': 'Kode OTP harus berupa angka!',
+      'any.required': 'Kode OTP wajib ada!'
+})
+
 const registerSchema = Joi.object({
-    username: Joi.string().min(1).max(32).trim().messages({
-        'string.min': "Username tidak boleh kosong!",
-        'string.max': "Panjang username tidak boleh lebih dari 32 karakter!"
-    }),
-    email: Joi.string().required().email().trim().messages({
-        'any.required': "Email wajib ada!",
-        'string.email': "Format email tidak valid!",
-    }),
-    password: Joi.string().required().pattern(new RegExp('^[a-zA-Z0-9]{3,30}$')).messages({
-        'any.required': "Password wajib ada!",
-        'string.pattern.base': "Password harus berupa alphanumeric!",
-        'any.only': "Password dan confirm password tidak sesuai!"
-    }),
+    username: usernameSchema,
+    email: emailSchema,
+    password: passwordSchema,
     confirm_password: Joi.string().required().valid(Joi.ref("password")).messages({
         'any.only': "Password dan konfirmasi password tidak sesuai!"
     })
 });
 
 const loginSchema = Joi.object({
-    email: Joi.string().required().email().trim().messages({
-        'any.required': "Email wajib ada!",
-        'string.email': "Format email tidak valid!",
-    }),
-    password: Joi.string().required().pattern(new RegExp('^[a-zA-Z0-9]{3,30}$')).messages({
-        'any.required': "Password wajib ada!",
-        'string.pattern.base': "Password harus berupa alphanumeric!"
-    }),
+    email: emailSchema,   
+    password: passwordSchema,
 })
 
 const profileSchema = Joi.object({
-    username: Joi.string().min(1).max(32).trim().messages({
-        'string.min': "Username tidak boleh kosong!",
-        'string.max': "Panjang username tidak boleh lebih dari 32 karakter!"
-    }),
+    username: usernameSchema,
     profile_image_url: Joi.string().uri().messages({
         'string.uri': "URL gambar tidak valid!",
     }),
@@ -50,8 +54,15 @@ const profileSchema = Joi.object({
     }),
 });
 
+const verifyOtpSchema = Joi.object({
+    email: emailSchema,
+    otp_code: otpSchema,
+})
+
 module.exports = {
     register: validator(registerSchema),
     login: validator(loginSchema),
     profile: validator(profileSchema),
+    email: validator(emailSchema),
+    verifyOtp: validator(verifyOtpSchema),
 }

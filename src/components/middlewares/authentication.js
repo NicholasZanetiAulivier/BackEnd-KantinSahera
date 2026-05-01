@@ -78,7 +78,7 @@ function parseUserId(userId){
     const idWithoutPrefix = id[1] || null;
     
     if (idWithoutPrefix) return idWithoutPrefix;
-    else throw errorResponder(errors.BAD_ID);
+    else throw errorResponder(errors.BAD_ID, "ID payload bukan ID User yang valid!");
 }
 
 function parseAdminId(adminId){
@@ -86,7 +86,7 @@ function parseAdminId(adminId){
     const idWithoutPrefix = id[1] || null;
     
     if (idWithoutPrefix) return idWithoutPrefix;
-    else throw errorResponder(errors.BAD_ID);
+    else throw errorResponder(errors.BAD_ID, "ID payload bukan ID Admin yang valid!");
 }
 
 module.exports = {

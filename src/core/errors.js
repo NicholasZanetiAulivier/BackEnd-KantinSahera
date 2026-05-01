@@ -40,7 +40,7 @@ const errors = {
         code: 'BAD_REQUEST_ERROR',
     },
     BAD_ID: {
-        description: 'ID yang diberikan bukan ID valid!',
+        description: 'Provided ID is not a valid ID for corresponding resource!',
         status: 400,
         code: 'BAD_ID'
     },
@@ -63,6 +63,16 @@ const errors = {
         description: 'Unprocessable entity',
         status: 422,
         code: 'UNPROCESSABLE_ENTITY_ERROR',
+    },
+    INTERNAL_SERVER_ERROR: {
+        description: 'An error has occured at application level!',
+        status: 500,
+        code: 'INTERNAL_SERVER ERROR',
+    },
+    OTP_EXPIRED: {
+        description: 'Provided OTP has expired!',
+        status: 403,
+        code: 'OTP_EXPIRED_ERROR',
     },
 };
 
@@ -89,6 +99,12 @@ function errorResponder(type, message = "") {
     return error;
 }
 
+/**
+ * Checks error type returned by Joi to return custom error
+ * @param {Object} error - Joi error object
+ * @returns {Error} if passed error object exists from invalid data
+ * @returns {undefined} if data is already valid, so passed error object is undefined
+ */
 function processJoiValidationError(error) {
     if (error) {
         const errorType = error.details[0].type;
