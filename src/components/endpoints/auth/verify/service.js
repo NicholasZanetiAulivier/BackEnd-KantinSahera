@@ -2,8 +2,12 @@ const repository = require('./repository');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const config = require('../../../../core/config');
+const logger = require('../../../../core/logger')('verify-service');
 const { hashPassword, passwordMatched } = require('../../../../utils/password');
 const { errorResponder, errors } = require('../../../../core/errors');
+const { markAsUntransferable } = require('worker_threads');
+// const userService = require('../user/service')
+// const adminService = require('../admin/service')
 
 function generateOTP(){
     const otp = crypto.randomInt(100000, 999999).toString();
@@ -19,7 +23,7 @@ async function sendOTP(email) {
 
         if (save && save.rowCount > 0) {
             let transporter = nodemailer.createTransport({
-                service: "gmail",
+                service: config.otp_sender.host,
                 auth: {
                     user: config.otp_sender.email,
                     pass: config.otp_sender.password,
@@ -46,17 +50,17 @@ async function sendOTP(email) {
             }
 
             let info = await transporter.sendMail(mailOptions);
-            console.log("Email sent successfully:", info.messageId);
 
             if (info.accepted.length > 0) {
                 return true;
             } else if (info.rejected.length > 0) {
+                logger.error(`Gagal mengirimkan pesan ke ${info.rejected[0]}`)
                 await repository.deleteOTP(email);
                 throw errorResponder(errors.UNPROCESSABLE_ENTITY, "OTP Tidak dapat dikirim ke email tujuan!");
             }
         } 
     } catch (err) {
-        console.error("Error in sendOTP:", err.message);
+        logger.error({err}, 'Terjadi error di layanan email!');
         await repository.deleteOTP(email);
         throw errorResponder(errors.INTERNAL_SERVER_ERROR, 
             "Terjadi error pada saat percobaan mengirim OTP!"
@@ -67,6 +71,13 @@ async function sendOTP(email) {
 async function verifyOTP(email, otp) {
     try {
         const query = await repository.findOTP(email);
+
+        // asumsi cek daftar dulu
+        // const existsOnUser = await userService.findByEmail(email);
+        // const existsOnAdmin = await adminService.findByEmail(email);
+
+        // if (!existsOnUser && !existsOnAdmin) 
+        //     throw errorResponder(errors.NOT_FOUND, "Email tidak terdaftar!");
         
         if (query.rowCount === 0) 
             throw errorResponder(errors.NOT_FOUND, "Tidak ada OTP untuk email yang bersangkutan!");
@@ -84,11 +95,28 @@ async function verifyOTP(email, otp) {
         if (!matched) 
             throw errorResponder(errors.INVALID_CREDENTIALS, "OTP yang dimasukkan salah!");
         else {
-            const verified = await repository.markAsVerified(email);
-            console.log(verified);
-
-            return verified;
+            return true;
         }
+    } catch (err) {
+        throw err;
+    }
+}
+
+async function markAdminAsVerified(email) {
+    try {
+        const result = await repository.setAdminVerified(email);
+
+        if (result) return true;
+    } catch (err) {
+        throw err;
+    }
+}
+
+async function markUserAsVerified(email) {
+    try {
+        const result = await repository.setUserVerified(email);
+
+        if (result) return true;
     } catch (err) {
         throw err;
     }
@@ -97,4 +125,6 @@ async function verifyOTP(email, otp) {
 module.exports = {
     sendOTP,
     verifyOTP,
+    markAdminAsVerified,
+    markUserAsVerified,
 }

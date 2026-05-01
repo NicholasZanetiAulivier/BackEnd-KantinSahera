@@ -1,6 +1,7 @@
 const { errorResponder, errors, processJoiValidationError } = require('../../../../core/errors');
 const validate = require('../../../middlewares/validator')
 const service = require('./service');
+const otpService = require('../verify/service');
 const { hashPassword, passwordMatched } = require('../../../../utils/password');
 const { generateAdminJwt, refreshAdminJwt } = require('../../../../utils/token');
 
@@ -63,7 +64,45 @@ async function login(req, res, next) {
     }
 }
 
+async function requestAdminOtp(req, res, next) {
+    try {
+        const { email } = req.body
+
+        const { error, value } = validate.email(email);
+
+        processJoiValidationError(error);
+
+        const mailed = await otpService.sendOTP(email);
+
+        if (mailed) return res.status(204).end();
+    } catch (err) {
+        return next(err);
+    }
+}
+
+async function verifyAdminOtp(req, res, next) {
+    try {
+        const { email, otp_code } = req.body;
+
+        const { error, value } = validate.verifyOtp({ email, otp_code });
+
+        processJoiValidationError(error);
+
+        const valid = await otpService.verifyOTP(email, otp_code);
+
+        if (valid) {
+            const result = await otpService.markAdminAsVerified(email);
+
+            if (result) return res.status(204).end();
+        }
+    } catch (err) {
+        return next(err);
+    }
+}
+
 module.exports = {
     register,
     login,
+    requestAdminOtp,
+    verifyAdminOtp,
 }

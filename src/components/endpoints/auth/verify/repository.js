@@ -1,5 +1,6 @@
 const { errorResponder, errors } = require('../../../../core/errors');
 const db = require('../../../../database/db');
+const logger = require('../../../../core/logger')('verify-repository');
 
 async function saveOTP(email, otp) {
     let res, clientref;
@@ -19,7 +20,7 @@ async function saveOTP(email, otp) {
         ).then(result => {
             res = result
         }).catch((err) => {
-            console.log(err);
+            logger.error({err}, 'Terjadi error query SQL!');
             throw errorResponder(errors.DB, "Error nice GODJOB");
         }).finally(() => {
             clientref.release();
@@ -40,7 +41,7 @@ async function findOTP(email) {
         ).then(result => {
             res = result
         }).catch((err) => {
-            console.log(err);
+            logger.error({err}, 'Terjadi error query SQL!');
             throw errorResponder(errors.DB, "Error nice GODJOB");
         }).finally(() => {
             clientref.release();
@@ -62,6 +63,7 @@ async function deleteOTP(email) {
             res = result
         }).catch((err) => {
             console.log(err);
+            logger.error({err}, 'Terjadi error query SQL!');
             throw errorResponder(errors.DB, "Error nice GODJOB");
         }).finally(() => {
             clientref.release();
@@ -71,31 +73,17 @@ async function deleteOTP(email) {
     return res;
 }
 
-async function markAsVerified(email) {
+async function setAdminVerified(email) {
     let res, clientref;
 
     await db.connect().then(async (client) => {
         clientref = client;
-        // ini otomatis gk boleh ada email sama di dua tabel, email harus di satu tabel aj
         try{
-
             await client.query('BEGIN');
             await client.query(
-                `UPDATE users SET verified = TRUE WHERE email = $1
-                    AND NOT EXISTS(
-                        SELECT 1 FROM admins
-                        WHERE email = $1
-                    )`, [email]
+                `UPDATE admins SET verified = TRUE WHERE email = $1`, 
+                [email]
             );
-
-            await client.query(
-                `UPDATE admins SET verified = TRUE WHERE email = $1
-                    AND NOT EXISTS(
-                        SELECT 1 FROM users
-                        WHERE email = $1
-                    )`, [email]
-            );
-
             await client.query(
                 'DELETE FROM account_otps WHERE email = $1;',
                 [email]
@@ -103,8 +91,37 @@ async function markAsVerified(email) {
             await client.query('COMMIT');
         }
         catch (err) {
-            console.log(err);
             await client.query('ROLLBACK');
+            logger.error({err}, 'Terjadi error query SQL!');
+            throw errorResponder(errors.DB, "Error nice GODJOB");
+        } finally {
+            clientref.release();
+        }
+    });
+                
+    return true;
+}
+
+async function setUserVerified(email) {
+    let res, clientref;
+
+    await db.connect().then(async (client) => {
+        clientref = client;
+        try{
+            await client.query('BEGIN');
+            await client.query(
+                `UPDATE users SET verified = TRUE WHERE email = $1`, 
+                [email]
+            );
+            await client.query(
+                'DELETE FROM account_otps WHERE email = $1;',
+                [email]
+            );
+            await client.query('COMMIT');
+        }
+        catch (err) {
+            await client.query('ROLLBACK');
+            logger.error({err}, 'Terjadi error query SQL!');
             throw errorResponder(errors.DB, "Error nice GODJOB");
         } finally {
             clientref.release();
@@ -117,6 +134,7 @@ async function markAsVerified(email) {
 module.exports = {
     saveOTP,
     findOTP,
-    markAsVerified,
+    setAdminVerified,
+    setUserVerified,
     deleteOTP,
 }
