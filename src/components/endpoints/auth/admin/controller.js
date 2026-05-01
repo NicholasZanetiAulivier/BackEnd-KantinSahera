@@ -1,4 +1,4 @@
-const { errorResponder, errors } = require('../../../../core/errors');
+const { errorResponder, errors, processJoiValidationError } = require('../../../../core/errors');
 const validate = require('../../../middlewares/validator')
 const service = require('./service');
 const { hashPassword, passwordMatched } = require('../../../../utils/password');
@@ -10,9 +10,7 @@ async function register(req, res, next) {
 
         const { error, value } = validate.register(req.body);
 
-        if (error) {
-            throw errorResponder(errors.BAD_REQUEST, error.details[0].message)
-        }
+        processJoiValidationError(error);
 
         const emailExists = await service.findByEmail(email);
 
@@ -38,17 +36,9 @@ async function login(req, res, next) {
     try {
         const { email, password } = req.body;
 
-        const { error, value } = validate.register(req.body);
+        const { error, value } = validate.login(req.body);
 
-        if (error) {
-            const invalidField = error.details[0].context.key;
-
-            if (invalidField === 'password') {
-                throw errorResponder(errors.BAD_REQUEST, "Password harus berupa alfanumerik!");
-            } else if (invalidField === 'email') {
-                throw errorResponder(errors.BAD_REQUEST, "Format email tidak valid!");
-            }
-        }
+        processJoiValidationError(error);
 
         const admin = await service.findByEmail(email);
 

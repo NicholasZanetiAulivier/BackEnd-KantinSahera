@@ -41,7 +41,7 @@ async function createUser(username, email, passwordHash) {
     return res;
 }
 
-async function changeProfileWhereEmail(profile, email) {
+async function changeProfileWhereId(profile, user_id) {
     let res, clientref;
 
     const profileValues = Object.values(profile); 
@@ -61,8 +61,8 @@ async function changeProfileWhereEmail(profile, email) {
 
         await client.query(
             `UPDATE users SET ${clausesStr}
-                WHERE email = $${count}`,
-            [...profileValues, email]
+                WHERE user_id = $${count}`,
+            [...profileValues, user_id]
 
         ).then(result => {
             res = result
@@ -76,8 +76,29 @@ async function changeProfileWhereEmail(profile, email) {
     return res;
 }
 
+async function getProfileById(id) {
+    await db.connect().then(async (client) => {
+        clientref = client;
+
+        await client.query(
+            `SELECT username, email, profile_image_url, phone_no FROM users WHERE user_id = $1`,
+            [id]
+        ).then(result => {
+            res = result
+        }).catch((err) => {
+            console.log(err);
+            throw errorResponder(errors.DB, "Error nice GODJOB");
+        }).finally(() => {
+            clientref.release();
+        });
+    });
+
+    return res;
+}
+
 module.exports = {
     findByEmail,
     createUser,
-    changeProfileWhereEmail,
+    changeProfileWhereId,
+    getProfileById,
 }

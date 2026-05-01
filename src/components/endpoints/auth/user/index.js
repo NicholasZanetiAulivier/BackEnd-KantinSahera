@@ -6,6 +6,7 @@ const route = express.Router();
 
 route.post('/register', controller.register);
 route.post('/login', controller.login);
-route.patch('/change-profile', passportUserJwt, controller.changeProfile);
+route.patch('/profile', passportUserJwt, controller.changeProfile); // change-profile -> profile for best RESTful design
+route.get('/profile', passportUserJwt, controller.getProfile);
 
 module.exports = route;

@@ -1,8 +1,9 @@
-const { errorResponder, errors } = require('../../../../core/errors');
+const { errorResponder, errors, processJoiValidationError } = require('../../../../core/errors');
 const validate = require('../../../middlewares/validator')
 const service = require('./service');
 const { hashPassword, passwordMatched } = require('../../../../utils/password');
 const { generateUserJwt, refreshUserJwt } = require('../../../../utils/token');
+const { parseUserId } = require('../../../middlewares/authentication');
 
 async function register(req, res, next) {
     try {
@@ -10,10 +11,7 @@ async function register(req, res, next) {
 
         const { error, value } = validate.register(req.body);
 
-        // TO-DO: Implement more concise validation error messages
-        if (error) {
-            throw errorResponder(errors.BAD_REQUEST, error.details[0].message)
-        }
+        processJoiValidationError(error);
 
         const emailExists = await service.findByEmail(email);
 
@@ -25,11 +23,10 @@ async function register(req, res, next) {
 
         const result = await service.createUser({ username, email, passwordHash });
 
-        if (result.rowCount > 0) {
+        if (result.rowCount > 0)
             return res.status(201).json({ message: "Akun user berhasil dibuat." });
-        } else {
+        else 
             throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Gagal membuat akun user");
-        }
     } catch (err) {
         return next(err);
     }
@@ -43,25 +40,7 @@ async function login(req, res, next) {
 
         let invalidField = null;
 
-        if (error) {
-            invalidField = error.details[0].context.key;
-        }
-
-        if (invalidField === 'password') {
-            if (error.details[0].type === 'any.required'){
-                throw errorResponder(errors.BAD_REQUEST, "Password wajib ada!")
-            } else {
-                // asumsi password ada tapi format invalid
-                throw errorResponder(errors.UNPROCESSABLE_ENTITY, "Password harus berupa alfanumerik!");
-            }
-
-        } else if (invalidField === 'email') {
-            if (error.details[0].type === 'any.required'){
-                throw errorResponder(errors.BAD_REQUEST, "Email wajib ada!")
-            } else {
-                throw errorResponder(errors.UNPROCESSABLE_ENTITY, "Format email tidak valid!");
-            }
-        }
+        processJoiValidationError(error);
 
         const user = await service.findByEmail(email);
 
@@ -91,23 +70,15 @@ async function login(req, res, next) {
 
 async function changeProfile(req, res, next) {
     try {
-        console.log('curr attached user ', req.user)
         const { username, profile_image_url, phone_number } = req.body;
 
         const { error, value } = validate.profile(req.body);
 
-        // let invalidField = null;
+        const id = parseUserId(req.user.user_id);
 
-        // if (error) {
-        //     invalidField = error.details[0].context.key;
-        // }
+        processJoiValidationError(error);
 
-        // TO-DO: Implement more concise validation error messages
-        if (error) {
-            throw errorResponder(errors.BAD_REQUEST, error.details[0].message)
-        }
-
-        const result = await service.changeProfileWhereEmail({username, profile_image_url, phone_number, email: req.user.email});
+        const result = await service.changeProfileWhereId({ username, profile_image_url, phone_number, user_id: id });
 
         console.log(result);
 
@@ -119,9 +90,23 @@ async function changeProfile(req, res, next) {
     }
 }
 
+async function getProfile(req, res, next) {
+    try {
+        const id = parseUserId(req.user.user_id);
+
+        const profile = await service.getProfileById(id);
+
+        if (profile) return res.status(200).json(profile);
+        else throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Gagal memperoleh biodata user!");
+    } catch (err) {
+        return next(err);
+    }
+}
+
 
 module.exports = {
     register,
     login,
     changeProfile,
+    getProfile,
 }
