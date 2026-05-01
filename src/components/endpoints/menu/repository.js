@@ -13,8 +13,6 @@ async function createMenu(name, image_url, price) {
         add.splice(1, 0, image_url);
     }
 
-
-
     await db.connect().then(async (client) => {
         clientref = client;
         await client.query(
@@ -32,7 +30,44 @@ async function createMenu(name, image_url, price) {
     return res;
 }
 
+async function editMenu(id, data) {
+    let res, clientref;
+
+    let query = "SELECT * FROM menus WHERE menu_id = $1;";
+    let add = [];
+
+    if (Object.keys(data).length > 0) {
+        let prepared = [];
+        let c = 1;
+        for (let k in data) {
+            prepared.push(k.toString() + " = $" + c++);
+            add.push(data[k]);
+        }
+
+        query = "UPDATE menus SET " + prepared.join(", ") + " WHERE menu_id = $" + c + " RETURNING *;";
+    }
+    add.push(id);
+
+    await db.connect().then(async (client) => {
+        clientref = client;
+        await client.query(
+            query,
+            add
+        ).then(result => {
+            res = result
+        }).catch((err) => {
+            throw errorResponder(errors.DB, "Can't update DB");
+        }).finally(() => {
+            clientref.release();
+        });
+    });
+
+
+    return res;
+}
+
 
 module.exports = {
     createMenu,
+    editMenu,
 }

@@ -3,6 +3,8 @@ const Joi = require('joi');
 // sanitasi field diluar definisi req body
 const validator = (schema) => (payload) => schema.validate(payload, { stripUnknown: true });
 
+/* Schema untuk Auth */
+
 // username ======= nama tampilan
 // password harus alphanumeric, min 3 char max 30 char (validation level)
 // why password is required here? because google auth doesnt need our login/register form
@@ -63,26 +65,43 @@ const verifyOtpSchema = Joi.object({
 })
 
 /* Schema untuk menu */
+
+const menuNameSchema = Joi.string().trim(true).min(1).messages({
+    'string.min': "Nama tidak boleh kurang dari 1 karakter!",
+    'string.empty': "Nama tidak boleh kosong"
+});
+
+const menuImageURLSchema = Joi.string().uri().messages({
+    'string.uri': "Image URL harus berupa URL yang valid"
+})
+
+const menuPriceSchema = Joi.number().precision(2).min(0).required().messages({
+    'number.min': "Harga harus berupa angka positif",
+    'number.precision': "Harga harus memiliki angka desimal 2 posisi di belakang koma"
+})
+
 const menuSchema = Joi.object({
-    name: Joi.string().trim(true).min(1).required().messages({
-        'string.min': "Nama tidak boleh kurang dari 1 karakter!",
-        'string.empty': "Nama tidak boleh kosong"
-    }),
-    image_url: Joi.string().uri().messages({
-        'string.uri': "Image URL harus berupa URL yang valid"
-    }),
-    price: Joi.number().precision(2).min(0).required().messages({
-        'number.min': "Harga harus berupa angka positif",
-        'number.precision': "Harga harus memiliki angka desimal 2 posisi di belakang koma"
-    })
+    name: menuNameSchema.required(),
+    image_url: menuImageURLSchema,
+    price: menuPriceSchema.required(),
+});
+
+const menuChangeSchema = Joi.object({
+    name: menuNameSchema.optional(),
+    image_url: menuImageURLSchema.optional(),
+    price: menuPriceSchema.optional(),
+    is_available: Joi.bool().optional(),
 })
 
 module.exports = {
+    //  auth
     register: validator(registerSchema),
     login: validator(loginSchema),
     profile: validator(profileSchema),
     email: validator(emailSchema),
     verifyOtp: validator(verifyOtpSchema),
 
+    //  menu
     menu: validator(menuSchema),
+    menuEdit: validator(menuChangeSchema)
 }

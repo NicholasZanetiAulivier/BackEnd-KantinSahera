@@ -57,7 +57,7 @@ passport.use(
             try {
                 const admin = adminPayload(await adminService.findByEmail(payload.email));
 
-                if (!(super_admin && payload.super_admin))
+                if (!(admin.super_admin && payload.super_admin))
                     throw errorResponder(errors.INVALID_CREDENTIALS, "Admin bukan super admin!");
 
                 return done(null, admin || false);
