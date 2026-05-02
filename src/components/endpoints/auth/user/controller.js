@@ -5,6 +5,7 @@ const otpService = require('../verify/service');
 const { hashPassword, passwordMatched } = require('../../../../utils/password');
 const { generateUserJwt, refreshUserJwt } = require('../../../../utils/token');
 const { parseUserId } = require('../../../middlewares/authentication');
+const config = require('../../../../core/config');
 
 async function register(req, res, next) {
     try {
@@ -137,6 +138,24 @@ async function verifyUserOtp(req, res, next) {
     }
 }
 
+// https://developers.google.com/identity/sign-in/web/backend-auth
+// https://developers.google.com/identity/gsi/web/reference/html-reference
+// https://developers.google.com/identity/gsi/web/guides/overview
+async function handleGoogleAuth(req, res, next) {
+    try {
+        // token = id token JWT dari Google
+        // csrf token skip dulu, undefined mulu di frontend
+        const { token } = req.body
+        
+        const idTokenValid = await service.verifyGoogleIdToken(token);
+
+        // nangani id token valid nanti dulu, sesuai kesepakatan kita
+
+        return res.status(200).json({message: "KICAU MANIAAA"});
+    } catch (err) {
+        return next(err);
+    }
+}
 
 module.exports = {
     register,
@@ -145,4 +164,5 @@ module.exports = {
     getProfile,
     requestUserOtp,
     verifyUserOtp,
+    handleGoogleAuth,
 }

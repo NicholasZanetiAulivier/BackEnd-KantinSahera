@@ -53,8 +53,22 @@ const loginSchema = Joi.object({
 
 const profileSchema = Joi.object({
     username: usernameSchema,
-    profile_image_url: Joi.string().uri().messages({
-        'string.uri': "URL gambar tidak valid!",
+    profile_image_url: Joi.string().uri({
+        scheme: ['https'],
+        allowRelative: false,
+    }).custom((value, helpers) => {
+        const allowedDomains = ['res.cloudinary.com', 'lh3.googleusercontent.com'];
+        const url = new URL(value);
+        if (!allowedDomains.some(domain => url.hostname.includes(domain))) {
+            return helpers.error('any.invalid', { 
+                message: 'Hanya Cloudinary dan Google picture domain yang diperbolehkan!' 
+            });
+        }
+        return value;
+    }).messages({
+        'string.uri': "URL gambar tidak valid atau tidak absolut!",
+        'string.uriCustomScheme': 'URL harus menggunakan protokol HTTPS!',
+        'any.invalid': 'Hanya Cloudinary dan Google picture domain yang diperbolehkan!' 
     }),
     phone_number: phoneNumberSchema,
 });

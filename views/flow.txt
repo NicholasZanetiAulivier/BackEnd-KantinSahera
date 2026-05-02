@@ -1,0 +1,10 @@
+flow sign in by google:
+1. user klik tombol login dengan google
+2. google muncul-in popup atau bottom sheet (kalo di hp)
+3. user pilih akun 
+4. google return id token (jwt)
+5. panggil API kita sendiri untuk login google
+6. backend verifikasi dan validasi token
+7. akun google yg emailnya belum terverifikasi langsung reject
+7. token valid, tambahin user ke db kalo belum ada akun, set google id kalo dh ada.
+8. return jwt local untuk user yang berhasil login google.

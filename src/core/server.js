@@ -2,20 +2,29 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const methodOverride = require('method-override');
 const pinoHTTP = require('pino-http');
-
 const config = require('./config');
 const logger = require('./logger')('app');
 const router = require('../components/routes');
 const { errorResponder, errors } = require('./errors');
 const compression = require('compression');
+const cookieParser = require('cookie-parser');
 
 module.exports = (app) => {
 
     app.enable('trust proxy');
 
+    // app.use(cors({
+    //     origin: [
+    //         config.base_url.frontend_user,
+    //         config.base_url.frontend_admin
+    //     ],
+    // }));
     app.use(cors());
 
     app.use(methodOverride('_method'));
+
+    // buat GSI
+    app.use(cookieParser());
 
     app.use(bodyParser.json({ limit: '20mb' }));
 
