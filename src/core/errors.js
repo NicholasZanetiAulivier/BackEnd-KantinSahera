@@ -74,6 +74,16 @@ const errors = {
         status: 403,
         code: 'OTP_EXPIRED_ERROR',
     },
+    GOOGLE_ACCOUNT_UNVERIFIED: {
+        description: 'Provided Google Account has unverified email!',
+        status: 401,
+        code: 'GOOGLE_ACCOUNT_UNVERIFIED_ERROR'
+    },
+    INVALID_CLIENT: {
+        description: 'Client is not allowed to communicate with server!',
+        status: 401,
+        code: 'INVALID_CLIENT_ERROR',
+    }
 };
 
 
