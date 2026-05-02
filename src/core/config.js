@@ -13,6 +13,8 @@ module.exports = {
     secret: {
         user: process.env.USER_SECRET_KEY,
         admin: process.env.ADMIN_SECRET_KEY,
+        google_client_id: process.env.GOOGLE_CLIENT_ID,
+        google_client_secret: process.env.GOOGLE_CLIENT_SECRET
     },
     database: {
         user: process.env.USER,
@@ -32,5 +34,10 @@ module.exports = {
         host: process.env.STMP_HOST,
         email: process.env.STMP_USER,
         password: process.env.STMP_PASS,
+    },
+    base_url: {
+        frontend_admin: process.env.FE_ADMIN_BASE_URL,
+        frontend_user: process.env.FE_USER_BASE_URL,
+        backend: process.env.BE_BASE_URL
     }
 };

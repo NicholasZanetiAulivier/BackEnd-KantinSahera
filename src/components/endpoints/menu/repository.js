@@ -2,7 +2,6 @@ const { errorResponder, errors } = require('../../../core/errors');
 const db = require('../../../database/db');
 const logger = require('../../../core/logger')('menu-repository')
 
-
 async function getMenuByIDs(ids) {
     let res, clientref;
 
@@ -19,8 +18,8 @@ async function getMenuByIDs(ids) {
         ).then(result => {
             res = result
         }).catch((err) => {
-            logger.error(err);
-            throw errorResponder(errors.DB, "Can't pull from DB");
+            logger.error({err}, 'Terjadi error database di modul menu!');
+            throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
         }).finally(() => {
             clientref.release();
         });
@@ -60,8 +59,8 @@ async function getMenuBySearch(offset, limit, search) {
         ).then(result => {
             res = result
         }).catch((err) => {
-            logger.error(err);
-            throw errorResponder(errors.DB, "Can't pull from DB");
+            logger.error({err}, 'Terjadi error database di modul menu!');
+            throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
         }).finally(() => {
             clientref.release();
         });
@@ -91,8 +90,8 @@ async function createMenu(name, image_url, price) {
         ).then(result => {
             res = result
         }).catch((err) => {
-            logger.error(err);
-            throw errorResponder(errors.DB, "Can't insert to DB");
+            logger.error({err}, 'Terjadi error database di modul menu!');
+            throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
         }).finally(() => {
             clientref.release();
         });
@@ -127,8 +126,8 @@ async function editMenu(id, data) {
         ).then(result => {
             res = result
         }).catch((err) => {
-            logger.error(err);
-            throw errorResponder(errors.DB, "Can't update DB");
+            logger.error({err}, 'Terjadi error database di modul menu!');
+            throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
         }).finally(() => {
             clientref.release();
         });
@@ -148,8 +147,8 @@ async function deleteMenu(id) {
         ).then(result => {
             res = result
         }).catch((err) => {
-            logger.error(err);
-            throw errorResponder(errors.DB, "Can't update DB");
+            logger.error({err}, 'Terjadi error database di modul menu!');
+            throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
         }).finally(() => {
             clientref.release();
         });
