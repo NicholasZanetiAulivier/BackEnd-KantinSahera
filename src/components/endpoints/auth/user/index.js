@@ -9,7 +9,7 @@ route.post('/login', controller.login);
 route.patch('/profile', passportUserJwt, controller.changeProfile);
 route.get('/profile', passportUserJwt, controller.getProfile);
 route.post('/otp/request', controller.requestUserOtp);
-route.post('/otp', controller.verifyUserOtp);
+route.post('/otp', controller.verifyUserEmailByOtp);
 route.post('/google', controller.handleGoogleAuth);
 
 module.exports = route;
