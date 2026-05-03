@@ -48,6 +48,11 @@ async function login(req, res, next) {
             throw errorResponder(errors.INVALID_CREDENTIALS, "Email atau kata sandi salah!");
         }
 
+        // generalisasikan error (ini kalo password database null, register lewat google)
+        if (!user.password) {
+            throw errorResponder(errors.INVALID_CREDENTIALS, 'Email atau kata sandi salah!');
+        }
+
         const passwordValid = await passwordMatched(password, user.password);
 
         user.password = null;
@@ -110,7 +115,11 @@ async function requestUserOtp(req, res, next) {
 
         processJoiValidationError(error);
 
-        const mailed = await otpService.sendOTP(email);
+        const user = await service.findByEmail(email);
+
+        if (!user) return res.status(204).end();
+
+        const mailed = await otpService.sendOTP(email, user.user_id);
 
         if (mailed) return res.status(204).end();
     } catch (err) {
@@ -118,18 +127,22 @@ async function requestUserOtp(req, res, next) {
     }
 }
 
-async function verifyUserOtp(req, res, next) {
+async function verifyUserEmailByOtp(req, res, next) {
     try {
         const { email, otp_code } = req.body;
 
         const { error, value } = validate.verifyOtp({ email, otp_code });
 
+        const user = await service.findByEmail(email);
+
+        if (!user) return res.status(204).end();
+
         processJoiValidationError(error);
 
-        const valid = await otpService.verifyOTP(email, otp_code);
+        const valid = await otpService.verifyOTP(email, user.user_id, otp_code);
 
         if (valid) {
-            const result = await otpService.markUserAsVerified(email);
+            const result = await otpService.markUserAsVerified(email, user.user_id);
 
             if (result) return res.status(204).end();
         }
@@ -162,6 +175,6 @@ module.exports = {
     changeProfile,
     getProfile,
     requestUserOtp,
-    verifyUserOtp,
+    verifyUserEmailByOtp,
     handleGoogleAuth,
 }

@@ -3,23 +3,20 @@ const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const config = require('../../../../core/config');
 const logger = require('../../../../core/logger')('verify-service');
-const { hashPassword, passwordMatched } = require('../../../../utils/password');
+const { hashOtp, passwordMatched } = require('../../../../utils/password');
 const { errorResponder, errors } = require('../../../../core/errors');
-const { markAsUntransferable } = require('worker_threads');
-// const userService = require('../user/service')
-// const adminService = require('../admin/service')
 
 function generateOTP(){
     const otp = crypto.randomInt(100000, 999999).toString();
     return otp;
 }
 
-async function sendOTP(email) {
+async function sendOTP(email, accountId, isResetPassword = false) {
     try {
         const otp = generateOTP();
 
-        const hashedOtp = await hashPassword(otp);
-        const save = await repository.saveOTP(email, hashedOtp);
+        const hashedOtp = await hashOtp(otp);
+        const save = await repository.saveOTP(email, accountId, hashedOtp, isResetPassword);
 
         if (save && save.rowCount > 0) {
             let transporter = nodemailer.createTransport({
@@ -33,7 +30,7 @@ async function sendOTP(email) {
             try {
                 await transporter.verify();
             } catch (err) {
-                await repository.deleteOTP(email);
+                await repository.deleteOTP(email, accountId);
                 throw errorResponder(errors.INTERNAL_SERVER_ERROR, 
                     "Terjadi error saat percobaan mengirim email OTP!");
             }
@@ -55,22 +52,22 @@ async function sendOTP(email) {
                 return true;
             } else if (info.rejected.length > 0) {
                 logger.error(`Gagal mengirimkan pesan ke ${info.rejected[0]}`)
-                await repository.deleteOTP(email);
+                await repository.deleteOTP(email, accountId);
                 throw errorResponder(errors.UNPROCESSABLE_ENTITY, "OTP Tidak dapat dikirim ke email tujuan!");
             }
         } 
     } catch (err) {
         logger.error({err}, 'Terjadi error di layanan email!');
-        await repository.deleteOTP(email);
+        await repository.deleteOTP(email, accountId);
         throw errorResponder(errors.INTERNAL_SERVER_ERROR, 
             "Terjadi error pada saat percobaan mengirim OTP!"
         );
     }
 }
 
-async function verifyOTP(email, otp) {
+async function verifyOTP(email, account_id, otp) {
     try {
-        const query = await repository.findOTP(email);
+        const query = await repository.findOTP(email, account_id);
 
         // asumsi cek daftar dulu
         // const existsOnUser = await userService.findByEmail(email);

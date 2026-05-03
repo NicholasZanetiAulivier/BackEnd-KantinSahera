@@ -72,7 +72,11 @@ async function requestAdminOtp(req, res, next) {
 
         processJoiValidationError(error);
 
-        const mailed = await otpService.sendOTP(email);
+        const admin = await service.findByEmail(email);
+
+        if (!admin) return res.status(204).end();
+
+        const mailed = await otpService.sendOTP(email, admin.admin_id);
 
         if (mailed) return res.status(204).end();
     } catch (err) {
@@ -80,7 +84,7 @@ async function requestAdminOtp(req, res, next) {
     }
 }
 
-async function verifyAdminOtp(req, res, next) {
+async function verifyAdminEmailByOtp(req, res, next) {
     try {
         const { email, otp_code } = req.body;
 
@@ -88,10 +92,14 @@ async function verifyAdminOtp(req, res, next) {
 
         processJoiValidationError(error);
 
-        const valid = await otpService.verifyOTP(email, otp_code);
+        const admin = await service.findByEmail(email);
+
+        if (!admin) return res.status(204).end();
+
+        const valid = await otpService.verifyOTP(email, admin.admin_id, otp_code);
 
         if (valid) {
-            const result = await otpService.markAdminAsVerified(email);
+            const result = await otpService.markAdminAsVerified(email, admin.admin_id);
 
             if (result) return res.status(204).end();
         }
@@ -104,5 +112,5 @@ module.exports = {
     register,
     login,
     requestAdminOtp,
-    verifyAdminOtp,
+    verifyAdminEmailByOtp,
 }

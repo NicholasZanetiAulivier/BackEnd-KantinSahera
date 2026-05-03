@@ -2,7 +2,7 @@ const { errorResponder, errors } = require('../../../../core/errors');
 const db = require('../../../../database/db');
 const logger = require('../../../../core/logger')('verify-repository');
 
-async function saveOTP(email, otp) {
+async function saveOTP(email, account_id, otp, is_reset_password) {
     let res, clientref;
 
     // kasih 15 menit
@@ -11,12 +11,12 @@ async function saveOTP(email, otp) {
     await db.connect().then(async (client) => {
         clientref = client;
         await client.query(
-            `INSERT INTO account_otps (email, otp, expires_at)
-                VALUES ($1, $2, $3)
-                ON CONFLICT (email) DO UPDATE
-                SET otp = $2, expires_at = $3
+            `INSERT INTO account_otps (email, account_id, otp, is_reset_password, expires_at)
+                VALUES ($1, $2, $3, $4, $5)
+                ON CONFLICT (email, account_id) DO UPDATE
+                SET otp = $2, created_at = NOW(), expires_at = $5
             `,
-            [email, otp, expires_at]
+            [email, account_id, otp, is_reset_password, expires_at]
         ).then(result => {
             res = result
         }).catch((err) => {
@@ -30,14 +30,14 @@ async function saveOTP(email, otp) {
     return res;
 }
 
-async function findOTP(email) {
+async function findOTP(email, account_id) {
     let res, clientref;
 
     await db.connect().then(async (client) => {
         clientref = client;
         await client.query(
-            'SELECT * FROM account_otps WHERE email = $1',
-            [email]
+            'SELECT * FROM account_otps WHERE email = $1 AND account_id = $2',
+            [email, account_id]
         ).then(result => {
             res = result
         }).catch((err) => {
@@ -51,14 +51,14 @@ async function findOTP(email) {
     return res;
 }
 
-async function deleteOTP(email) {
+async function deleteOTP(email, account_id) {
     let res, clientref;
 
     await db.connect().then(async (client) => {
         clientref = client;
         await client.query(
-            'DELETE FROM account_otps WHERE email = $1;',
-            [email]
+            'DELETE FROM account_otps WHERE email = $1 AND account_id = $2;',
+            [email, account_id]
         ).then(result => {
             res = result
         }).catch((err) => {
@@ -73,7 +73,7 @@ async function deleteOTP(email) {
     return res;
 }
 
-async function setAdminVerified(email) {
+async function setAdminVerified(email, account_id) {
     let res, clientref;
 
     await db.connect().then(async (client) => {
@@ -85,8 +85,8 @@ async function setAdminVerified(email) {
                 [email]
             );
             await client.query(
-                'DELETE FROM account_otps WHERE email = $1;',
-                [email]
+                'DELETE FROM account_otps WHERE email = $1 AND account_id = $2;',
+                [email, account_id]
             );
             await client.query('COMMIT');
         }
@@ -102,7 +102,7 @@ async function setAdminVerified(email) {
     return true;
 }
 
-async function setUserVerified(email) {
+async function setUserVerified(email, account_id) {
     let res, clientref;
 
     await db.connect().then(async (client) => {
@@ -114,13 +114,12 @@ async function setUserVerified(email) {
                 [email]
             );
             await client.query(
-                'DELETE FROM account_otps WHERE email = $1;',
-                [email]
+                'DELETE FROM account_otps WHERE email = $1 AND account_id = $2;',
+                [email, account_id]
             );
             await client.query('COMMIT');
         }
         catch (err) {
-            await client.query('ROLLBACK');
             logger.error({err}, 'Terjadi error database di modul verifikasi!');
             throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
         } finally {

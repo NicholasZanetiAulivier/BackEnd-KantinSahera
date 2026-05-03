@@ -73,9 +73,11 @@ tables = {
         created_at TIMESTAMP NOT NULL DEFAULT NOW(),
         expires_at TIMESTAMP NOT NULL,
         otp VARCHAR NOT NULL,
-        email VARCHAR(345) UNIQUE NOT NULL,
-        PRIMARY KEY(email)
-    );`
+        is_reset_password BOOLEAN NOT NULL DEFAULT FALSE,
+        email VARCHAR(345) NOT NULL,
+        account_id UUID UNIQUE NOT NULL,
+        PRIMARY KEY(email, account_id)
+    );`,
 }
 
 async function main() {
