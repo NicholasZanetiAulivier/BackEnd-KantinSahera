@@ -24,7 +24,9 @@
         function handleCredentialResponse(response) {
 
             // console.log(response)
-            // console.log("Encoded JWT ID token: " + response.credential);
+            console.log("Encoded JWT ID token: " + response.credential);
+
+            // console.log(document.cookie);
 
             // const responsePayload = decodeJWT(response.credential);
 
@@ -36,28 +38,28 @@
             // console.log("  Profile image URL: " + responsePayload.picture);
             // console.log("  Email: " + responsePayload.email);
 
-            fetch("http://localhost:5000/api/auth/user/google", {
-                method: "POST",
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    token: response.credential,
-                })
-            })
-                .then(async response => {
-                    if (!response.ok) {
-                        const data = await response.json();
-                        throw new Error(`HTTP error! status: ${response.status}\n
-                                        message: ${JSON.stringify(data)}
-                        `);
-                    }
-                    else if (response.ok) {
-                        window.location.href = "http://localhost:3000/home"
-                    }
-                })
-                .then(data => console.log(data))
-                .catch(error => console.error('Error:', error));
+            // fetch("http://localhost:5000/api/auth/user/google", {
+            //     method: "POST",
+            //     headers: {
+            //         'Content-Type': 'application/json'
+            //     },
+            //     body: JSON.stringify({
+            //         token: response.credential,
+            //     })
+            // })
+            //     .then(async response => {
+            //         if (!response.ok) {
+            //             const data = await response.json();
+            //             throw new Error(`HTTP error! status: ${response.status}\n
+            //                             message: ${JSON.stringify(data)}
+            //             `);
+            //         }
+            //         else if (response.ok) {
+            //             window.location.href = "http://localhost:3000/home"
+            //         }
+            //     })
+            //     .then(data => console.log(data))
+            //     .catch(error => console.error('Error:', error));
         }
     </script>
 </head>

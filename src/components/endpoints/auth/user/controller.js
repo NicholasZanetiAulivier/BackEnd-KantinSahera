@@ -143,15 +143,14 @@ async function verifyUserOtp(req, res, next) {
 // https://developers.google.com/identity/gsi/web/guides/overview
 async function handleGoogleAuth(req, res, next) {
     try {
-        // token = id token JWT dari Google
-        // csrf token skip dulu, undefined mulu di frontend
-        const { token } = req.body
+        // credential = id token JWT dari Google (ngikut docs)
+        const { credential } = req.body
         
-        const idTokenValid = await service.verifyGoogleIdToken(token);
+        const idTokenValid = await service.verifyGoogleIdToken(credential);
 
-        // nangani id token valid nanti dulu, sesuai kesepakatan kita
+        const result = await service.handleGoogleAuth(idTokenValid);
 
-        return res.status(200).json({message: "KICAU MANIAAA"});
+        return res.status(200).json(result);
     } catch (err) {
         return next(err);
     }

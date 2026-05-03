@@ -3,6 +3,7 @@ const {OAuth2Client} = require('google-auth-library');
 const config = require('../../../../core/config');
 const logger = require('../../../../core/logger')('user-service');
 const {errors, errorResponder} = require('../../../../core/errors');
+const { generateUserJwt } = require('../../../../utils/token');
 
 // per platform harus beda client, cuma sekarang kita web doang
 const client = new OAuth2Client(config.secret.google_client_id);
@@ -44,10 +45,10 @@ async function verifyGoogleIdToken(token) {
             throw errorResponder(errors.INVALID_CLIENT, "Client tidak valid!");
         }
 
-        return { google_id: userid, email, name, picture };
+        return { google_id: userid, username: name, email, profile_image_url: picture };
     } catch (err) {
         logger.error({err}, "Gagal memverifikasi id token Google pengguna!");
-        throw err;
+        throw errorResponder(errors.INVALID_TOKEN, "Gagal mengvalidasi token!");
     }
 }
 
@@ -79,10 +80,62 @@ async function getProfileById(id) {
     return res.rows[0];
 }
 
+async function handleGoogleAuth(googlePayload){
+    const status = {
+        register: 'Anda berhasil membuat akun dengan Google!',
+        login: 'Berhasil login dengan Google!',
+        bind: 'Berhasil mengaitkan akun yang telah ada dengan akun Google!'
+    };
+
+    const accountExists = await repository.findByEmail(googlePayload.email);
+
+    let db = accountExists.rows[0];
+
+    let returnMessage;
+    let user = {}
+
+    // kasus akun belum ada, maka accountExists undefined
+    if (!db) {
+        db = {
+            google_id: 'KOSONG'
+        }
+    }
+
+    // kasus returning user (user sudah sign in dengan google sebelumnya)
+    // bandingkan sub id (google_id) di db dg sub claim di payload
+    if (db.google_id === googlePayload.google_id) {
+        user = db;
+
+        returnMessage = status['login'];
+    } else {
+        // register atau bind akun
+        const result = await repository.createOrUpsertGoogleUser(googlePayload);
+
+        user = result.rows[0];
+
+        if (user.is_updated) returnMessage = status['bind'];
+        else returnMessage = status['register'];
+    }
+
+    const token = await generateUserJwt({
+        user_id: user.user_id,
+        username: user.username,
+        email: user.email,
+        verified: user.verified
+    });
+
+    if (!token) {
+        throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Proses login gagal!");
+    }
+   
+    return { message: returnMessage, token: token }
+}
+
 module.exports = {
     findByEmail,
     createUser,
     changeProfileWhereId,
     getProfileById,
     verifyGoogleIdToken,
+    handleGoogleAuth,
 }

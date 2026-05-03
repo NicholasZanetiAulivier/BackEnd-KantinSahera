@@ -100,9 +100,44 @@ async function getProfileById(id) {
     return res;
 }
 
+async function createOrUpsertGoogleUser(googleUser) {
+    const user = googleUser;
+    
+    const { google_id, username, email, profile_image_url } = user;
+
+    await db.connect().then(async (client) => {
+        clientref = client;
+
+        // xmax untuk pengecekan on conflict dijalankan tidak
+        // coalesce returns first non null, so existing config wont be overwritten by google payload
+        // https://stackoverflow.com/questions/34762732/how-to-find-out-if-an-upsert-was-an-update-with-postgresql-9-5-upsert
+        await client.query(
+            `INSERT INTO users (google_id, username, email, profile_image_url, verified)
+                VALUES ($1, $2, $3, $4, true) ON CONFLICT (email) DO UPDATE SET
+                google_id = $1,
+                username = COALESCE(users.username, $2),
+                profile_image_url = COALESCE(users.profile_image_url, $4),
+                verified = true
+                RETURNING user_id, username, email, verified, (xmax::text::int > 0) AS is_updated
+            `,
+            [google_id, username, email, profile_image_url]
+        ).then(result => {
+            res = result
+        }).catch((err) => {
+            logger.error({err}, 'Terjadi error database di modul user!');
+            throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
+        }).finally(() => {
+            clientref.release();
+        });
+    });
+
+    return res;
+}
+
 module.exports = {
     findByEmail,
     createUser,
     changeProfileWhereId,
     getProfileById,
+    createOrUpsertGoogleUser,
 }
