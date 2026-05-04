@@ -3,20 +3,20 @@ const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const config = require('../../../../core/config');
 const logger = require('../../../../core/logger')('verify-service');
-const { hashOtp, hashPassword, passwordMatched } = require('../../../../utils/password');
+const { hashOtpUser, hashOtpAdmin, hashPassword, passwordMatched } = require('../../../../utils/password');
 const { errorResponder, errors } = require('../../../../core/errors');
 
-function generateOTP(){
+function generateOTP() {
     const otp = crypto.randomInt(100000, 999999).toString();
     return otp;
 }
 
-async function sendOTP(email, accountId) {
+async function sendOTP(email, accountId, is_admin) {
     try {
         const otp = generateOTP();
 
-        const hashedOtp = await hashOtp(otp);
-        const save = await repository.saveOTP(email, accountId, hashedOtp);
+        const hashedOtp = is_admin ? await hashOtpAdmin(otp) : await hashOtpUser(otp);
+        const save = await repository.saveOTP(email, accountId, hashedOtp, is_admin);
 
         if (save && save.rowCount > 0) {
             let transporter = nodemailer.createTransport({
@@ -30,8 +30,8 @@ async function sendOTP(email, accountId) {
             try {
                 await transporter.verify();
             } catch (err) {
-                await repository.deleteOTP(email, accountId);
-                throw errorResponder(errors.INTERNAL_SERVER_ERROR, 
+                await repository.deleteOTP(email, accountId, true);
+                throw errorResponder(errors.INTERNAL_SERVER_ERROR,
                     "Terjadi error saat percobaan mengirim email OTP!");
             }
 
@@ -55,21 +55,21 @@ async function sendOTP(email, accountId) {
                 await repository.deleteOTP(email, accountId);
                 throw errorResponder(errors.UNPROCESSABLE_ENTITY, "OTP Tidak dapat dikirim ke email tujuan!");
             }
-        } 
+        }
     } catch (err) {
-        logger.error({err}, 'Terjadi error di layanan email!');
+        logger.error({ err }, 'Terjadi error di layanan email!');
         await repository.deleteOTP(email, accountId);
-        throw errorResponder(errors.INTERNAL_SERVER_ERROR, 
+        throw errorResponder(errors.INTERNAL_SERVER_ERROR,
             "Terjadi error pada saat percobaan mengirim OTP!"
         );
     }
 }
 
-async function verifyOTP(email, account_id, plaintext_otp) {
+async function verifyOTP(email, account_id, plaintext_otp, is_admin) {
     try {
-        const query = await repository.findOTP(email, account_id);
-        
-        if (query.rowCount === 0) 
+        const query = await repository.findOTP(email, account_id, is_admin);
+
+        if (query.rowCount === 0)
             throw errorResponder(errors.NOT_FOUND, "Tidak ada OTP untuk email yang bersangkutan!");
 
         const data = query.rows[0];
@@ -83,11 +83,11 @@ async function verifyOTP(email, account_id, plaintext_otp) {
         if (expired) {
             throw errorResponder(errors.OTP_EXPIRED, "OTP yang diberikan sudah expired!");
         }
-        
+
         const matched = await passwordMatched(plaintext_otp, data.otp);
 
-        if (!matched){
-            const failedCount = await repository.incrementAttemptsCount(email, account_id);
+        if (!matched) {
+            const failedCount = await repository.incrementAttemptsCount(email, account_id, is_admin);
             throw errorResponder(errors.INVALID_CREDENTIALS, "OTP yang dimasukkan salah!");
         } else {
             return true;
@@ -97,18 +97,18 @@ async function verifyOTP(email, account_id, plaintext_otp) {
     }
 }
 
-async function checkOtpMatched(email, account_id, plaintext_otp) {
+async function checkOtpMatched(email, account_id, plaintext_otp, is_admin) {
     try {
-        const query = await repository.findOTP(email, account_id);
-        
+        const query = await repository.findOTP(email, account_id, is_admin);
+
         // generalisasikan untuk otp yang tidak ada, anggap ini otp salah
         if (query.rowCount === 0) return false;
 
         const data = query.rows[0];
-        
+
         const matched = await passwordMatched(plaintext_otp, data.otp);
 
-        if (!matched){
+        if (!matched) {
             return false;
         } else {
             return true;
@@ -117,7 +117,7 @@ async function checkOtpMatched(email, account_id, plaintext_otp) {
         throw err;
     }
 }
- 
+
 async function markAdminAsVerified(email) {
     try {
         const result = await repository.setAdminVerified(email);

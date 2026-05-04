@@ -16,6 +16,8 @@ const CONNECTION_CONFIGURATION = {
     } : null,
 }; //Copy, karena males refactor kalo ganti module.exports di db.js
 
+const logger_used = logger('Rate Limit');
+
 const createLimitter = (prefix = "") => ERT.rateLimit({
     windowMs: 60000 * 60,
     limit: 3,
@@ -23,7 +25,7 @@ const createLimitter = (prefix = "") => ERT.rateLimit({
     standardHeaders: true,
     store: new postgresStores.PostgresStore(CONNECTION_CONFIGURATION, prefix),
     ipv6Subnet: 56, // Default, ubah kalo perluh,
-    logger: logger('Rate Limit')
+    logger: logger_used
 })
 
 module.exports = {

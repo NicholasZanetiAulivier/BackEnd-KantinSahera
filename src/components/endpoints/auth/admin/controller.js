@@ -87,7 +87,7 @@ async function requestAdminOtp(req, res, next) {
             }, simulatedTime);
         }
 
-        const mailed = await otpService.sendOTP(email, admin.admin_id);
+        const mailed = await otpService.sendOTP(email, admin.admin_id, true);
 
         if (mailed) return res.status(204).end();
     } catch (err) {
@@ -107,7 +107,7 @@ async function verifyAdminEmailByOtp(req, res, next) {
 
         if (!admin) return res.status(204).end();
 
-        const valid = await otpService.verifyOTP(email, admin.admin_id, otp_code);
+        const valid = await otpService.verifyOTP(email, admin.admin_id, otp_code, true);
 
         if (valid) {
             const result = await otpService.markAdminAsVerified(email, admin.admin_id);
@@ -119,9 +119,32 @@ async function verifyAdminEmailByOtp(req, res, next) {
     }
 }
 
+async function checkOtpMatched(req, res, next) {
+    try {
+        const { error, value } = validate.verifyOtp(req.body);
+        processJoiValidationError(error);
+
+        const { email, otp_code } = value;
+
+        const admin = await service.findByEmail(email);
+
+        // generalisasikan error untuk mencegah account enumeration
+        if (!admin) throw errorResponder(errors.INVALID_CREDENTIALS, "OTP yang dimasukkan tidak sesuai!");
+
+        const valid = await otpService.checkOtpMatched(email, admin.admin_id, otp_code, true);
+
+        if (valid) return res.status(204).end();
+        else throw errorResponder(errors.INVALID_CREDENTIALS, "OTP yang dimasukkan tidak sesuai!");
+    } catch (err) {
+        return next(err);
+    }
+}
+
+
 module.exports = {
     register,
     login,
     requestAdminOtp,
     verifyAdminEmailByOtp,
+    checkOtpMatched
 }

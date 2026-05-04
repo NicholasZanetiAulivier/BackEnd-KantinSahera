@@ -3,7 +3,7 @@ const db = require('../../../../database/db');
 const logger = require('../../../../core/logger')('verify-repository');
 const config = require('../../../../core/config');
 
-async function saveOTP(email, account_id, otp) {
+async function saveOTP(email, account_id, otp, is_admin) {
     let res, clientref;
 
     // kasih 10 menit
@@ -13,16 +13,16 @@ async function saveOTP(email, account_id, otp) {
     await db.connect().then(async (client) => {
         clientref = client;
         await client.query(
-            `INSERT INTO account_otps (email, account_id, otp, expires_at, attempt_count)
-                VALUES ($1, $2, $3, $4, $5)
+            `INSERT INTO account_otps (email, account_id, otp, expires_at, attempt_count , is_admin)
+                VALUES ($1, $2, $3, $4, $5 , $6)
                 ON CONFLICT (email, account_id) DO UPDATE
                 SET otp = $2, created_at = NOW(), expires_at = $4, attempt_count = $5
             `,
-            [email, account_id, otp, expires_at, attempt_count]
+            [email, account_id, otp, expires_at, attempt_count, is_admin]
         ).then(result => {
             res = result
         }).catch((err) => {
-            logger.error({err}, 'Terjadi error database di verifikasi!');
+            logger.error({ err }, 'Terjadi error database di verifikasi!');
             throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
         }).finally(() => {
             clientref.release();
@@ -32,18 +32,18 @@ async function saveOTP(email, account_id, otp) {
     return res;
 }
 
-async function findOTP(email, account_id) {
+async function findOTP(email, account_id, is_admin) {
     let res, clientref;
 
     await db.connect().then(async (client) => {
         clientref = client;
         await client.query(
-            'SELECT * FROM account_otps WHERE email = $1 AND account_id = $2',
-            [email, account_id]
+            'SELECT * FROM account_otps WHERE email = $1 AND account_id = $2 AND is_admin = $3',
+            [email, account_id, is_admin]
         ).then(result => {
             res = result
         }).catch((err) => {
-            logger.error({err}, 'Terjadi error database di verifikasi!');
+            logger.error({ err }, 'Terjadi error database di verifikasi!');
             throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
         }).finally(() => {
             clientref.release();
@@ -53,19 +53,19 @@ async function findOTP(email, account_id) {
     return res;
 }
 
-async function deleteOTP(email, account_id) {
+async function deleteOTP(email, account_id, is_admin) {
     let res, clientref;
 
     await db.connect().then(async (client) => {
         clientref = client;
         await client.query(
-            'DELETE FROM account_otps WHERE email = $1 AND account_id = $2;',
-            [email, account_id]
+            'DELETE FROM account_otps WHERE email = $1 AND account_id = $2 AND is_admin = $3;',
+            [email, account_id, is_admin]
         ).then(result => {
             res = result
         }).catch((err) => {
             console.log(err);
-            logger.error({err}, 'Terjadi error database di verifikasi!');
+            logger.error({ err }, 'Terjadi error database di verifikasi!');
             throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
         }).finally(() => {
             clientref.release();
@@ -80,10 +80,10 @@ async function setAdminVerified(email, admin_id) {
 
     await db.connect().then(async (client) => {
         clientref = client;
-        try{
+        try {
             await client.query('BEGIN');
             await client.query(
-                `UPDATE admins SET verified = TRUE WHERE email = $1 AND admin_id = $2`, 
+                `UPDATE admins SET verified = TRUE WHERE email = $1 AND admin_id = $2`,
                 [email, admin_id]
             );
             await client.query(
@@ -94,13 +94,13 @@ async function setAdminVerified(email, admin_id) {
         }
         catch (err) {
             await client.query('ROLLBACK');
-            logger.error({err}, 'Terjadi error database di verifikasi!');
+            logger.error({ err }, 'Terjadi error database di verifikasi!');
             throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
         } finally {
             clientref.release();
         }
     });
-                
+
     return true;
 }
 
@@ -109,10 +109,10 @@ async function setUserVerified(email, user_id) {
 
     await db.connect().then(async (client) => {
         clientref = client;
-        try{
+        try {
             await client.query('BEGIN');
             await client.query(
-                `UPDATE users SET verified = TRUE WHERE email = $1 AND user_id = $2`, 
+                `UPDATE users SET verified = TRUE WHERE email = $1 AND user_id = $2`,
                 [email, user_id]
             );
             await client.query(
@@ -122,29 +122,29 @@ async function setUserVerified(email, user_id) {
             await client.query('COMMIT');
         }
         catch (err) {
-            logger.error({err}, 'Terjadi error database di modul verifikasi!');
+            logger.error({ err }, 'Terjadi error database di modul verifikasi!');
             throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
         } finally {
             clientref.release();
         }
     });
-                
+
     return true;
 }
 
-async function incrementAttemptsCount(email, account_id) {
-        let res, clientref;
+async function incrementAttemptsCount(email, account_id, is_admin) {
+    let res, clientref;
 
     await db.connect().then(async (client) => {
         clientref = client;
         await client.query(
             `UPDATE account_otps SET attempt_count = attempt_count + 1 
-                WHERE email = $1 AND account_id = $2`,
-            [email, account_id]
+                WHERE email = $1 AND account_id = $2 AND is_admin = $3`,
+            [email, account_id, is_admin]
         ).then(result => {
             res = result
         }).catch((err) => {
-            logger.error({err}, 'Terjadi error database di verifikasi!');
+            logger.error({ err }, 'Terjadi error database di verifikasi!');
             throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
         }).finally(() => {
             clientref.release();
@@ -159,7 +159,7 @@ async function updateUserPassword(email, user_id, password) {
 
     await db.connect().then(async (client) => {
         clientref = client;
-        try{
+        try {
             await client.query('BEGIN');
             await client.query(
                 `UPDATE users SET password = $1
@@ -173,13 +173,13 @@ async function updateUserPassword(email, user_id, password) {
             await client.query('COMMIT');
         }
         catch (err) {
-            logger.error({err}, 'Terjadi error database di modul verifikasi!');
+            logger.error({ err }, 'Terjadi error database di modul verifikasi!');
             throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
         } finally {
             clientref.release();
         }
     });
-                
+
     return true;
 }
 

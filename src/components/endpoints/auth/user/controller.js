@@ -128,7 +128,7 @@ async function requestUserOtp(req, res, next) {
             }, simulatedTime);
         }
 
-        const mailed = await otpService.sendOTP(email, user.user_id);
+        const mailed = await otpService.sendOTP(email, user.user_id, false);
 
         if (mailed) return res.status(204).end();
     } catch (err) {
@@ -148,7 +148,7 @@ async function verifyUserEmailByOtp(req, res, next) {
 
         if (!user) return res.status(204).end();
 
-        const valid = await otpService.verifyOTP(email, user.user_id, otp_code);
+        const valid = await otpService.verifyOTP(email, user.user_id, otp_code, false);
 
         if (valid) {
             const result = await otpService.markUserAsVerified(email, user.user_id);
@@ -190,7 +190,7 @@ async function resetPassword(req, res, next) {
 
         if (!user) return res.status(204).end();
 
-        const valid = await otpService.verifyOTP(email, user.user_id, otp_code);
+        const valid = await otpService.verifyOTP(email, user.user_id, otp_code, false);
 
         if (valid) {
             // kirim plaintext password
@@ -215,7 +215,7 @@ async function checkOtpMatched(req, res, next) {
         // generalisasikan error untuk mencegah account enumeration
         if (!user) throw errorResponder(errors.INVALID_CREDENTIALS, "OTP yang dimasukkan tidak sesuai!");
 
-        const valid = await otpService.checkOtpMatched(email, user.user_id, otp_code);
+        const valid = await otpService.checkOtpMatched(email, user.user_id, otp_code, false);
 
         if (valid) return res.status(204).end();
         else throw errorResponder(errors.INVALID_CREDENTIALS, "OTP yang dimasukkan tidak sesuai!");

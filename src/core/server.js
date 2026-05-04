@@ -11,7 +11,8 @@ const cookieParser = require('cookie-parser');
 
 module.exports = (app) => {
 
-    app.enable('trust proxy');
+    // app.enable('trust proxy');
+    // Trust proxy gak compatible dengan IP based rate limiting, karena bisa di bypass
 
     // app.use(cors({
     //     origin: [
@@ -49,7 +50,7 @@ module.exports = (app) => {
     app.get('/favicon.ico', (req, res, next) => {
         return res.status(204).end();
     })
-    
+
     //Main Router
     app.use(config.api.prefix, router);
 
