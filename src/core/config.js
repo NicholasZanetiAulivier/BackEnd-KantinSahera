@@ -35,6 +35,7 @@ module.exports = {
         email: process.env.STMP_USER,
         password: process.env.STMP_PASS,
     },
+    otp_time: 10, // 10 menit
     base_url: {
         frontend_admin: process.env.FE_ADMIN_BASE_URL,
         frontend_user: process.env.FE_USER_BASE_URL,

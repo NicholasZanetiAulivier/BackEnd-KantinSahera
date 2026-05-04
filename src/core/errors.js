@@ -83,6 +83,11 @@ const errors = {
         description: 'Client is not allowed to communicate with server!',
         status: 401,
         code: 'INVALID_CLIENT_ERROR',
+    },
+    TOO_MANY_REQUEST: {
+        description: 'Maximun amount of requests has reached!',
+        status: 429,
+        code: 'TOO_MANY_REQUEST_ERROR'
     }
 };
 
