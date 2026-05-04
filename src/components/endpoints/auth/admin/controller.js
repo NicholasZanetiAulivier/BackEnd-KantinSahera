@@ -7,11 +7,11 @@ const { generateAdminJwt, refreshAdminJwt } = require('../../../../utils/token')
 
 async function register(req, res, next) {
     try {
-        const { email, password, confirm_password } = req.body;
-
         const { error, value } = validate.register(req.body);
 
         processJoiValidationError(error);
+
+        const { email, password, confirm_password } = value;
 
         const emailExists = await service.findByEmail(email);
 
@@ -23,7 +23,7 @@ async function register(req, res, next) {
 
         const result = await service.createAdmin({ email, passwordHash });
 
-        if (result.rowCount > 0) 
+        if (result.rowCount > 0)
             return res.status(201).json({ message: "Akun admin berhasil dibuat." });
     } catch (err) {
         return next(err);
@@ -32,11 +32,11 @@ async function register(req, res, next) {
 
 async function login(req, res, next) {
     try {
-        const { email, password } = req.body;
-
         const { error, value } = validate.login(req.body);
 
         processJoiValidationError(error);
+
+        const { email, password } = value;
 
         const admin = await service.findByEmail(email);
 
@@ -80,12 +80,12 @@ async function requestAdminOtp(req, res, next) {
             // 3 - 5 detik
             min = Math.ceil(3000);
             max = Math.floor(5000);
-            const simulatedTime =  Math.floor(Math.random() * (max - min + 1)) + min;
+            const simulatedTime = Math.floor(Math.random() * (max - min + 1)) + min;
 
             return setTimeout(() => {
                 return res.status(204).end();
             }, simulatedTime);
-        } 
+        }
 
         const mailed = await otpService.sendOTP(email, admin.admin_id);
 
@@ -97,11 +97,11 @@ async function requestAdminOtp(req, res, next) {
 
 async function verifyAdminEmailByOtp(req, res, next) {
     try {
-        const { email, otp_code } = req.body;
-
-        const { error, value } = validate.verifyOtp({ email, otp_code });
+        const { error, value } = validate.verifyOtp(req.body);
 
         processJoiValidationError(error);
+
+        const { email, otp_code } = value;
 
         const admin = await service.findByEmail(email);
 

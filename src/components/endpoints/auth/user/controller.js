@@ -9,11 +9,11 @@ const config = require('../../../../core/config');
 
 async function register(req, res, next) {
     try {
-        const { username, email, phone_number, password, confirm_password } = req.body;
 
         const { error, value } = validate.register(req.body);
-
         processJoiValidationError(error);
+
+        const { username, email, phone_number, password, confirm_password } = value;
 
         const emailExists = await service.findByEmail(email);
 
@@ -34,13 +34,12 @@ async function register(req, res, next) {
 
 async function login(req, res, next) {
     try {
-        const { email, password } = req.body;
-
         const { error, value } = validate.login(req.body);
+        processJoiValidationError(error);
+
+        const { email, password } = value;
 
         let invalidField = null;
-
-        processJoiValidationError(error);
 
         const user = await service.findByEmail(email);
 
@@ -76,13 +75,12 @@ async function login(req, res, next) {
 
 async function changeProfile(req, res, next) {
     try {
-        const { username, profile_image_url, phone_number } = req.body;
-
         const { error, value } = validate.profile(req.body);
+        processJoiValidationError(error);
+
+        const { username, profile_image_url, phone_number } = value;
 
         const id = parseUserId(req.user.user_id);
-
-        processJoiValidationError(error);
 
         const result = await service.changeProfileWhereId({ username, profile_image_url, phone_number, user_id: id });
 
@@ -140,15 +138,15 @@ async function requestUserOtp(req, res, next) {
 
 async function verifyUserEmailByOtp(req, res, next) {
     try {
-        const { email, otp_code } = req.body;
+        const { error, value } = validate.verifyOtp(req.body);
 
-        const { error, value } = validate.verifyOtp({ email, otp_code });
+        processJoiValidationError(error);
+
+        const { email, otp_code } = value;
 
         const user = await service.findByEmail(email);
 
         if (!user) return res.status(204).end();
-
-        processJoiValidationError(error);
 
         const valid = await otpService.verifyOTP(email, user.user_id, otp_code);
 
@@ -182,15 +180,15 @@ async function handleGoogleAuth(req, res, next) {
 
 async function resetPassword(req, res, next) {
     try {
-        const { email, otp_code, password, confirm_password } = req.body;
+        const { error, value } = validate.resetPassword(req.body);
 
-        const { error, value } = validate.resetPassword({ email, otp_code, password, confirm_password });
+        processJoiValidationError(error);
+
+        const { email, otp_code, password, confirm_password } = value;
 
         const user = await service.findByEmail(email);
 
         if (!user) return res.status(204).end();
-
-        processJoiValidationError(error);
 
         const valid = await otpService.verifyOTP(email, user.user_id, otp_code);
 
