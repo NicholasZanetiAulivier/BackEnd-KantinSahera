@@ -73,11 +73,12 @@ tables = {
         created_at TIMESTAMP NOT NULL DEFAULT NOW(),
         expires_at TIMESTAMP NOT NULL,
         otp VARCHAR NOT NULL,
-        is_reset_password BOOLEAN NOT NULL DEFAULT FALSE,
+        attempt_count INTEGER NOT NULL DEFAULT 1,
         email VARCHAR(345) NOT NULL,
         account_id UUID UNIQUE NOT NULL,
         PRIMARY KEY(email, account_id)
-    );`,
+    );`, // hapus kolom is reset password, takutnya malah berbelit implementasinya
+    // tambah attempt_count untuk blok pengguna yang terlalu banyak salah input otp
 }
 
 async function main() {
@@ -97,7 +98,7 @@ async function main() {
                 .catch((e) => console.log(`Error creating table ${tableName}:\n ${e}`));
         }
 
-        await client.query(`INSERT INTO admins (email, password, super_admin) VALUES ($1,$2,$3)`, ["super@gmail.com", await hashPassword("admin"), true])
+        await client.query(`INSERT INTO admins (email, password, super_admin) VALUES ($1,$2,$3)`, ["super@gmail.com", await hashPassword("adminsahera123"), true])
             .then(() => console.log("Added super admin!"))
             .catch((e) => console.log("Failed to add super admin"));//Temp, move to seeder if needed
 
