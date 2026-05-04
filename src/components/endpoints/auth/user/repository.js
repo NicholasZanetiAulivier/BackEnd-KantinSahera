@@ -80,12 +80,14 @@ async function changeProfileWhereId(profile, user_id) {
     return res;
 }
 
+// nambahin return kolom yang perlu (user_id dan verified), 
+// jadi selain untuk return info profil juga bisa buat semacam /auth/me (biar gk ribet)
 async function getProfileById(id) {
     await db.connect().then(async (client) => {
         clientref = client;
 
         await client.query(
-            `SELECT username, email, profile_image_url, phone_no FROM users WHERE user_id = $1`,
+            `SELECT user_id, username, email, profile_image_url, phone_no, verified FROM users WHERE user_id = $1`,
             [id]
         ).then(result => {
             res = result

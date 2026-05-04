@@ -19,8 +19,9 @@ const usernameSchema = Joi.string().min(1).max(32).trim().messages({
     'string.max': "Panjang username tidak boleh lebih dari 32 karakter!"
 })
 
-const passwordSchema = Joi.string().required().pattern(new RegExp('^[a-zA-Z0-9]{3,30}$')).messages({
+const passwordSchema = Joi.string().required().min(12).pattern(new RegExp('^[a-zA-Z0-9]{3,30}$')).messages({
     'any.required': "Password wajib ada!",
+    'string.min': 'Panjang password harus 12 karakter ke atas!',
     'string.pattern.base': "Password harus berupa alphanumeric!",
     'any.only': "Password dan confirm password tidak sesuai!"
 })
@@ -107,6 +108,15 @@ const menuChangeSchema = Joi.object({
     is_available: Joi.bool().optional(),
 })
 
+const resetPasswordSchema = Joi.object({
+    email: emailSchema,
+    otp_code: otpSchema,
+    password: passwordSchema,
+    confirm_password: Joi.string().required().valid(Joi.ref("password")).messages({
+        'any.only': "Password dan konfirmasi password tidak sesuai!"
+    })
+});
+
 module.exports = {
     //  auth
     register: validator(registerSchema),
@@ -114,6 +124,7 @@ module.exports = {
     profile: validator(profileSchema),
     email: validator(emailSchema),
     verifyOtp: validator(verifyOtpSchema),
+    resetPassword: validator(resetPasswordSchema),
 
     //  menu
     menu: validator(menuSchema),

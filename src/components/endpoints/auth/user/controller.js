@@ -117,7 +117,18 @@ async function requestUserOtp(req, res, next) {
 
         const user = await service.findByEmail(email);
 
-        if (!user) return res.status(204).end();
+        // kasus request otp pada akun yang tidak terdaftar
+        // simulasikan lama proses pengiriman email via nodemailer (pake setTimeout)
+        if (!user) {
+            // 3 - 5 detik
+            min = Math.ceil(3000);
+            max = Math.floor(5000);
+            const simulatedTime =  Math.floor(Math.random() * (max - min + 1)) + min;
+
+            return setTimeout(() => {
+                return res.status(204).end();
+            }, simulatedTime);
+        } 
 
         const mailed = await otpService.sendOTP(email, user.user_id);
 
@@ -169,6 +180,53 @@ async function handleGoogleAuth(req, res, next) {
     }
 }
 
+async function resetPassword(req, res, next) {
+    try {
+        const { email, otp_code, password, confirm_password } = req.body;
+
+        const { error, value } = validate.resetPassword({ email, otp_code, password, confirm_password });
+
+        const user = await service.findByEmail(email);
+
+        if (!user) return res.status(204).end();
+
+        processJoiValidationError(error);
+
+        const valid = await otpService.verifyOTP(email, user.user_id, otp_code);
+
+        if (valid) {
+            // kirim plaintext password
+            const result = await otpService.resetUserPassword(email, user.user_id, password);
+
+            if (result) return res.status(204).end();
+        }
+    } catch (err) {
+        return next(err);
+    }
+}
+
+async function checkOtpMatched(req, res, next) {
+    try {
+        const { email, otp_code } = req.body;
+
+        const { error, value } = validate.verifyOtp({ email, otp_code });
+
+        const user = await service.findByEmail(email);
+
+        // generalisasikan error untuk mencegah account enumeration
+        if (!user) throw errorResponder(errors.INVALID_CREDENTIALS, "OTP yang dimasukkan tidak sesuai!");
+
+        processJoiValidationError(error);
+
+        const valid = await otpService.checkOtpMatched(email, user.user_id, otp_code);
+
+        if (valid) return res.status(204).end();
+        else throw errorResponder(errors.INVALID_CREDENTIALS, "OTP yang dimasukkan tidak sesuai!");
+    } catch (err) {
+        return next(err);
+    }
+}
+
 module.exports = {
     register,
     login,
@@ -177,4 +235,6 @@ module.exports = {
     requestUserOtp,
     verifyUserEmailByOtp,
     handleGoogleAuth,
+    resetPassword,
+    checkOtpMatched,
 }
