@@ -9,11 +9,11 @@ const config = require('../../../../core/config');
 
 async function register(req, res, next) {
     try {
-        const { username, email, phone_number, password, confirm_password } = req.body;
 
         const { error, value } = validate.register(req.body);
-
         processJoiValidationError(error);
+
+        const { username, email, phone_number, password, confirm_password } = value;
 
         const emailExists = await service.findByEmail(email);
 
@@ -34,13 +34,12 @@ async function register(req, res, next) {
 
 async function login(req, res, next) {
     try {
-        const { email, password } = req.body;
-
         const { error, value } = validate.login(req.body);
+        processJoiValidationError(error);
+
+        const { email, password } = value;
 
         let invalidField = null;
-
-        processJoiValidationError(error);
 
         const user = await service.findByEmail(email);
 
@@ -76,13 +75,12 @@ async function login(req, res, next) {
 
 async function changeProfile(req, res, next) {
     try {
-        const { username, profile_image_url, phone_number } = req.body;
-
         const { error, value } = validate.profile(req.body);
+        processJoiValidationError(error);
+
+        const { username, profile_image_url, phone_number } = value;
 
         const id = parseUserId(req.user.user_id);
-
-        processJoiValidationError(error);
 
         const result = await service.changeProfileWhereId({ username, profile_image_url, phone_number, user_id: id });
 
@@ -123,14 +121,14 @@ async function requestUserOtp(req, res, next) {
             // 3 - 5 detik
             min = Math.ceil(3000);
             max = Math.floor(5000);
-            const simulatedTime =  Math.floor(Math.random() * (max - min + 1)) + min;
+            const simulatedTime = Math.floor(Math.random() * (max - min + 1)) + min;
 
             return setTimeout(() => {
                 return res.status(204).end();
             }, simulatedTime);
-        } 
+        }
 
-        const mailed = await otpService.sendOTP(email, user.user_id);
+        const mailed = await otpService.sendOTP(email, user.user_id, false);
 
         if (mailed) return res.status(204).end();
     } catch (err) {
@@ -140,17 +138,17 @@ async function requestUserOtp(req, res, next) {
 
 async function verifyUserEmailByOtp(req, res, next) {
     try {
-        const { email, otp_code } = req.body;
+        const { error, value } = validate.verifyOtp(req.body);
 
-        const { error, value } = validate.verifyOtp({ email, otp_code });
+        processJoiValidationError(error);
+
+        const { email, otp_code } = value;
 
         const user = await service.findByEmail(email);
 
         if (!user) return res.status(204).end();
 
-        processJoiValidationError(error);
-
-        const valid = await otpService.verifyOTP(email, user.user_id, otp_code);
+        const valid = await otpService.verifyOTP(email, user.user_id, otp_code, false);
 
         if (valid) {
             const result = await otpService.markUserAsVerified(email, user.user_id);
@@ -169,7 +167,7 @@ async function handleGoogleAuth(req, res, next) {
     try {
         // credential = id token JWT dari Google (ngikut docs)
         const { credential } = req.body
-        
+
         const idTokenValid = await service.verifyGoogleIdToken(credential);
 
         const result = await service.handleGoogleAuth(idTokenValid);
@@ -182,17 +180,17 @@ async function handleGoogleAuth(req, res, next) {
 
 async function resetPassword(req, res, next) {
     try {
-        const { email, otp_code, password, confirm_password } = req.body;
+        const { error, value } = validate.resetPassword(req.body);
 
-        const { error, value } = validate.resetPassword({ email, otp_code, password, confirm_password });
+        processJoiValidationError(error);
+
+        const { email, otp_code, password, confirm_password } = value;
 
         const user = await service.findByEmail(email);
 
         if (!user) return res.status(204).end();
 
-        processJoiValidationError(error);
-
-        const valid = await otpService.verifyOTP(email, user.user_id, otp_code);
+        const valid = await otpService.verifyOTP(email, user.user_id, otp_code, false);
 
         if (valid) {
             // kirim plaintext password
@@ -207,18 +205,17 @@ async function resetPassword(req, res, next) {
 
 async function checkOtpMatched(req, res, next) {
     try {
-        const { email, otp_code } = req.body;
+        const { error, value } = validate.verifyOtp(req.body);
+        processJoiValidationError(error);
 
-        const { error, value } = validate.verifyOtp({ email, otp_code });
+        const { email, otp_code } = value;
 
         const user = await service.findByEmail(email);
 
         // generalisasikan error untuk mencegah account enumeration
         if (!user) throw errorResponder(errors.INVALID_CREDENTIALS, "OTP yang dimasukkan tidak sesuai!");
 
-        processJoiValidationError(error);
-
-        const valid = await otpService.checkOtpMatched(email, user.user_id, otp_code);
+        const valid = await otpService.checkOtpMatched(email, user.user_id, otp_code, false);
 
         if (valid) return res.status(204).end();
         else throw errorResponder(errors.INVALID_CREDENTIALS, "OTP yang dimasukkan tidak sesuai!");

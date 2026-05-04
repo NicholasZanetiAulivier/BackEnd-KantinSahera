@@ -7,11 +7,11 @@ const { generateAdminJwt, refreshAdminJwt } = require('../../../../utils/token')
 
 async function register(req, res, next) {
     try {
-        const { email, password, confirm_password } = req.body;
-
         const { error, value } = validate.register(req.body);
 
         processJoiValidationError(error);
+
+        const { email, password, confirm_password } = value;
 
         const emailExists = await service.findByEmail(email);
 
@@ -23,7 +23,7 @@ async function register(req, res, next) {
 
         const result = await service.createAdmin({ email, passwordHash });
 
-        if (result.rowCount > 0) 
+        if (result.rowCount > 0)
             return res.status(201).json({ message: "Akun admin berhasil dibuat." });
     } catch (err) {
         return next(err);
@@ -32,11 +32,11 @@ async function register(req, res, next) {
 
 async function login(req, res, next) {
     try {
-        const { email, password } = req.body;
-
         const { error, value } = validate.login(req.body);
 
         processJoiValidationError(error);
+
+        const { email, password } = value;
 
         const admin = await service.findByEmail(email);
 
@@ -80,14 +80,14 @@ async function requestAdminOtp(req, res, next) {
             // 3 - 5 detik
             min = Math.ceil(3000);
             max = Math.floor(5000);
-            const simulatedTime =  Math.floor(Math.random() * (max - min + 1)) + min;
+            const simulatedTime = Math.floor(Math.random() * (max - min + 1)) + min;
 
             return setTimeout(() => {
                 return res.status(204).end();
             }, simulatedTime);
-        } 
+        }
 
-        const mailed = await otpService.sendOTP(email, admin.admin_id);
+        const mailed = await otpService.sendOTP(email, admin.admin_id, true);
 
         if (mailed) return res.status(204).end();
     } catch (err) {
@@ -97,17 +97,17 @@ async function requestAdminOtp(req, res, next) {
 
 async function verifyAdminEmailByOtp(req, res, next) {
     try {
-        const { email, otp_code } = req.body;
-
-        const { error, value } = validate.verifyOtp({ email, otp_code });
+        const { error, value } = validate.verifyOtp(req.body);
 
         processJoiValidationError(error);
+
+        const { email, otp_code } = value;
 
         const admin = await service.findByEmail(email);
 
         if (!admin) return res.status(204).end();
 
-        const valid = await otpService.verifyOTP(email, admin.admin_id, otp_code);
+        const valid = await otpService.verifyOTP(email, admin.admin_id, otp_code, true);
 
         if (valid) {
             const result = await otpService.markAdminAsVerified(email, admin.admin_id);
@@ -119,9 +119,32 @@ async function verifyAdminEmailByOtp(req, res, next) {
     }
 }
 
+async function checkOtpMatched(req, res, next) {
+    try {
+        const { error, value } = validate.verifyOtp(req.body);
+        processJoiValidationError(error);
+
+        const { email, otp_code } = value;
+
+        const admin = await service.findByEmail(email);
+
+        // generalisasikan error untuk mencegah account enumeration
+        if (!admin) throw errorResponder(errors.INVALID_CREDENTIALS, "OTP yang dimasukkan tidak sesuai!");
+
+        const valid = await otpService.checkOtpMatched(email, admin.admin_id, otp_code, true);
+
+        if (valid) return res.status(204).end();
+        else throw errorResponder(errors.INVALID_CREDENTIALS, "OTP yang dimasukkan tidak sesuai!");
+    } catch (err) {
+        return next(err);
+    }
+}
+
+
 module.exports = {
     register,
     login,
     requestAdminOtp,
     verifyAdminEmailByOtp,
+    checkOtpMatched
 }

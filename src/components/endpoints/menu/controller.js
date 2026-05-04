@@ -29,9 +29,10 @@ async function createMenu(req, res, next) {
     try {
 
         const { error, value } = validate.menu(req.body);
-        const { name, image_url, price } = value;
 
         processJoiValidationError(error);
+
+        const { name, image_url, price } = value;
 
         const result = await service.createMenu(name, image_url || undefined, price);
         return res.status(201).json({ message: "Menu berhasil dibuat!", data: result }).send();
@@ -43,9 +44,8 @@ async function createMenu(req, res, next) {
 async function editMenu(req, res, next) {
     try {
         const { error, value } = validate.menuEdit(req.body);
+
         const id = new Number(req.params.id);
-
-
         checkInteger(id, 1, 'ID');
 
         processJoiValidationError(error);

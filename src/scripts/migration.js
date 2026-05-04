@@ -53,10 +53,10 @@ tables = {
         last_logged_in TIMESTAMP NOT NULL DEFAULT NOW()
     );`,
     restaurant_schedules: `CREATE TABLE IF NOT EXISTS restaurant_schedules(
-        day VARCHAR(10) NOT NULL PRIMARY KEY,
+        day_name VARCHAR(10) NOT NULL PRIMARY KEY,
         open_time TIME NOT NULL,
         close_time TIME NOT NULL,
-        open BOOLEAN NOT NULL DEFAULT TRUE
+        open BOOLEAN NOT NULL DEFAULT FALSE
     );`,
     restaurant_datas: `CREATE TABLE IF NOT EXISTS restaurant_datas(
         key VARCHAR NOT NULL PRIMARY KEY,
@@ -76,13 +76,18 @@ tables = {
         attempt_count INTEGER NOT NULL DEFAULT 1,
         email VARCHAR(345) NOT NULL,
         account_id UUID UNIQUE NOT NULL,
-        PRIMARY KEY(email, account_id)
+        is_admin BOOLEAN NOT NULL DEFAULT FALSE,
+        PRIMARY KEY(email, account_id,is_admin)
     );`, // hapus kolom is reset password, takutnya malah berbelit implementasinya
     // tambah attempt_count untuk blok pengguna yang terlalu banyak salah input otp
 }
 
+
+
 async function main() {
-    await db.connect().then(async (client) => {
+    let client;
+    await db.connect().then(async (c) => {
+        client = c;
         await client.query(`CREATE EXTENSION IF NOT EXISTS "pgcrypto";`);
 
         for (const i in tables) {
@@ -97,13 +102,12 @@ async function main() {
                 .then(() => console.log(`Table ${tableName} successfully created`))
                 .catch((e) => console.log(`Error creating table ${tableName}:\n ${e}`));
         }
-
-        await client.query(`INSERT INTO admins (email, password, super_admin) VALUES ($1,$2,$3)`, ["super@gmail.com", await hashPassword("adminsahera123"), true])
-            .then(() => console.log("Added super admin!"))
-            .catch((e) => console.log("Failed to add super admin"));//Temp, move to seeder if needed
-
-        console.log("Successfully Remigrated");
-    }).catch((err) => console.log(err));
+        await client.query("COMMIT");
+        console.log("---Successfully Remigrated---");
+    }).catch(async (err) => {
+        await client.query("ROLLBACK");
+        console.log(err);
+    }).finally(async () => await client.release());
 
     process.exit(0);
 }
