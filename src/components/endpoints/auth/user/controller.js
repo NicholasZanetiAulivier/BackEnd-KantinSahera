@@ -123,12 +123,12 @@ async function requestUserOtp(req, res, next) {
             // 3 - 5 detik
             min = Math.ceil(3000);
             max = Math.floor(5000);
-            const simulatedTime =  Math.floor(Math.random() * (max - min + 1)) + min;
+            const simulatedTime = Math.floor(Math.random() * (max - min + 1)) + min;
 
             return setTimeout(() => {
                 return res.status(204).end();
             }, simulatedTime);
-        } 
+        }
 
         const mailed = await otpService.sendOTP(email, user.user_id);
 
@@ -169,7 +169,7 @@ async function handleGoogleAuth(req, res, next) {
     try {
         // credential = id token JWT dari Google (ngikut docs)
         const { credential } = req.body
-        
+
         const idTokenValid = await service.verifyGoogleIdToken(credential);
 
         const result = await service.handleGoogleAuth(idTokenValid);
@@ -207,16 +207,15 @@ async function resetPassword(req, res, next) {
 
 async function checkOtpMatched(req, res, next) {
     try {
-        const { email, otp_code } = req.body;
+        const { error, value } = validate.verifyOtp(req.body);
+        processJoiValidationError(error);
 
-        const { error, value } = validate.verifyOtp({ email, otp_code });
+        const { email, otp_code } = value;
 
         const user = await service.findByEmail(email);
 
         // generalisasikan error untuk mencegah account enumeration
         if (!user) throw errorResponder(errors.INVALID_CREDENTIALS, "OTP yang dimasukkan tidak sesuai!");
-
-        processJoiValidationError(error);
 
         const valid = await otpService.checkOtpMatched(email, user.user_id, otp_code);
 
