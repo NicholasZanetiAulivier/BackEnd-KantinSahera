@@ -93,9 +93,52 @@ async function getAddress() {
     return res;
 }
 
+async function getStatus() {
+    let res, clientref;
+
+    await db.connect().then(async (client) => {
+        clientref = client;
+        await client.query(
+            "SELECT * FROM restaurant_datas WHERE key='status'"
+        ).then(result => {
+            res = result
+        }).catch((err) => {
+            logger.error({ err }, 'Terjadi error database di restaurant!');
+            throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
+        }).finally(() => {
+            clientref.release();
+        });
+    });
+
+    return res;
+}
+
+async function setStatus(status) {
+    let res, clientref;
+
+    await db.connect().then(async (client) => {
+        clientref = client;
+        await client.query(
+            "UPDATE restaurant_datas SET value = $1 WHERE key = 'status'",
+            [status]
+        ).then(result => {
+            res = result
+        }).catch((err) => {
+            logger.error({ err }, 'Terjadi error database di restaurant!');
+            throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
+        }).finally(() => {
+            clientref.release();
+        });
+    });
+
+    return res;
+}
+
 module.exports = {
     getSchedule,
     getContacts,
     getPhysicalRestaurantData,
     getAddress,
+    getStatus,
+    setStatus
 }

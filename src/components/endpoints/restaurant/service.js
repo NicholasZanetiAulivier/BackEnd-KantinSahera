@@ -19,9 +19,24 @@ async function getRestaurantData() {
     const address = await repository.getAddress();
     data.address = address.rows[0]["value"];
 
+    data.status = await getRestaurantStatus();
+
     return data;
+}
+
+async function getRestaurantStatus() {
+    const data = await repository.getStatus();
+
+    return data.rows[0]['value'];
+}
+
+async function setStatus(status) {
+    await repository.setStatus(status);
+    return;
 }
 
 module.exports = {
     getRestaurantData,
+    getRestaurantStatus,
+    setStatus
 }
