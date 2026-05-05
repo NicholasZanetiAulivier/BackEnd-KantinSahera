@@ -11,12 +11,12 @@ function generateOTP() {
     return otp;
 }
 
-async function sendOTP(email, accountId, is_admin) {
+async function sendOTP(email, is_admin) {
     try {
         const otp = generateOTP();
 
         const hashedOtp = is_admin ? await hashOtpAdmin(otp) : await hashOtpUser(otp);
-        const save = await repository.saveOTP(email, accountId, hashedOtp, is_admin);
+        const save = await repository.saveOTP(email, hashedOtp, is_admin);
 
         if (save && save.rowCount > 0) {
             let transporter = nodemailer.createTransport({
@@ -30,7 +30,7 @@ async function sendOTP(email, accountId, is_admin) {
             try {
                 await transporter.verify();
             } catch (err) {
-                await repository.deleteOTP(email, accountId, true);
+                await repository.deleteOTP(email,  is_admin);
                 throw errorResponder(errors.INTERNAL_SERVER_ERROR,
                     "Terjadi error saat percobaan mengirim email OTP!");
             }
@@ -52,22 +52,22 @@ async function sendOTP(email, accountId, is_admin) {
                 return true;
             } else if (info.rejected.length > 0) {
                 logger.error(`Gagal mengirimkan pesan ke ${info.rejected[0]}`)
-                await repository.deleteOTP(email, accountId);
+                await repository.deleteOTP(email, is_admin);
                 throw errorResponder(errors.UNPROCESSABLE_ENTITY, "OTP Tidak dapat dikirim ke email tujuan!");
             }
         }
     } catch (err) {
         logger.error({ err }, 'Terjadi error di layanan email!');
-        await repository.deleteOTP(email, accountId);
+        await repository.deleteOTP(email, is_admin);
         throw errorResponder(errors.INTERNAL_SERVER_ERROR,
             "Terjadi error pada saat percobaan mengirim OTP!"
         );
     }
 }
 
-async function verifyOTP(email, account_id, plaintext_otp, is_admin) {
+async function verifyOTP(email, plaintext_otp, is_admin) {
     try {
-        const query = await repository.findOTP(email, account_id, is_admin);
+        const query = await repository.findOTP(email, is_admin);
 
         if (query.rowCount === 0)
             throw errorResponder(errors.NOT_FOUND, "Tidak ada OTP untuk email yang bersangkutan!");
@@ -87,7 +87,7 @@ async function verifyOTP(email, account_id, plaintext_otp, is_admin) {
         const matched = await passwordMatched(plaintext_otp, data.otp);
 
         if (!matched) {
-            const failedCount = await repository.incrementAttemptsCount(email, account_id, is_admin);
+            const failedCount = await repository.incrementAttemptsCount(email, is_admin);
             throw errorResponder(errors.INVALID_CREDENTIALS, "OTP yang dimasukkan salah!");
         } else {
             return true;
@@ -97,9 +97,9 @@ async function verifyOTP(email, account_id, plaintext_otp, is_admin) {
     }
 }
 
-async function checkOtpMatched(email, account_id, plaintext_otp, is_admin) {
+async function checkOtpMatched(email, plaintext_otp, is_admin) {
     try {
-        const query = await repository.findOTP(email, account_id, is_admin);
+        const query = await repository.findOTP(email, is_admin);
 
         // generalisasikan untuk otp yang tidak ada, anggap ini otp salah
         if (query.rowCount === 0) return false;

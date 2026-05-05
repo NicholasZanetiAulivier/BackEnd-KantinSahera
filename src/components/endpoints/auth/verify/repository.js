@@ -3,7 +3,7 @@ const db = require('../../../../database/db');
 const logger = require('../../../../core/logger')('verify-repository');
 const config = require('../../../../core/config');
 
-async function saveOTP(email, account_id, otp, is_admin) {
+async function saveOTP(email, otp, is_admin) {
     let res, clientref;
 
     // kasih 10 menit
@@ -13,12 +13,12 @@ async function saveOTP(email, account_id, otp, is_admin) {
     await db.connect().then(async (client) => {
         clientref = client;
         await client.query(
-            `INSERT INTO account_otps (email, account_id, otp, expires_at, attempt_count , is_admin)
-                VALUES ($1, $2, $3, $4, $5 , $6)
-                ON CONFLICT (email, account_id) DO UPDATE
-                SET otp = $2, created_at = NOW(), expires_at = $4, attempt_count = $5
+            `INSERT INTO account_otps (email, otp, expires_at, attempt_count , is_admin)
+                VALUES ($1, $2, $3, $4, $5)
+                ON CONFLICT (email, is_admin) DO UPDATE
+                SET otp = $2, created_at = NOW(), expires_at = $3, attempt_count = $4
             `,
-            [email, account_id, otp, expires_at, attempt_count, is_admin]
+            [email, otp, expires_at, attempt_count, is_admin]
         ).then(result => {
             res = result
         }).catch((err) => {
@@ -32,14 +32,14 @@ async function saveOTP(email, account_id, otp, is_admin) {
     return res;
 }
 
-async function findOTP(email, account_id, is_admin) {
+async function findOTP(email, is_admin) {
     let res, clientref;
 
     await db.connect().then(async (client) => {
         clientref = client;
         await client.query(
-            'SELECT * FROM account_otps WHERE email = $1 AND account_id = $2 AND is_admin = $3',
-            [email, account_id, is_admin]
+            'SELECT * FROM account_otps WHERE email = $1 AND is_admin = $2',
+            [email, is_admin]
         ).then(result => {
             res = result
         }).catch((err) => {
@@ -53,14 +53,14 @@ async function findOTP(email, account_id, is_admin) {
     return res;
 }
 
-async function deleteOTP(email, account_id, is_admin) {
+async function deleteOTP(email, is_admin) {
     let res, clientref;
 
     await db.connect().then(async (client) => {
         clientref = client;
         await client.query(
-            'DELETE FROM account_otps WHERE email = $1 AND account_id = $2 AND is_admin = $3;',
-            [email, account_id, is_admin]
+            'DELETE FROM account_otps WHERE email = $1 AND is_admin = $2;',
+            [email, is_admin]
         ).then(result => {
             res = result
         }).catch((err) => {
@@ -87,8 +87,8 @@ async function setAdminVerified(email, admin_id) {
                 [email, admin_id]
             );
             await client.query(
-                'DELETE FROM account_otps WHERE email = $1 AND account_id = $2;',
-                [email, admin_id]
+                'DELETE FROM account_otps WHERE email = $1 AND is_admin = $2;',
+                [email, true]
             );
             await client.query('COMMIT');
         }
@@ -116,8 +116,8 @@ async function setUserVerified(email, user_id) {
                 [email, user_id]
             );
             await client.query(
-                'DELETE FROM account_otps WHERE email = $1 AND account_id = $2;',
-                [email, user_id]
+                'DELETE FROM account_otps WHERE email = $1 AND is_admin = $2;',
+                [email, false]
             );
             await client.query('COMMIT');
         }
@@ -132,15 +132,15 @@ async function setUserVerified(email, user_id) {
     return true;
 }
 
-async function incrementAttemptsCount(email, account_id, is_admin) {
+async function incrementAttemptsCount(email, is_admin) {
     let res, clientref;
 
     await db.connect().then(async (client) => {
         clientref = client;
         await client.query(
             `UPDATE account_otps SET attempt_count = attempt_count + 1 
-                WHERE email = $1 AND account_id = $2 AND is_admin = $3`,
-            [email, account_id, is_admin]
+                WHERE email = $1 AND is_admin = $2`,
+            [email, is_admin]
         ).then(result => {
             res = result
         }).catch((err) => {
@@ -167,8 +167,8 @@ async function updateUserPassword(email, user_id, password) {
                 [password, email, user_id]
             );
             await client.query(
-                'DELETE FROM account_otps WHERE email = $1 AND account_id = $2;',
-                [email, user_id]
+                'DELETE FROM account_otps WHERE email = $1 AND is_admin = $2;',
+                [email, false]
             );
             await client.query('COMMIT');
         }
