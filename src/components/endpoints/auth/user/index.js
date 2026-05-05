@@ -6,13 +6,13 @@ const { createLimitter } = require('../../../middlewares/limiter');
 const route = express.Router();
 
 route.post('/register', controller.register);
-route.post('/login', controller.login);
+route.post('/login', createLimitter('userLogin', 5), controller.login);
 route.patch('/profile', passportUserJwt, controller.changeProfile);
 route.get('/profile', passportUserJwt, controller.getProfile);
-route.post('/otp/request', createLimitter('userOTPRequest'), controller.requestUserOtp);
-route.post('/otp/check', createLimitter('userOTPCheck'), controller.checkOtpMatched); // untuk sekedar check OTP dengan OTP database
+route.post('/otp/request', createLimitter('userOTPRequest', 3), controller.requestUserOtp);
+route.post('/otp/check', createLimitter('userOTPCheck', 3), controller.checkOtpMatched); // untuk sekedar check OTP dengan OTP database
 route.post('/verify-email', controller.verifyUserEmailByOtp); // ganti nama endpoint buat menjiwai
-route.post('/google', controller.handleGoogleAuth);
+route.post('/google', createLimitter('userGoogleAuth', 5), controller.handleGoogleAuth);
 // NOTE BUAT FRONTEND:
 // panggil OTP request dulu
 // biar user tau kalo otp yang diinput bener, panggil /otp/check

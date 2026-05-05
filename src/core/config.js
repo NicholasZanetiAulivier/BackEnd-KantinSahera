@@ -14,7 +14,11 @@ module.exports = {
         user: process.env.USER_SECRET_KEY,
         admin: process.env.ADMIN_SECRET_KEY,
         google_client_id: process.env.GOOGLE_CLIENT_ID,
-        google_client_secret: process.env.GOOGLE_CLIENT_SECRET // gak dipakai 
+        google_client_secret: process.env.GOOGLE_CLIENT_SECRET // gak dipakai
+    },
+    admin_account: {
+        email: process.env.ADMIN_ACCOUNT_EMAIL,
+        password: process.env.ADMIN_ACCOUNT_PASSWORD
     },
     database: {
         user: process.env.USER,
