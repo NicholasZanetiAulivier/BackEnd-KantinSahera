@@ -9,6 +9,6 @@ route.post('/create', passportSuperJwt, controller.register); //Admin cuma boleh
 route.post('/login', createLimiter('adminLogin', 5), controller.login);
 route.post('/otp/request', createLimitter('adminOTPRequest', 3), controller.requestAdminOtp);
 route.post('/otp/check', createLimitter('adminOTPCheck', 3), controller.checkOtpMatched);
-route.post('/otp', controller.verifyAdminEmailByOtp);
+route.post('/verify-email', controller.verifyAdminEmailByOtp);
 
 module.exports = route;
