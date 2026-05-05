@@ -3,7 +3,7 @@ const db = require('../../../../database/db');
 const logger = require('../../../../core/logger')('verify-repository');
 const config = require('../../../../core/config');
 
-async function saveOTP(email, account_id, otp, is_admin) {
+async function saveOTP(email, otp, is_admin) {
     let res, clientref;
 
     // kasih 10 menit
@@ -13,12 +13,12 @@ async function saveOTP(email, account_id, otp, is_admin) {
     await db.connect().then(async (client) => {
         clientref = client;
         await client.query(
-            `INSERT INTO account_otps (email, account_id, otp, expires_at, attempt_count , is_admin)
-                VALUES ($1, $2, $3, $4, $5 , $6)
-                ON CONFLICT (email, account_id) DO UPDATE
-                SET otp = $2, created_at = NOW(), expires_at = $4, attempt_count = $5
+            `INSERT INTO account_otps (email, otp, expires_at, attempt_count , is_admin)
+                VALUES ($1, $2, $3, $4, $5)
+                ON CONFLICT (email, is_admin) DO UPDATE
+                SET otp = $2, created_at = NOW(), expires_at = $3, attempt_count = $4
             `,
-            [email, account_id, otp, expires_at, attempt_count, is_admin]
+            [email, otp, expires_at, attempt_count, is_admin]
         ).then(result => {
             res = result
         }).catch((err) => {
@@ -32,14 +32,14 @@ async function saveOTP(email, account_id, otp, is_admin) {
     return res;
 }
 
-async function findOTP(email, account_id, is_admin) {
+async function findOTP(email, is_admin) {
     let res, clientref;
 
     await db.connect().then(async (client) => {
         clientref = client;
         await client.query(
-            'SELECT * FROM account_otps WHERE email = $1 AND account_id = $2 AND is_admin = $3',
-            [email, account_id, is_admin]
+            'SELECT * FROM account_otps WHERE email = $1 AND is_admin = $2',
+            [email, is_admin]
         ).then(result => {
             res = result
         }).catch((err) => {
@@ -53,14 +53,14 @@ async function findOTP(email, account_id, is_admin) {
     return res;
 }
 
-async function deleteOTP(email, account_id, is_admin) {
+async function deleteOTP(email, is_admin) {
     let res, clientref;
 
     await db.connect().then(async (client) => {
         clientref = client;
         await client.query(
-            'DELETE FROM account_otps WHERE email = $1 AND account_id = $2 AND is_admin = $3;',
-            [email, account_id, is_admin]
+            'DELETE FROM account_otps WHERE email = $1 AND is_admin = $2;',
+            [email, is_admin]
         ).then(result => {
             res = result
         }).catch((err) => {
@@ -75,49 +75,45 @@ async function deleteOTP(email, account_id, is_admin) {
     return res;
 }
 
-async function setAdminVerified(email, admin_id) {
+async function incrementAttemptsCount(email, is_admin) {
     let res, clientref;
 
     await db.connect().then(async (client) => {
         clientref = client;
-        try {
-            await client.query('BEGIN');
-            await client.query(
-                `UPDATE admins SET verified = TRUE WHERE email = $1 AND admin_id = $2`,
-                [email, admin_id]
-            );
-            await client.query(
-                'DELETE FROM account_otps WHERE email = $1 AND account_id = $2;',
-                [email, admin_id]
-            );
-            await client.query('COMMIT');
-        }
-        catch (err) {
-            await client.query('ROLLBACK');
+        await client.query(
+            `UPDATE account_otps SET attempt_count = attempt_count + 1 
+                WHERE email = $1 AND is_admin = $2`,
+            [email, is_admin]
+        ).then(result => {
+            res = result
+        }).catch((err) => {
             logger.error({ err }, 'Terjadi error database di verifikasi!');
             throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
-        } finally {
+        }).finally(() => {
             clientref.release();
-        }
+        });
     });
 
-    return true;
+    return res;
 }
 
-async function setUserVerified(email, user_id) {
+getTableName = (isAdmin) => isAdmin ? 'admins' : 'users';
+
+async function updateAccountPassword(email, password, is_admin = false) {
     let res, clientref;
+    const table_name = getTableName(is_admin);
 
     await db.connect().then(async (client) => {
         clientref = client;
         try {
             await client.query('BEGIN');
             await client.query(
-                `UPDATE users SET verified = TRUE WHERE email = $1 AND user_id = $2`,
-                [email, user_id]
+                `UPDATE ${table_name} SET password = $1 WHERE email = $2`,
+                [password, email]
             );
             await client.query(
-                'DELETE FROM account_otps WHERE email = $1 AND account_id = $2;',
-                [email, user_id]
+                'DELETE FROM account_otps WHERE email = $1 AND is_admin = $2;',
+                [email, is_admin]
             );
             await client.query('COMMIT');
         }
@@ -132,43 +128,22 @@ async function setUserVerified(email, user_id) {
     return true;
 }
 
-async function incrementAttemptsCount(email, account_id, is_admin) {
+async function setAccountVerified(email, is_admin = false) {
     let res, clientref;
+    const table_name = getTableName(is_admin);
 
-    await db.connect().then(async (client) => {
-        clientref = client;
-        await client.query(
-            `UPDATE account_otps SET attempt_count = attempt_count + 1 
-                WHERE email = $1 AND account_id = $2 AND is_admin = $3`,
-            [email, account_id, is_admin]
-        ).then(result => {
-            res = result
-        }).catch((err) => {
-            logger.error({ err }, 'Terjadi error database di verifikasi!');
-            throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
-        }).finally(() => {
-            clientref.release();
-        });
-    });
-
-    return res;
-}
-
-async function updateUserPassword(email, user_id, password) {
-    let res, clientref;
 
     await db.connect().then(async (client) => {
         clientref = client;
         try {
             await client.query('BEGIN');
             await client.query(
-                `UPDATE users SET password = $1
-                    WHERE email = $2 AND user_id = $3`,
-                [password, email, user_id]
+                `UPDATE ${table_name} SET verified = $1 WHERE email = $2`,
+                [true, email]
             );
             await client.query(
-                'DELETE FROM account_otps WHERE email = $1 AND account_id = $2;',
-                [email, user_id]
+                'DELETE FROM account_otps WHERE email = $1 AND is_admin = $2;',
+                [email, is_admin]
             );
             await client.query('COMMIT');
         }
@@ -186,9 +161,8 @@ async function updateUserPassword(email, user_id, password) {
 module.exports = {
     saveOTP,
     findOTP,
-    setAdminVerified,
-    setUserVerified,
     deleteOTP,
     incrementAttemptsCount,
-    updateUserPassword,
+    updateAccountPassword,
+    setAccountVerified,
 }

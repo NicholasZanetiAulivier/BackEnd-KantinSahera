@@ -1,5 +1,6 @@
 const db = require('../database/db');
 const { hashPassword } = require('../utils/password');
+const config = require('../core/config')
 
 const days = [
     { day: "monday", open: "07:00:00", close: "16:00:00" },
@@ -16,7 +17,8 @@ async function main() {
     await db.connect().then(async (c) => {
         client = c;
         await client.query("BEGIN");
-        await client.query(`INSERT INTO admins (email, password, super_admin) VALUES ($1,$2,$3)`, ["super@gmail.com", await hashPassword("adminsahera123"), true])
+        await client.query(`INSERT INTO admins (email, password, super_admin) VALUES ($1,$2,$3)`, 
+            [config.admin_account.email, await hashPassword(config.admin_account.password), true])
             .then(() => console.log("Added super admin!"))
             .catch((e) => console.log("Failed to add super admin"));
 
@@ -34,6 +36,7 @@ async function main() {
         await client.query("INSERT INTO restaurant_datas (key , value) VALUES ('contacts' , $1 )", [contacts.join("|")]); // contacts: +62...|08...|... and so on
         const address = "sebelah untar";
         await client.query("INSERT INTO restaurant_datas (key , value) VALUES ('address' , $1 )", [address]); //address: sebelah untar, address single valued di sini, klo mau diganti, tinggal ganti algonya kayak contacts
+        // single valued aja biar gak ribet
 
         const physicalOpen = "07:00:00";
         const physicalClose = "19:00:00";
