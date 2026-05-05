@@ -20,7 +20,7 @@ const logger_used = logger('Rate Limit');
 
 const createLimitter = (prefix = "") => ERT.rateLimit({
     windowMs: 60000 * 60,
-    limit: 3,
+    limit: 100,
     legacyHeaders: false, // rekomendasi Docs nya
     standardHeaders: true,
     store: new postgresStores.PostgresStore(CONNECTION_CONFIGURATION, prefix),

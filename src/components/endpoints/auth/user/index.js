@@ -11,7 +11,7 @@ route.patch('/profile', passportUserJwt, controller.changeProfile);
 route.get('/profile', passportUserJwt, controller.getProfile);
 route.post('/otp/request', createLimitter('userOTPRequest'), controller.requestUserOtp);
 route.post('/otp/check', createLimitter('userOTPCheck'), controller.checkOtpMatched); // untuk sekedar check OTP dengan OTP database
-route.post('/otp', controller.verifyUserEmailByOtp); // ini bisa ganti nama jadi set-verified (biar lebih menjelaskan fungsi)
+route.post('/verify-email', controller.verifyUserEmailByOtp); // ganti nama endpoint buat menjiwai
 route.post('/google', controller.handleGoogleAuth);
 // NOTE BUAT FRONTEND:
 // panggil OTP request dulu

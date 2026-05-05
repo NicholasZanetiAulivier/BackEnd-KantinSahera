@@ -110,7 +110,7 @@ async function verifyAdminEmailByOtp(req, res, next) {
         const valid = await otpService.verifyOTP(email, otp_code, true);
 
         if (valid) {
-            const result = await otpService.markAdminAsVerified(email, admin.admin_id);
+            const result = await otpService.markAccountAsVerified(email, true);
 
             if (result) return res.status(204).end();
         }

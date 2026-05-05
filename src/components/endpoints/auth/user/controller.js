@@ -151,7 +151,7 @@ async function verifyUserEmailByOtp(req, res, next) {
         const valid = await otpService.verifyOTP(email, otp_code, false);
 
         if (valid) {
-            const result = await otpService.markUserAsVerified(email, user.user_id);
+            const result = await otpService.markAccountAsVerified(email, false);
 
             if (result) return res.status(204).end();
         }
@@ -194,7 +194,7 @@ async function resetPassword(req, res, next) {
 
         if (valid) {
             // kirim plaintext password
-            const result = await otpService.resetUserPassword(email, user.user_id, password);
+            const result = await otpService.resetAccountPassword(email, password, false);
 
             if (result) return res.status(204).end();
         }
