@@ -23,6 +23,27 @@ async function findByEmail(email) {
     return res;
 }
 
+async function findById(user_id) {
+    let res, clientref;
+
+    await db.connect().then(async (client) => {
+        clientref = client;
+        await client.query(
+            'SELECT user_id, google_id, email, username, verified FROM users WHERE user_id = $1',
+            [user_id]
+        ).then(result => {
+            res = result
+        }).catch((err) => {
+            logger.error({err}, 'Terjadi error database di modul user!');
+            throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
+        }).finally(() => {
+            clientref.release();
+        });
+    });
+
+    return res;
+}
+
 async function createUser(username, email, phone_no, passwordHash) {
     let res, clientref;
 
@@ -138,6 +159,7 @@ async function createOrUpsertGoogleUser(googleUser) {
 
 module.exports = {
     findByEmail,
+    findById,
     createUser,
     changeProfileWhereId,
     getProfileById,

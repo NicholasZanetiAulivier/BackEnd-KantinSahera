@@ -16,7 +16,7 @@ passport.use(
 
         async (payload, done) => {
             try {
-                const user = userPayload(await userService.findByEmail(payload.email));
+                const user = userPayload(await userService.findById(parseUserId(payload.user_id)));
                 return done(null, user || false);
             } catch (err) {
                 return done(err, false);
@@ -35,7 +35,7 @@ passport.use(
 
         async (payload, done) => {
             try {
-                const admin = adminPayload(await adminService.findByEmail(payload.email));
+                const admin = adminPayload(await adminService.findById(parseAdminId(payload.admin_id)));
 
                 return done(null, admin || false);
             } catch (err) {
@@ -55,7 +55,7 @@ passport.use(
 
         async (payload, done) => {
             try {
-                const admin = adminPayload(await adminService.findByEmail(payload.email));
+                const admin = adminPayload(await adminService.findById(parseAdminId(payload.admin_id)));
 
                 if (!(admin.super_admin && payload.super_admin))
                     throw errorResponder(errors.INVALID_CREDENTIALS, "Admin bukan super admin!");
@@ -82,7 +82,7 @@ function parseUserId(userId) {
 }
 
 function parseAdminId(adminId) {
-    const id = userId.split(config.keys_prefix.admin_id);
+    const id = adminId.split(config.keys_prefix.admin_id);
     const idWithoutPrefix = id[1] || null;
 
     if (idWithoutPrefix) return idWithoutPrefix;

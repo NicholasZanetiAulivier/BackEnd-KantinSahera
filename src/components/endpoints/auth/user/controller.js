@@ -4,8 +4,9 @@ const service = require('./service');
 const otpService = require('../verify/service');
 const { hashPassword, passwordMatched } = require('../../../../utils/password');
 const { generateUserJwt, refreshUserJwt } = require('../../../../utils/token');
-const { parseUserId } = require('../../../middlewares/authentication');
+const { parseUserId, passportUserJwt } = require('../../../middlewares/authentication');
 const config = require('../../../../core/config');
+const jwt = require('jsonwebtoken');
 
 async function register(req, res, next) {
     try {
@@ -61,7 +62,7 @@ async function login(req, res, next) {
             const token = await generateUserJwt(user);
 
             if (!token) {
-                throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Proses login gagal!");
+                throw errorResponder(errors.INVALID_TOKEN, "Proses login gagal!");
             }
 
             return res.status(200).json({ token: token });
@@ -224,6 +225,18 @@ async function checkOtpMatched(req, res, next) {
     }
 }
 
+async function refreshToken(req, res, next) {
+    try {
+        const refreshToken = req.body.token;
+
+        const result = await service.createRefreshToken(refreshToken);
+
+        if (result) return res.status(200).json({token: result}) 
+    } catch (err) {
+        return next(err);
+    }
+}
+
 module.exports = {
     register,
     login,
@@ -234,4 +247,5 @@ module.exports = {
     handleGoogleAuth,
     resetPassword,
     checkOtpMatched,
+    refreshToken,
 }

@@ -3,6 +3,8 @@ const db = require('../../../../database/db');
 const logger = require('../../../../core/logger')('verify-repository');
 const config = require('../../../../core/config');
 
+getTableName = (isAdmin) => isAdmin ? 'admins' : 'users';
+
 async function saveOTP(email, otp, is_admin) {
     let res, clientref;
 
@@ -96,8 +98,6 @@ async function incrementAttemptsCount(email, is_admin) {
 
     return res;
 }
-
-getTableName = (isAdmin) => isAdmin ? 'admins' : 'users';
 
 async function updateAccountPassword(email, password, is_admin = false) {
     let res, clientref;
