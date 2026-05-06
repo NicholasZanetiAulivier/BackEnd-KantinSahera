@@ -34,9 +34,24 @@ async function setRestaurantStatus(req, res, next) {
     }
 }
 
+async function updateRestaurantData(req, res, next) {
+    try {
+        const { error, value } = validate.restaurant(req.body);
+        processJoiValidationError(error);
+
+        const { schedule, contacts, physical_place, address, status } = value;
+        await service.updateOrSkip(schedule, contacts, physical_place, address, status);
+
+        return res.status(204).send();
+    } catch (err) {
+        return next(err);
+    }
+}
+
 
 module.exports = {
     getRestaurantData,
     getRestaurantStatus,
-    setRestaurantStatus
+    setRestaurantStatus,
+    updateRestaurantData
 }

@@ -35,8 +35,27 @@ async function setStatus(status) {
     return;
 }
 
+async function updateOrSkip(schedule, contacts, physical_place, address, status) {
+    if (schedule) {
+        await repository.setSchedule(schedule);
+    }
+    if (contacts) {
+        await repository.setContacts(contacts);
+    }
+    if (physical_place) {
+        await repository.setPhysical(physical_place);
+    }
+    if (address) {
+        await repository.setAddress(address);
+    }
+    if (status) {
+        await repository.setStatus(status);
+    }
+}
+
 module.exports = {
     getRestaurantData,
     getRestaurantStatus,
-    setStatus
+    setStatus,
+    updateOrSkip,
 }

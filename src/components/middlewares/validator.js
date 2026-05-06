@@ -47,6 +47,8 @@ const registerSchema = Joi.object({
     })
 });
 
+const time24hrSchema = Joi.string().pattern(/^([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])$/); // HH:MM:SS 24 hr
+
 const loginSchema = Joi.object({
     email: emailSchema,
     password: passwordSchema,
@@ -61,15 +63,15 @@ const profileSchema = Joi.object({
         const allowedDomains = ['res.cloudinary.com', 'lh3.googleusercontent.com'];
         const url = new URL(value);
         if (!allowedDomains.some(domain => url.hostname.includes(domain))) {
-            return helpers.error('any.invalid', { 
-                message: 'Hanya Cloudinary dan Google picture domain yang diperbolehkan!' 
+            return helpers.error('any.invalid', {
+                message: 'Hanya Cloudinary dan Google picture domain yang diperbolehkan!'
             });
         }
         return value;
     }).messages({
         'string.uri': "URL gambar tidak valid atau tidak absolut!",
         'string.uriCustomScheme': 'URL harus menggunakan protokol HTTPS!',
-        'any.invalid': 'Hanya Cloudinary dan Google picture domain yang diperbolehkan!' 
+        'any.invalid': 'Hanya Cloudinary dan Google picture domain yang diperbolehkan!'
     }),
     phone_number: phoneNumberSchema,
 });
@@ -117,6 +119,34 @@ const resetPasswordSchema = Joi.object({
     })
 });
 
+/* Schema untuk restaurant */
+const allowedDays = [
+    'monday',
+    'tuesday',
+    'wednesday',
+    'thursday',
+    'friday',
+    'saturday',
+    'sunday'
+];
+
+const restaurantDataSchema = Joi.object({
+    schedule: Joi.array().items(Joi.object({
+        day_name: Joi.string().valid(allowedDays), // Wajib lowercase bhs inggris
+        open_time: time24hrSchema.optional(), // HH:MM:SS 24 hr format
+        close_time: time24hrSchema.optional(), // same as open_time
+        open: Joi.bool().optional()
+    })).optional(),
+    contacts: Joi.array().items(phoneNumberSchema).optional(),
+    physical_place: Joi.object({
+        open: time24hrSchema.optional(),
+        close: time24hrSchema.optional(),
+        day_closed: Joi.array().items(Joi.string().valid(allowedDays)).optional(),
+    }).optional(),
+    address: Joi.string().optional(),
+    status: Joi.string().valid('closed', 'open').optional(),
+})
+
 module.exports = {
     //  auth
     register: validator(registerSchema),
@@ -128,5 +158,8 @@ module.exports = {
 
     //  menu
     menu: validator(menuSchema),
-    menuEdit: validator(menuChangeSchema)
+    menuEdit: validator(menuChangeSchema),
+
+    //  restaurant
+    restaurant: validator(restaurantDataSchema)
 }
