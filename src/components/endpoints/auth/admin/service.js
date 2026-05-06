@@ -6,6 +6,12 @@ async function findByEmail(email) {
     return res.rows[0];
 }
 
+async function findById(admin_id) {
+    const res = await repository.findById(admin_id);
+
+    return res.rows[0];
+}
+
 async function createAdmin(admin) {
     const { email, passwordHash } = admin;
 
@@ -16,5 +22,6 @@ async function createAdmin(admin) {
 
 module.exports = {
     findByEmail,
+    findById,
     createAdmin,
 }

@@ -52,7 +52,7 @@ async function login(req, res, next) {
             const token = await generateAdminJwt(admin);
 
             if (!token) {
-                throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Proses login gagal!");
+                throw errorResponder(errors.INVALID_TOKEN, "Proses login gagal!");
             }
 
             return res.status(200).json({ token: token });
@@ -140,11 +140,37 @@ async function checkOtpMatched(req, res, next) {
     }
 }
 
+async function resetPassword(req, res, next) {
+    try {
+        const { error, value } = validate.resetPassword(req.body);
+
+        processJoiValidationError(error);
+
+        const { email, otp_code, password, confirm_password } = value;
+
+        const user = await service.findByEmail(email);
+
+        if (!user) return res.status(204).end();
+
+        // set boolean flag ke true untuk email akun admin
+        const valid = await otpService.verifyOTP(email, otp_code, true);
+
+        if (valid) {
+            // kirim plaintext password
+            const result = await otpService.resetAccountPassword(email, password, true);
+
+            if (result) return res.status(204).end();
+        }
+    } catch (err) {
+        return next(err);
+    }
+}
 
 module.exports = {
     register,
     login,
     requestAdminOtp,
     verifyAdminEmailByOtp,
-    checkOtpMatched
+    checkOtpMatched,
+    resetPassword
 }
