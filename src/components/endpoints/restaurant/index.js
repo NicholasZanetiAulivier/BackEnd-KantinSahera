@@ -6,7 +6,7 @@ const route = express.Router();
 
 route.put('/', passportAdminJwt, controller.updateRestaurantData);
 
-route.get('/status/:status', passportAdminJwt, controller.setRestaurantStatus);
+route.put('/status/', passportAdminJwt, controller.setRestaurantStatus);
 route.get('/status', controller.getRestaurantStatus);
 route.get('/', controller.getRestaurantData);
 

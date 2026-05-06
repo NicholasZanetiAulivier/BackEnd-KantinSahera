@@ -22,7 +22,10 @@ async function getRestaurantStatus(req, res, next) {
 
 async function setRestaurantStatus(req, res, next) {
     try {
-        const status = req.params.status.toLowerCase().trim();
+        const { error, value } = validate.status(req.body);
+        processJoiValidationError(error);
+
+        const { status } = value;
         if (status === 'open' || status === 'closed') {
             await service.setStatus(status);
         } else {

@@ -99,7 +99,7 @@ const menuPriceSchema = Joi.number().precision(2).min(0).required().messages({
 
 const menuSchema = Joi.object({
     name: menuNameSchema.required(),
-    image_url: menuImageURLSchema,
+    image_url: menuImageURLSchema.optional(),
     price: menuPriceSchema.required(),
 });
 
@@ -120,19 +120,16 @@ const resetPasswordSchema = Joi.object({
 });
 
 /* Schema untuk restaurant */
-const allowedDays = [
-    'monday',
-    'tuesday',
-    'wednesday',
-    'thursday',
-    'friday',
-    'saturday',
-    'sunday'
-];
+
+const restaurantOpenStatusSchema = Joi.string().valid('closed', 'open').trim().lowercase();
+
+const restaurantUpdateStatusSchema = Joi.object({
+    status: restaurantOpenStatusSchema.required(),
+})
 
 const restaurantDataSchema = Joi.object({
     schedule: Joi.array().items(Joi.object({
-        day_name: Joi.string().valid(allowedDays), // Wajib lowercase bhs inggris
+        day_name: Joi.string().valid('monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'), // Wajib lowercase bhs inggris
         open_time: time24hrSchema.optional(), // HH:MM:SS 24 hr format
         close_time: time24hrSchema.optional(), // same as open_time
         open: Joi.bool().optional()
@@ -141,10 +138,10 @@ const restaurantDataSchema = Joi.object({
     physical_place: Joi.object({
         open: time24hrSchema.optional(),
         close: time24hrSchema.optional(),
-        day_closed: Joi.array().items(Joi.string().valid(allowedDays)).optional(),
+        day_closed: Joi.array().items(Joi.string().valid('monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday')).optional(),
     }).optional(),
     address: Joi.string().optional(),
-    status: Joi.string().valid('closed', 'open').optional(),
+    status: restaurantOpenStatusSchema.optional(),
 })
 
 module.exports = {
@@ -161,5 +158,6 @@ module.exports = {
     menuEdit: validator(menuChangeSchema),
 
     //  restaurant
+    status: validator(restaurantUpdateStatusSchema),
     restaurant: validator(restaurantDataSchema)
 }

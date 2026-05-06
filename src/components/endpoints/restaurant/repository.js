@@ -145,7 +145,7 @@ async function setSchedule(schedule) {
             let c = 1;
             let sets = [];
             let add = [];
-            for (let key of day) {
+            for (let key in day) {
                 if (key === 'day_name') continue;
                 sets.push(key + " = " + "$" + c++);
                 add.push(day[key]);
@@ -153,7 +153,7 @@ async function setSchedule(schedule) {
             add.push(day.day_name);
             if (sets.length > 0) {
                 await client.query(
-                    "UPDATE restaurant_schedules SET " + sets.join(',') + "WHERE day_name = $" + c,
+                    "UPDATE restaurant_schedules SET " + sets.join(',') + " WHERE day_name = $" + c,
                     add
                 );
             }
@@ -161,11 +161,11 @@ async function setSchedule(schedule) {
         await client.query("COMMIT");
     }).then(result => {
         res = result
-    }).catch((err) => {
+    }).catch(async (err) => {
         await clientref.query("ROLLBACK");
         logger.error({ err }, 'Terjadi error database di restaurant!');
         throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
-    }).finally(() => {
+    }).finally(async () => {
         await clientref.release();
     });
 
@@ -188,7 +188,7 @@ async function setContacts(contacts) {
     }).catch((err) => {
         logger.error({ err }, 'Terjadi error database di restaurant!');
         throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
-    }).finally(() => {
+    }).finally(async () => {
         await clientref.release();
     });
     return res;
@@ -211,7 +211,7 @@ async function setPhysical(physical_place) {
     }).catch((err) => {
         logger.error({ err }, 'Terjadi error database di restaurant!');
         throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
-    }).finally(() => {
+    }).finally(async () => {
         await clientref.release();
     });
     return res;
@@ -221,6 +221,7 @@ async function setAddress(address) {
     let res, clientref;
 
     await db.connect().then(async (client) => {
+        clientref = client;
         await client.query(
             "UPDATE restaurant_datas SET value = $1 WHERE key = 'address'",
             [address]
@@ -230,7 +231,7 @@ async function setAddress(address) {
     }).catch((err) => {
         logger.error({ err }, 'Terjadi error database di restaurant!');
         throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
-    }).finally(() => {
+    }).finally(async () => {
         await clientref.release();
     });
     return res;
