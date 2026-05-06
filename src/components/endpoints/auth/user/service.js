@@ -158,9 +158,6 @@ async function createRefreshToken(refreshToken) {
     if (!user) throw errorResponder(errors.NOT_FOUND, "User tidak ditemukan!");
 
     const accessToken = await refreshUserJwt(user);
-    await jwt.verify(accessToken, config.secret.user, (err, decoded) => {
-        // console.log(decoded);
-    });
 
     if (!accessToken) throw errorResponder(errors.INVALID_TOKEN, "Gagal membuat token baru!");
 

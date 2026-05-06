@@ -166,11 +166,24 @@ async function resetPassword(req, res, next) {
     }
 }
 
+async function refreshToken(req, res, next) {
+    try {
+        const refreshToken = req.body.token;
+
+        const result = await service.createRefreshToken(refreshToken);
+
+        if (result) return res.status(200).json({token: result}) 
+    } catch (err) {
+        return next(err);
+    }
+}
+
 module.exports = {
     register,
     login,
     requestAdminOtp,
     verifyAdminEmailByOtp,
     checkOtpMatched,
-    resetPassword
+    resetPassword,
+    refreshToken
 }
