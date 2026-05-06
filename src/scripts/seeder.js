@@ -17,7 +17,7 @@ async function main() {
     await db.connect().then(async (c) => {
         client = c;
         await client.query("BEGIN");
-        await client.query(`INSERT INTO admins (email, password, super_admin) VALUES ($1,$2,$3)`, 
+        await client.query(`INSERT INTO admins (email, password, super_admin) VALUES ($1,$2,$3)`,
             [config.admin_account.email, await hashPassword(config.admin_account.password), true])
             .then(() => console.log("Added super admin!"))
             .catch((e) => console.log("Failed to add super admin"));
@@ -45,8 +45,10 @@ async function main() {
         await client.query("INSERT INTO restaurant_datas (key,value) VALUES ('physical_open' , $1)", [physicalOpen]); // physical_open: 07:00:00
         await client.query("INSERT INTO restaurant_datas (key,value) VALUES ('physical_close' , $1)", [physicalClose]);// physical_close: 19:00:00
         await client.query("INSERT INTO restaurant_datas (key,value) VALUES ('physical_day_closed' , $1)", [physicalDayClosed.join('|')]); //physical_day_closed: saturday|sunday|... and so on
-        await client.query("COMMIT");
 
+        await client.query("INSERT INTO restaurant_datas (key,value) VALUES ('status' , $1)", ['closed']); // status: open
+
+        await client.query("COMMIT");
         console.log("---Seeding process finished---")
     }).catch(async (err) => {
         await client.query("ROLLBACK");
