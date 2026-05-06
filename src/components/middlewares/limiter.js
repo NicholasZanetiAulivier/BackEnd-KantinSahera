@@ -18,7 +18,7 @@ const CONNECTION_CONFIGURATION = {
 
 const logger_used = logger('Rate Limit');
 
-const createLimitter = (prefix = "", requestLimit = 3) => ERT.rateLimit({
+const createLimiter = (prefix = "", requestLimit = 3) => ERT.rateLimit({
     windowMs: 60000 * 60, // sejam
     limit: requestLimit,
     legacyHeaders: false, // rekomendasi Docs nya
@@ -29,5 +29,5 @@ const createLimitter = (prefix = "", requestLimit = 3) => ERT.rateLimit({
 })
 
 module.exports = {
-    createLimitter,
+    createLimiter,
 }

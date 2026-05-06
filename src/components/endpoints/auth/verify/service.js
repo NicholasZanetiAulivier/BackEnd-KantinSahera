@@ -127,7 +127,7 @@ async function resetAccountPassword(email, plaintext_password, is_admin = false)
         // wajib manggil hashPassword untuk hash password (jangan ketukar dg otp)
         const hashedPassword = await hashPassword(plaintext_password);
 
-        const result = await repository.updateUserPassword(email, hashedPassword, is_admin);
+        const result = await repository.updateAccountPassword(email, hashedPassword, is_admin);
 
         if (result) return true;
     } catch (err) {

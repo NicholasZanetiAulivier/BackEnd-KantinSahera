@@ -3,7 +3,9 @@ const {OAuth2Client} = require('google-auth-library');
 const config = require('../../../../core/config');
 const logger = require('../../../../core/logger')('user-service');
 const {errors, errorResponder} = require('../../../../core/errors');
-const { generateUserJwt } = require('../../../../utils/token');
+const { generateUserJwt, refreshUserJwt } = require('../../../../utils/token');
+const jwt = require('jsonwebtoken');
+const { parseUserId } = require('../../../middlewares/authentication');
 
 // per platform harus beda client, cuma sekarang kita web doang
 const client = new OAuth2Client(config.secret.google_client_id);
@@ -50,6 +52,12 @@ async function verifyGoogleIdToken(token) {
         logger.error({err}, "Gagal memverifikasi id token Google pengguna!");
         throw errorResponder(errors.INVALID_TOKEN, "Gagal mengvalidasi token!");
     }
+}
+
+async function findById(user_id) {
+    const res = await repository.findById(user_id);
+
+    return res.rows[0];
 }
 
 async function findByEmail(email) {
@@ -131,11 +139,38 @@ async function handleGoogleAuth(googlePayload){
     return { message: returnMessage, token: token }
 }
 
+async function createRefreshToken(refreshToken) {
+    // refresh dilakukan 5 menit sebelum expired
+    let payload;
+    await jwt.verify(refreshToken, config.secret.user, (err, decoded) => {
+        if (err) {
+            logger.error({err}, "Terjadi error saat validasi token refresh!");
+            if (err.name = 'TokenExpiredError') throw errorResponder(errors.TOKEN_EXPIRED, "Token sudah expired!");
+            else throw errorResponder(errors.INVALID_TOKEN, "Token yang diberikan tidak valid!");
+        }
+
+        payload = decoded;
+    });
+
+    const data = await repository.findById(parseUserId(payload.user_id));
+    const user = data.rows[0];
+
+    if (!user) throw errorResponder(errors.NOT_FOUND, "User tidak ditemukan!");
+
+    const accessToken = await refreshUserJwt(user);
+
+    if (!accessToken) throw errorResponder(errors.INVALID_TOKEN, "Gagal membuat token baru!");
+
+    return accessToken;
+}
+
 module.exports = {
     findByEmail,
+    findById,
     createUser,
     changeProfileWhereId,
     getProfileById,
     verifyGoogleIdToken,
     handleGoogleAuth,
+    createRefreshToken,
 }
