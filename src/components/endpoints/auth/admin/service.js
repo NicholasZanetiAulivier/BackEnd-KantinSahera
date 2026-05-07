@@ -24,10 +24,10 @@ async function createAdmin(admin) {
     return res;
 }
 
-async function createRefreshToken(refreshToken) {
+async function createRefreshToken(accessToken) {
     // refresh dilakukan 5 menit sebelum expired
     let payload;
-    await jwt.verify(refreshToken, config.secret.admin, (err, decoded) => {
+    await jwt.verify(accessToken, config.secret.admin, (err, decoded) => {
         if (err) {
             logger.error({err}, "Terjadi error saat validasi token refresh!");
             if (err.name = 'TokenExpiredError') throw errorResponder(errors.TOKEN_EXPIRED, "Token sudah expired!");
@@ -42,11 +42,11 @@ async function createRefreshToken(refreshToken) {
 
     if (!admin) throw errorResponder(errors.NOT_FOUND, "Admin tidak ditemukan!");
 
-    const accessToken = await refreshAdminJwt(admin);
+    const refreshToken = await refreshAdminJwt(admin);
 
-    if (!accessToken) throw errorResponder(errors.INVALID_TOKEN, "Gagal membuat token baru!");
+    if (!refreshToken) throw errorResponder(errors.INVALID_TOKEN, "Gagal membuat token baru!");
 
-    return accessToken;
+    return refreshToken;
 }
 
 module.exports = {

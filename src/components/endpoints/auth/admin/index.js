@@ -1,6 +1,6 @@
 const express = require('express');
 const controller = require('./controller');
-const { passportSuperJwt } = require('../../../middlewares/authentication');
+const { passportSuperJwt, passportAdminJwt } = require('../../../middlewares/authentication');
 const { createLimiter } = require('../../../middlewares/limiter');
 
 const route = express.Router();
@@ -11,6 +11,6 @@ route.post('/otp/request', createLimiter('adminOTPRequest', 3), controller.reque
 route.post('/otp/check', createLimiter('adminOTPCheck', 3), controller.checkOtpMatched);
 route.post('/verify-email', controller.verifyAdminEmailByOtp);
 route.post('/reset-password', controller.resetPassword);
-route.post('/refresh', controller.refreshToken);
+route.post('/refresh', passportAdminJwt, controller.refreshToken);
 
 module.exports = route;

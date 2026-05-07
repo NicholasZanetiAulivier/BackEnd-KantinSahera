@@ -168,9 +168,10 @@ async function resetPassword(req, res, next) {
 
 async function refreshToken(req, res, next) {
     try {
-        const refreshToken = req.body.token;
+        const authorization = req.headers.authorization;
+        const accessToken = authorization.split('Bearer ')[1];
 
-        const result = await service.createRefreshToken(refreshToken);
+        const result = await service.createRefreshToken(accessToken);
 
         if (result) return res.status(200).json({token: result}) 
     } catch (err) {
