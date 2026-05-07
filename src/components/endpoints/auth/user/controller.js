@@ -4,7 +4,8 @@ const service = require('./service');
 const otpService = require('../verify/service');
 const { hashPassword, passwordMatched } = require('../../../../utils/password');
 const { generateUserJwt, refreshUserJwt } = require('../../../../utils/token');
-const { parseUserId, passportUserJwt } = require('../../../middlewares/authentication');
+const { passportUserJwt } = require('../../../middlewares/authentication');
+const { parseUserId } = require('../../../../utils/id-parser');
 const config = require('../../../../core/config');
 const jwt = require('jsonwebtoken');
 
@@ -238,6 +239,18 @@ async function refreshToken(req, res, next) {
     }
 }
 
+async function logout (req, res, next) {
+    try {
+        const { exp, jti } = req.user;
+
+        const result = await jwtService.invalidateJti(exp, jti);
+
+        if (result) return res.status(204).end();
+    } catch (err) {
+        return next(err);
+    }
+}
+
 module.exports = {
     register,
     login,
@@ -249,4 +262,5 @@ module.exports = {
     resetPassword,
     checkOtpMatched,
     refreshToken,
+    logout,
 }

@@ -2,8 +2,10 @@ const { errorResponder, errors, processJoiValidationError } = require('../../../
 const validate = require('../../../middlewares/validator')
 const service = require('./service');
 const otpService = require('../verify/service');
+const jwtService = require('../jwt/service');
 const { hashPassword, passwordMatched } = require('../../../../utils/password');
 const { generateAdminJwt, refreshAdminJwt } = require('../../../../utils/token');
+const { auth } = require('google-auth-library');
 
 async function register(req, res, next) {
     try {
@@ -142,6 +144,10 @@ async function checkOtpMatched(req, res, next) {
 
 async function resetPassword(req, res, next) {
     try {
+        // // TO-DO: Invalidate current jwt, jika endpoint ini diakses saat kondisi login 
+        // const authorization = req.headers.authorization;
+        // const token = authorization.split('Bearer ')[1];
+
         const { error, value } = validate.resetPassword(req.body);
 
         processJoiValidationError(error);
@@ -179,6 +185,18 @@ async function refreshToken(req, res, next) {
     }
 }
 
+async function logout(req, res, next) {
+    try {
+        const { exp, jti } = req.user;
+
+        const result = await jwtService.invalidateJti(exp, jti);
+
+        if (result) return res.status(204).end();
+    } catch (err) {
+        return next(err);
+    }
+}
+
 module.exports = {
     register,
     login,
@@ -186,5 +204,6 @@ module.exports = {
     verifyAdminEmailByOtp,
     checkOtpMatched,
     resetPassword,
-    refreshToken
+    refreshToken,
+    logout,
 }
