@@ -1,6 +1,6 @@
 const express = require('express');
 const controller = require('./controller');
-const { passportSuperJwt, passportAdminJwt } = require('../../../middlewares/authentication');
+const { passportSuperJwt, passportAdminJwt, adminOptionalAuth } = require('../../../middlewares/authentication');
 const { createLimiter } = require('../../../middlewares/limiter');
 
 const route = express.Router();
@@ -11,7 +11,7 @@ route.post('/otp/request', createLimiter('adminOTPRequest', 3), controller.reque
 route.post('/otp/check', createLimiter('adminOTPCheck', 3), controller.checkOtpMatched);
 route.post('/verify-email', controller.verifyAdminEmailByOtp);
 // TO-DO: Invalidate current jwt, jika endpoint reset password diakses saat kondisi login 
-route.post('/reset-password', controller.resetPassword);
+route.post('/reset-password', adminOptionalAuth, controller.resetPassword);
 route.post('/refresh', passportAdminJwt, controller.refreshToken);
 route.post('/logout', passportAdminJwt, controller.logout);
 

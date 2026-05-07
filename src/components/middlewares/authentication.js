@@ -87,8 +87,32 @@ const passportUserJwt = passport.authenticate('user', { session: false });
 const passportAdminJwt = passport.authenticate('admin', { session: false });
 const passportSuperJwt = passport.authenticate('superadmin', { session: false });
 
+const userOptionalAuth = (req, res, next) => {
+    passport.authenticate('user', { session: false }, function(err, user, info) {
+        if (err) throw err;
+        if (user) {
+            req.user = user;
+        }
+        
+        return next();
+    })(req, res, next);
+};
+
+const adminOptionalAuth = (req, res, next) => {
+    passport.authenticate('admin', { session: false }, function(err, user, info) {
+        if (err) throw err;
+        if (user) {
+            req.user = user;
+        }
+        
+        return next();
+    })(req, res, next);
+};
+
 module.exports = {
     passportUserJwt,
     passportAdminJwt,
     passportSuperJwt,
+    userOptionalAuth,
+    adminOptionalAuth,
 };

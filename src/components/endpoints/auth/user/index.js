@@ -1,6 +1,6 @@
 const express = require('express');
 const controller = require('./controller');
-const { passportUserJwt } = require('../../../middlewares/authentication');
+const { passportUserJwt, userOptionalAuth } = require('../../../middlewares/authentication');
 const { createLimiter } = require('../../../middlewares/limiter');
 
 const route = express.Router();
@@ -18,7 +18,7 @@ route.post('/google', createLimiter('userGoogleAuth', 5), controller.handleGoogl
 // biar user tau kalo otp yang diinput bener, panggil /otp/check
 // jadi form ada dua, form untuk isi otp dan form untuk input password baru (beda page)
 // Kode OTP kirim sekalian dg field password baru
-route.post('/reset-password', controller.resetPassword);
+route.post('/reset-password', userOptionalAuth, controller.resetPassword);
 route.post('/refresh', passportUserJwt, controller.refreshToken); // reject expired access token
 route.post('/logout', passportUserJwt, controller.logout);
 

@@ -144,9 +144,7 @@ async function checkOtpMatched(req, res, next) {
 
 async function resetPassword(req, res, next) {
     try {
-        // // TO-DO: Invalidate current jwt, jika endpoint ini diakses saat kondisi login 
-        // const authorization = req.headers.authorization;
-        // const token = authorization.split('Bearer ')[1];
+        const { jti } = req.user;
 
         const { error, value } = validate.resetPassword(req.body);
 
@@ -165,7 +163,11 @@ async function resetPassword(req, res, next) {
             // kirim plaintext password
             const result = await otpService.resetAccountPassword(email, password, true);
 
-            if (result) return res.status(204).end();
+            if (result) {
+                if (jti) await jwtService.invalidateJti(token.jti);
+
+                return res.status(204).end();
+            } 
         }
     } catch (err) {
         return next(err);

@@ -2,6 +2,7 @@ const { errorResponder, errors, processJoiValidationError } = require('../../../
 const validate = require('../../../middlewares/validator')
 const service = require('./service');
 const otpService = require('../verify/service');
+const jwtService = require('../jwt/service');
 const { hashPassword, passwordMatched } = require('../../../../utils/password');
 const { generateUserJwt, refreshUserJwt } = require('../../../../utils/token');
 const { passportUserJwt } = require('../../../middlewares/authentication');
@@ -184,6 +185,8 @@ async function resetPassword(req, res, next) {
     try {
         const { error, value } = validate.resetPassword(req.body);
 
+        const { jti } = req.user;
+
         processJoiValidationError(error);
 
         const { email, otp_code, password, confirm_password } = value;
@@ -198,7 +201,11 @@ async function resetPassword(req, res, next) {
             // kirim plaintext password
             const result = await otpService.resetAccountPassword(email, password, false);
 
-            if (result) return res.status(204).end();
+            if (result) {
+                if (jti) await jwtService.invalidateJti(jti);
+
+                return res.status(204).end();
+            }
         }
     } catch (err) {
         return next(err);
