@@ -5,7 +5,7 @@ const logger = require('../../../../core/logger')('user-service');
 const {errors, errorResponder} = require('../../../../core/errors');
 const { generateUserJwt, refreshUserJwt } = require('../../../../utils/token');
 const jwt = require('jsonwebtoken');
-const { parseUserId } = require('../../../middlewares/authentication');
+const { parseUserId } = require('../../../../utils/id-parser');
 
 // per platform harus beda client, cuma sekarang kita web doang
 const client = new OAuth2Client(config.secret.google_client_id);

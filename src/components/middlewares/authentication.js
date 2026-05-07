@@ -5,6 +5,7 @@ const adminService = require('../../components/endpoints/auth/admin/service');
 const { errorResponder, errors } = require('../../core/errors');
 const { Strategy: JwtStrategy, ExtractJwt } = require('passport-jwt');
 const { userPayload, adminPayload } = require('../../utils/jwt-payload');
+const { parseUserId, parseAdminId } = require('../../utils/id-parser');
 
 passport.use(
     'user',
@@ -72,27 +73,8 @@ const passportUserJwt = passport.authenticate('user', { session: false });
 const passportAdminJwt = passport.authenticate('admin', { session: false });
 const passportSuperJwt = passport.authenticate('superadmin', { session: false });
 
-function parseUserId(userId) {
-    const id = userId.split(config.keys_prefix.user_id);
-    console.log(id);
-    const idWithoutPrefix = id[1] || null;
-
-    if (idWithoutPrefix) return idWithoutPrefix;
-    else throw errorResponder(errors.BAD_ID, "ID payload bukan ID User yang valid!");
-}
-
-function parseAdminId(adminId) {
-    const id = adminId.split(config.keys_prefix.admin_id);
-    const idWithoutPrefix = id[1] || null;
-
-    if (idWithoutPrefix) return idWithoutPrefix;
-    else throw errorResponder(errors.BAD_ID, "ID payload bukan ID Admin yang valid!");
-}
-
 module.exports = {
     passportUserJwt,
     passportAdminJwt,
     passportSuperJwt,
-    parseUserId,
-    parseAdminId,
 };

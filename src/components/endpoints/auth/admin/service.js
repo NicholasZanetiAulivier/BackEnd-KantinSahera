@@ -1,5 +1,7 @@
 const repository = require('./repository');
-const { parseAdminId } = require('../../../middlewares/authentication');
+const { parseAdminId } = require('../../../../utils/id-parser');
+const jwt = require('jsonwebtoken');
+const config = require('../../../../core/config');
 
 async function findByEmail(email) {
     const res = await repository.findByEmail(email);
@@ -37,7 +39,7 @@ async function createRefreshToken(refreshToken) {
     const data = await repository.findById(parseAdminId(payload.user_id));
     const admin = data.rows[0];
 
-    if (!admin) throw errorResponder(errors.NOT_FOUND, "User tidak ditemukan!");
+    if (!admin) throw errorResponder(errors.NOT_FOUND, "Admin tidak ditemukan!");
 
     const accessToken = await refreshUserJwt(admin);
 
@@ -50,4 +52,5 @@ module.exports = {
     findByEmail,
     findById,
     createAdmin,
+    createRefreshToken,
 }
