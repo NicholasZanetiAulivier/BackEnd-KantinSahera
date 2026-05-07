@@ -2,6 +2,7 @@ const repository = require('./repository');
 const { parseAdminId } = require('../../../../utils/id-parser');
 const jwt = require('jsonwebtoken');
 const config = require('../../../../core/config');
+const { refreshAdminJwt } = require('../../../../utils/token')
 
 async function findByEmail(email) {
     const res = await repository.findByEmail(email);
@@ -36,12 +37,12 @@ async function createRefreshToken(refreshToken) {
         payload = decoded;
     });
 
-    const data = await repository.findById(parseAdminId(payload.user_id));
+    const data = await repository.findById(parseAdminId(payload.admin_id));
     const admin = data.rows[0];
 
     if (!admin) throw errorResponder(errors.NOT_FOUND, "Admin tidak ditemukan!");
 
-    const accessToken = await refreshUserJwt(admin);
+    const accessToken = await refreshAdminJwt(admin);
 
     if (!accessToken) throw errorResponder(errors.INVALID_TOKEN, "Gagal membuat token baru!");
 
