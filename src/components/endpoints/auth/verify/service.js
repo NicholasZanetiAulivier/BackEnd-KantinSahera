@@ -2,7 +2,7 @@ const repository = require('./repository');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const config = require('../../../../core/config');
-const logger = require('../../../../core/logger')('verify-service');
+const {logger} = require('../../../../core/logger');
 const { hashOtp, hashPassword, passwordMatched } = require('../../../../utils/password');
 const { errorResponder, errors } = require('../../../../core/errors');
 

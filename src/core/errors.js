@@ -91,7 +91,6 @@ const errors = {
     }
 };
 
-
 function errorResponder(code, status, description, message = "") {
     const err = new Error(message);
 
@@ -136,5 +135,5 @@ function processJoiValidationError(error) {
 module.exports = {
     errorResponder,
     errors,
-    processJoiValidationError
+    processJoiValidationError,
 };

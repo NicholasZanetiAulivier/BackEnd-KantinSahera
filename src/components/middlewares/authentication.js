@@ -1,10 +1,18 @@
 const passport = require('passport');
 const config = require('../../core/config');
-const userService = require('../../components/endpoints/auth/user/service');
-const adminService = require('../../components/endpoints/auth/admin/service');
+const userService = require('../endpoints/auth/user/service');
+const adminService = require('../endpoints/auth/admin/service');
+const jwtService = require('../endpoints/auth/jwt/service');
 const { errorResponder, errors } = require('../../core/errors');
 const { Strategy: JwtStrategy, ExtractJwt } = require('passport-jwt');
 const { userPayload, adminPayload } = require('../../utils/jwt-payload');
+const { parseUserId, parseAdminId } = require('../../utils/id-parser');
+
+invalidJti = async (jti) => {
+    const invalid = await jwtService.isInvalidJti(jti);
+
+    if (invalid) throw errorResponder(errors.INVALID_TOKEN, "Token yang diberikan tidak valid!");
+}
 
 passport.use(
     'user',
@@ -16,8 +24,11 @@ passport.use(
 
         async (payload, done) => {
             try {
+                await invalidJti(payload.jti);
+                
                 const user = userPayload(await userService.findById(parseUserId(payload.user_id)));
-                return done(null, user || false);
+
+                return done(null, { ...user, exp: payload.exp, jti: payload.jti } || false);
             } catch (err) {
                 return done(err, false);
             }
@@ -35,9 +46,11 @@ passport.use(
 
         async (payload, done) => {
             try {
+                await invalidJti(payload.jti);
+                
                 const admin = adminPayload(await adminService.findById(parseAdminId(payload.admin_id)));
 
-                return done(null, admin || false);
+                return done(null, { ...admin, exp: payload.exp, jti: payload.jti } || false);
             } catch (err) {
                 return done(err, false);
             }
@@ -55,12 +68,14 @@ passport.use(
 
         async (payload, done) => {
             try {
+                await invalidJti(payload.jti);
+
                 const admin = adminPayload(await adminService.findById(parseAdminId(payload.admin_id)));
 
                 if (!(admin.super_admin && payload.super_admin))
                     throw errorResponder(errors.INVALID_CREDENTIALS, "Admin bukan super admin!");
 
-                return done(null, admin || false);
+                return done(null, { ...admin, exp: payload.exp, jti: payload.jti } || false);
             } catch (err) {
                 return done(err, false);
             }
@@ -72,27 +87,32 @@ const passportUserJwt = passport.authenticate('user', { session: false });
 const passportAdminJwt = passport.authenticate('admin', { session: false });
 const passportSuperJwt = passport.authenticate('superadmin', { session: false });
 
-function parseUserId(userId) {
-    const id = userId.split(config.keys_prefix.user_id);
-    console.log(id);
-    const idWithoutPrefix = id[1] || null;
+const userOptionalAuth = (req, res, next) => {
+    passport.authenticate('user', { session: false }, function(err, user, info) {
+        if (err) throw err;
+        if (user) {
+            req.user = user;
+        }
+        
+        return next();
+    })(req, res, next);
+};
 
-    if (idWithoutPrefix) return idWithoutPrefix;
-    else throw errorResponder(errors.BAD_ID, "ID payload bukan ID User yang valid!");
-}
-
-function parseAdminId(adminId) {
-    const id = adminId.split(config.keys_prefix.admin_id);
-    const idWithoutPrefix = id[1] || null;
-
-    if (idWithoutPrefix) return idWithoutPrefix;
-    else throw errorResponder(errors.BAD_ID, "ID payload bukan ID Admin yang valid!");
-}
+const adminOptionalAuth = (req, res, next) => {
+    passport.authenticate('admin', { session: false }, function(err, user, info) {
+        if (err) throw err;
+        if (user) {
+            req.user = user;
+        }
+        
+        return next();
+    })(req, res, next);
+};
 
 module.exports = {
     passportUserJwt,
     passportAdminJwt,
     passportSuperJwt,
-    parseUserId,
-    parseAdminId,
+    userOptionalAuth,
+    adminOptionalAuth,
 };

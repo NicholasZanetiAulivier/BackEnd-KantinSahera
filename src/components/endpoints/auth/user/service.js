@@ -1,11 +1,11 @@
 const repository = require('./repository');
 const {OAuth2Client} = require('google-auth-library');
 const config = require('../../../../core/config');
-const logger = require('../../../../core/logger')('user-service');
+const {logger} = require('../../../../core/logger');
 const {errors, errorResponder} = require('../../../../core/errors');
 const { generateUserJwt, refreshUserJwt } = require('../../../../utils/token');
 const jwt = require('jsonwebtoken');
-const { parseUserId } = require('../../../middlewares/authentication');
+const { parseUserId } = require('../../../../utils/id-parser');
 
 // per platform harus beda client, cuma sekarang kita web doang
 const client = new OAuth2Client(config.secret.google_client_id);
@@ -139,10 +139,10 @@ async function handleGoogleAuth(googlePayload){
     return { message: returnMessage, token: token }
 }
 
-async function createRefreshToken(refreshToken) {
+async function createRefreshToken(accessToken) {
     // refresh dilakukan 5 menit sebelum expired
     let payload;
-    await jwt.verify(refreshToken, config.secret.user, (err, decoded) => {
+    await jwt.verify(accessToken, config.secret.user, (err, decoded) => {
         if (err) {
             logger.error({err}, "Terjadi error saat validasi token refresh!");
             if (err.name = 'TokenExpiredError') throw errorResponder(errors.TOKEN_EXPIRED, "Token sudah expired!");
@@ -157,11 +157,11 @@ async function createRefreshToken(refreshToken) {
 
     if (!user) throw errorResponder(errors.NOT_FOUND, "User tidak ditemukan!");
 
-    const accessToken = await refreshUserJwt(user);
+    const refreshToken = await refreshUserJwt(user);
 
-    if (!accessToken) throw errorResponder(errors.INVALID_TOKEN, "Gagal membuat token baru!");
+    if (!refreshToken) throw errorResponder(errors.INVALID_TOKEN, "Gagal membuat token baru!");
 
-    return accessToken;
+    return refreshToken;
 }
 
 module.exports = {

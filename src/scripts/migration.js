@@ -79,6 +79,11 @@ tables = {
         PRIMARY KEY(email, is_admin)
     );`, // hapus kolom is reset password, takutnya malah berbelit implementasinya
     // tambah attempt_count untuk blok pengguna yang terlalu banyak salah input otp
+    jti_blackklists: `CREATE TABLE IF NOT EXISTS jti_blacklists(
+        expires_at TIMESTAMPTZ NOT NULL,
+        jti UUID UNIQUE NOT NULL,
+        PRIMARY KEY(jti)
+    );` // timestamp with time zone untuk menyesuaikan exp claim jwt
 }
 
 async function main() {

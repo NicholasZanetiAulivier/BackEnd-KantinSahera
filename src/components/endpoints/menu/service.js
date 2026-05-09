@@ -21,7 +21,8 @@ async function createMenu(name, image_url, price) {
 async function editMenu(id, data) {
     const res = await repository.editMenu(id, data);
 
-    return;
+    return; // ???
+    // return void === undefined
 }
 
 async function deleteMenu(id) {

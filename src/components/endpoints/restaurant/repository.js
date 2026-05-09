@@ -1,6 +1,6 @@
 const { errorResponder, errors } = require('../../../core/errors');
 const db = require('../../../database/db');
-const logger = require('../../../core/logger')('menu-repository')
+const {logger} = require('../../../core/logger');
 
 async function getSchedule(days = []) {
     console.log(days);

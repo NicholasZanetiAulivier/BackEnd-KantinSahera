@@ -1,5 +1,8 @@
 const repository = require('./repository');
-const { parseAdminId } = require('../../../middlewares/authentication');
+const { parseAdminId } = require('../../../../utils/id-parser');
+const jwt = require('jsonwebtoken');
+const config = require('../../../../core/config');
+const { refreshAdminJwt } = require('../../../../utils/token')
 
 async function findByEmail(email) {
     const res = await repository.findByEmail(email);
@@ -21,10 +24,10 @@ async function createAdmin(admin) {
     return res;
 }
 
-async function createRefreshToken(refreshToken) {
+async function createRefreshToken(accessToken) {
     // refresh dilakukan 5 menit sebelum expired
     let payload;
-    await jwt.verify(refreshToken, config.secret.admin, (err, decoded) => {
+    await jwt.verify(accessToken, config.secret.admin, (err, decoded) => {
         if (err) {
             logger.error({err}, "Terjadi error saat validasi token refresh!");
             if (err.name = 'TokenExpiredError') throw errorResponder(errors.TOKEN_EXPIRED, "Token sudah expired!");
@@ -34,20 +37,21 @@ async function createRefreshToken(refreshToken) {
         payload = decoded;
     });
 
-    const data = await repository.findById(parseAdminId(payload.user_id));
+    const data = await repository.findById(parseAdminId(payload.admin_id));
     const admin = data.rows[0];
 
-    if (!admin) throw errorResponder(errors.NOT_FOUND, "User tidak ditemukan!");
+    if (!admin) throw errorResponder(errors.NOT_FOUND, "Admin tidak ditemukan!");
 
-    const accessToken = await refreshUserJwt(admin);
+    const refreshToken = await refreshAdminJwt(admin);
 
-    if (!accessToken) throw errorResponder(errors.INVALID_TOKEN, "Gagal membuat token baru!");
+    if (!refreshToken) throw errorResponder(errors.INVALID_TOKEN, "Gagal membuat token baru!");
 
-    return accessToken;
+    return refreshToken;
 }
 
 module.exports = {
     findByEmail,
     findById,
     createAdmin,
+    createRefreshToken,
 }

@@ -3,7 +3,7 @@ const bodyParser = require('body-parser');
 const methodOverride = require('method-override');
 const pinoHTTP = require('pino-http');
 const config = require('./config');
-const logger = require('./logger')('app');
+const {logger} = require('./logger');
 const router = require('../components/routes');
 const { errorResponder, errors } = require('./errors');
 const compression = require('compression');
@@ -67,12 +67,7 @@ module.exports = (app) => {
             description: error.description,
         };
 
-        // If this error is thrown by our code execution, then also log the stack trace
-        if (error.stack) {
-            ctx.stack = error.stack;
-        }
-
-        logger.error(ctx, error.toString());
+        logger.error({err: error, ...ctx});
 
         return next(error);
     });

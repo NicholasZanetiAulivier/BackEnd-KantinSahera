@@ -2,9 +2,11 @@ const { errorResponder, errors, processJoiValidationError } = require('../../../
 const validate = require('../../../middlewares/validator')
 const service = require('./service');
 const otpService = require('../verify/service');
+const jwtService = require('../jwt/service');
 const { hashPassword, passwordMatched } = require('../../../../utils/password');
 const { generateUserJwt, refreshUserJwt } = require('../../../../utils/token');
-const { parseUserId, passportUserJwt } = require('../../../middlewares/authentication');
+const { passportUserJwt } = require('../../../middlewares/authentication');
+const { parseUserId } = require('../../../../utils/id-parser');
 const config = require('../../../../core/config');
 const jwt = require('jsonwebtoken');
 
@@ -183,6 +185,8 @@ async function resetPassword(req, res, next) {
     try {
         const { error, value } = validate.resetPassword(req.body);
 
+        const { jti } = req.user;
+
         processJoiValidationError(error);
 
         const { email, otp_code, password, confirm_password } = value;
@@ -197,7 +201,11 @@ async function resetPassword(req, res, next) {
             // kirim plaintext password
             const result = await otpService.resetAccountPassword(email, password, false);
 
-            if (result) return res.status(204).end();
+            if (result) {
+                if (jti) await jwtService.invalidateJti(jti);
+
+                return res.status(204).end();
+            }
         }
     } catch (err) {
         return next(err);
@@ -227,11 +235,24 @@ async function checkOtpMatched(req, res, next) {
 
 async function refreshToken(req, res, next) {
     try {
-        const refreshToken = req.body.token;
+        const authorization = req.headers.authorization;
+        const accessToken = authorization.split('Bearer ')[1];
 
-        const result = await service.createRefreshToken(refreshToken);
+        const result = await service.createRefreshToken(accessToken);
 
         if (result) return res.status(200).json({token: result}) 
+    } catch (err) {
+        return next(err);
+    }
+}
+
+async function logout (req, res, next) {
+    try {
+        const { exp, jti } = req.user;
+
+        const result = await jwtService.invalidateJti(exp, jti);
+
+        if (result) return res.status(204).end();
     } catch (err) {
         return next(err);
     }
@@ -248,4 +269,5 @@ module.exports = {
     resetPassword,
     checkOtpMatched,
     refreshToken,
+    logout,
 }

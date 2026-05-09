@@ -2,8 +2,10 @@ const { errorResponder, errors, processJoiValidationError } = require('../../../
 const validate = require('../../../middlewares/validator')
 const service = require('./service');
 const otpService = require('../verify/service');
+const jwtService = require('../jwt/service');
 const { hashPassword, passwordMatched } = require('../../../../utils/password');
 const { generateAdminJwt, refreshAdminJwt } = require('../../../../utils/token');
+const { auth } = require('google-auth-library');
 
 async function register(req, res, next) {
     try {
@@ -142,6 +144,8 @@ async function checkOtpMatched(req, res, next) {
 
 async function resetPassword(req, res, next) {
     try {
+        const { jti } = req.user;
+
         const { error, value } = validate.resetPassword(req.body);
 
         processJoiValidationError(error);
@@ -159,7 +163,11 @@ async function resetPassword(req, res, next) {
             // kirim plaintext password
             const result = await otpService.resetAccountPassword(email, password, true);
 
-            if (result) return res.status(204).end();
+            if (result) {
+                if (jti) await jwtService.invalidateJti(token.jti);
+
+                return res.status(204).end();
+            } 
         }
     } catch (err) {
         return next(err);
@@ -168,11 +176,24 @@ async function resetPassword(req, res, next) {
 
 async function refreshToken(req, res, next) {
     try {
-        const refreshToken = req.body.token;
+        const authorization = req.headers.authorization;
+        const accessToken = authorization.split('Bearer ')[1];
 
-        const result = await service.createRefreshToken(refreshToken);
+        const result = await service.createRefreshToken(accessToken);
 
         if (result) return res.status(200).json({token: result}) 
+    } catch (err) {
+        return next(err);
+    }
+}
+
+async function logout(req, res, next) {
+    try {
+        const { exp, jti } = req.user;
+
+        const result = await jwtService.invalidateJti(exp, jti);
+
+        if (result) return res.status(204).end();
     } catch (err) {
         return next(err);
     }
@@ -185,5 +206,6 @@ module.exports = {
     verifyAdminEmailByOtp,
     checkOtpMatched,
     resetPassword,
-    refreshToken
+    refreshToken,
+    logout,
 }

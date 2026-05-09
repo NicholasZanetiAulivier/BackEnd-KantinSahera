@@ -1,7 +1,7 @@
 const ERT = require('express-rate-limit');
 const postgresStores = require('@acpr/rate-limit-postgresql')
 const config = require('../../core/config');
-const logger = require('../../core/logger');
+const {logger} = require('../../core/logger');
 
 const CONNECTION_CONFIGURATION = {
     user: config.database.user,
@@ -16,8 +16,6 @@ const CONNECTION_CONFIGURATION = {
     } : null,
 }; //Copy, karena males refactor kalo ganti module.exports di db.js
 
-const logger_used = logger('Rate Limit');
-
 const createLimiter = (prefix = "", requestLimit = 3) => ERT.rateLimit({
     windowMs: 60000 * 60, // sejam
     limit: requestLimit,
@@ -25,7 +23,7 @@ const createLimiter = (prefix = "", requestLimit = 3) => ERT.rateLimit({
     standardHeaders: true,
     store: new postgresStores.PostgresStore(CONNECTION_CONFIGURATION, prefix),
     ipv6Subnet: 56, // Default, ubah kalo perluh,
-    logger: logger_used
+    logger: logger
 })
 
 module.exports = {
