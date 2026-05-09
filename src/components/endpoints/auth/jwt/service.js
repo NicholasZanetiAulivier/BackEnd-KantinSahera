@@ -1,6 +1,6 @@
 const repository = require('./repository');
 const config = require('../../../../core/config');
-const logger = require('../../../../core/logger')('token-service');
+const {logger} = require('../../../../core/logger');
 
 // i dont want to use redis, why?
 // pertama, gw gk mau bikin ram deployment MELEDAK (redis itu in memory)

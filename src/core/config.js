@@ -4,6 +4,8 @@ process.env.NODE_ENV = (process.env.NODE_ENV || 'development').toLowerCase();
 const { loadEnvFile } = require('node:process');
 loadEnvFile('.env');
 module.exports = {
+    name: 'Kirno-API',
+    pino_level: process.env.PINO_LEVEL,
     env: process.env.NODE_ENV,
     api: {
         prefix: '/api',

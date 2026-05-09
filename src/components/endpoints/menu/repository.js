@@ -1,6 +1,6 @@
 const { errorResponder, errors } = require('../../../core/errors');
 const db = require('../../../database/db');
-const logger = require('../../../core/logger')('menu-repository')
+const {logger} = require('../../../core/logger');
 
 async function getMenuByIDs(ids) {
     let res, clientref;
@@ -45,9 +45,6 @@ async function getMenuBySearch(offset, limit, search) {
         query += " OFFSET $" + c++;
         add.push(new Number(offset));
     }
-
-    console.log(query);
-    console.log(add);
 
     let res, clientref;
 

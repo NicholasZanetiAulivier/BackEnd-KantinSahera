@@ -1,6 +1,6 @@
 const { errorResponder, errors } = require('../../../../core/errors');
 const db = require('../../../../database/db');
-const logger = require('../../../../core/logger')('token-repository');
+const {logger} = require('../../../../core/logger');
 const config = require('../../../../core/config');
 
 async function addInvalid(exp, jti) {

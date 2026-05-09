@@ -1,7 +1,7 @@
 const repository = require('./repository');
 const {OAuth2Client} = require('google-auth-library');
 const config = require('../../../../core/config');
-const logger = require('../../../../core/logger')('user-service');
+const {logger} = require('../../../../core/logger');
 const {errors, errorResponder} = require('../../../../core/errors');
 const { generateUserJwt, refreshUserJwt } = require('../../../../utils/token');
 const jwt = require('jsonwebtoken');
