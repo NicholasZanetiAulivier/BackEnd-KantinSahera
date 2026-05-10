@@ -6,7 +6,7 @@ const { checkInteger, checkUserParamsTokenID } = require('../../../utils/checks'
 
 async function getCustomerCart(req, res, next) {
     try {
-        const id = checkUserParamsTokenID(req);
+        const id = parseUserId(req.user.user_id);
 
         let { offset, limit } = req.query;
 
@@ -22,7 +22,7 @@ async function getCustomerCart(req, res, next) {
 
 async function addCustomerCartItem(req, res, next) {
     try {
-        const id = checkUserParamsTokenID(req);
+        const id = parseUserId(req.user.user_id);
 
         const { error, value } = validate.cartItem(req.body);
         processJoiValidationError(error);
@@ -42,7 +42,7 @@ async function addCustomerCartItem(req, res, next) {
 
 async function updateCustomerCartItem(req, res, next) {
     try {
-        const id = checkUserParamsTokenID(req);
+        const id = parseUserId(req.user.user_id);
         const { menuid: menu_id } = req.params;
 
         const { error, value } = validate.cartItemQuantity(req.body);
@@ -63,7 +63,7 @@ async function updateCustomerCartItem(req, res, next) {
 
 async function deleteCustomerCartItem(req, res, next) {
     try {
-        const id = checkUserParamsTokenID(req);
+        const id = parseUserId(req.user.user_id);
         const { menuid: menu_id } = req.params;
 
         if (!(await service.checkItemInCustomerCart(id, menu_id))) {
@@ -77,10 +77,50 @@ async function deleteCustomerCartItem(req, res, next) {
     }
 }
 
+async function deleteCustomerCart(req, res, next) {
+    try {
+        const id = parseUserId(req.user.user_id);
+
+        await service.deleteCustomerCart(id);
+        return res.status(204).send();
+    } catch (err) {
+        return next(err);
+    }
+}
+
+async function getCartPrice(req, res, next) {
+    try {
+        const id = parseUserId(req.user.user_id);
+
+        const price = await service.getCartPrice(id, true);
+        return res.status(200).json({ price }).send();
+    } catch (err) {
+        return next(err);
+    }
+}
+
+async function createOrder(req, res, next) {
+    try {
+        const id = parseUserId(req.user.user_id);
+
+        if (!(await service.checkCustomerCartExists(id))) {
+            throw errorResponder(errors.NOT_FOUND, "Tidak ada data cart untuk pengguna ini!");
+        }
+
+        await service.createOrder(id);
+        return res.status(204).send();
+    } catch (err) {
+        return next(err);
+    }
+}
+
 
 module.exports = {
     getCustomerCart,
+    getCartPrice,
     addCustomerCartItem,
     updateCustomerCartItem,
-    deleteCustomerCartItem
+    deleteCustomerCartItem,
+    deleteCustomerCart,
+    createOrder
 }

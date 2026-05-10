@@ -93,6 +93,26 @@ async function deleteCustomerCartItem(id, menu_id) {
     return res;
 }
 
+async function deleteCustomerCart(id) {
+    let res, clientref;
+
+    await db.connect().then(async (client) => {
+        clientref = client;
+        await client.query(
+            "DELETE FROM carts WHERE customer_id=$1 ;",
+            [id]
+        ).then(result => {
+            res = result
+        });
+    }).catch((err) => {
+        logger.error({ err }, 'Terjadi error database di restaurant!');
+        throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
+    }).finally(async () => {
+        await clientref.release();
+    });
+    return res;
+}
+
 async function getItemInCustomerCart(id, menu_id) {
     let res, clientref;
 
@@ -113,10 +133,68 @@ async function getItemInCustomerCart(id, menu_id) {
     return res;
 }
 
+async function getCartPrice(id, has_fee) {
+    let res, clientref;
+
+    await db.connect().then(async (client) => {
+        clientref = client;
+        let price = await client.query(
+            `SELECT SUM(menus.price*carts.quantity) "total" FROM carts JOIN menus ON carts.menu_id=menus.menu_id WHERE carts.customer_id=$1`,
+            [id]
+        ).then(result => new Number(result.rows[0].total));
+        if (has_fee) {
+            price += await client.query(
+                `SELECT NULLIF(value, '0') "value"  FROM restaurant_datas WHERE key ='fee'`
+            ).then(result => new Number(result.rows[0].value));
+        }
+        return price;
+    }).then(price => { res = price }).catch((err) => {
+        logger.error({ err }, 'Terjadi error database di restaurant!');
+        throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
+    }).finally(async () => {
+        await clientref.release();
+    });
+    return res;
+}
+
+async function createOrder(id) {
+    let res, clientref;
+
+    await db.connect().then(async (client) => {
+        clientref = client;
+
+        await client.query('BEGIN');
+
+        let price = await client.query('');
+        await client.query(`
+            INSERT INTO orders(total_price,)
+            `)
+        await client.query(
+            `WITH item_data AS (
+                SELECT * FROM carts WHERE customer_id=$1
+            ) INSERT INTO order_items`,
+            [id]
+        ).then(result => {
+            res = result
+        });
+
+        await client.query('COMMIT');
+    }).catch(async (err) => {
+        await clientref.query('ROLLBACK');
+        logger.error({ err }, 'Terjadi error database di restaurant!');
+        throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
+    }).finally(async () => {
+        await clientref.release();
+    });
+    return res;
+}
+
 module.exports = {
     getCustomerCart,
+    getCartPrice,
     addCustomerCartItem,
     getItemInCustomerCart,
     updateCustomerCartItem,
-    deleteCustomerCartItem
+    deleteCustomerCartItem,
+    deleteCustomerCart
 }

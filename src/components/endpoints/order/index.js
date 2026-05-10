@@ -5,9 +5,13 @@ const { passportAdminJwt, passportUserJwt } = require('../../middlewares/authent
 const route = express.Router();
 
 //Carts
-route.get('/cart/:id', passportUserJwt, controller.getCustomerCart);
-route.post('/cart/:id', passportUserJwt, controller.addCustomerCartItem);
-route.patch('/cart/:id/:menuid', passportUserJwt, controller.updateCustomerCartItem);
-route.delete('/cart/:id/:menuid', passportUserJwt, controller.deleteCustomerCartItem);
+route.get('/cart/price', passportUserJwt, controller.getCartPrice);
+route.get('/cart/', passportUserJwt, controller.getCustomerCart);
+route.post('/cart/', passportUserJwt, controller.addCustomerCartItem);
+route.patch('/cart/:menuid', passportUserJwt, controller.updateCustomerCartItem);
+route.delete('/cart/:menuid', passportUserJwt, controller.deleteCustomerCartItem);
+route.delete('/cart/', passportUserJwt, controller.deleteCustomerCart);
+
+route.post('/create', passportUserJwt, controller.createOrder);
 
 module.exports = route;
