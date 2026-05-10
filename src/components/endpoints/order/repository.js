@@ -157,7 +157,7 @@ async function getCartPrice(id, has_fee) {
     return res;
 }
 
-async function createOrder(id) {
+async function createOrder(id, location, note, has_fee, is_takeaway) {
     let res, clientref;
 
     await db.connect().then(async (client) => {
@@ -165,22 +165,113 @@ async function createOrder(id) {
 
         await client.query('BEGIN');
 
-        let price = await client.query('');
-        await client.query(`
-            INSERT INTO orders(total_price,)
-            `)
+        let price = await getCartPrice(id, has_fee);
+        let order = await client.query(`
+            INSERT INTO orders(total_price,location,note,has_fee,customer_id,is_takeaway)
+            VALUES ($1,$2,$3,$4,$5,$6) RETURNING *;`,
+            [price, location, note, has_fee, id, is_takeaway]
+        ).then(results => results.rows[0]);
+        console.log([price, location, note, has_fee, id, is_takeaway])
+
         await client.query(
             `WITH item_data AS (
                 SELECT * FROM carts WHERE customer_id=$1
-            ) INSERT INTO order_items`,
-            [id]
+            ) INSERT INTO order_items(order_id , menu_id, quantity)
+             SELECT $2, menu_id , quantity FROM item_data`,
+            [id, order.order_id]
         ).then(result => {
-            res = result
+            res = order
         });
 
+        await client.query(
+            `DELETE FROM carts WHERE customer_id=$1`,
+            [id]
+        );
         await client.query('COMMIT');
     }).catch(async (err) => {
         await clientref.query('ROLLBACK');
+        logger.error({ err }, 'Terjadi error database di restaurant!');
+        throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
+    }).finally(async () => {
+        await clientref.release();
+    });
+    return res;
+}
+
+async function getOrderByID(id) {
+    let res, clientref;
+
+    await db.connect().then(async (client) => {
+        clientref = client;
+        let price = await client.query(
+            `SELECT * FROM orders WHERE order_id = $1`,
+            [id]
+        ).then(result => {
+            res = result;
+        });
+    }).catch((err) => {
+        logger.error({ err }, 'Terjadi error database di restaurant!');
+        throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
+    }).finally(async () => {
+        await clientref.release();
+    });
+    return res;
+}
+
+async function getOrderByUserID(id, offset, limit) {
+    let res, clientref;
+    let offsetLimitString = "";
+    let add = [id];
+    let c = 2;
+    if (limit) {
+        offsetLimitString += " LIMIT $" + c++;
+        add.push(limit);
+    }
+    if (offset) {
+        offsetLimitString += " OFFSET $" + c++;
+        add.push(offset);
+    }
+
+    await db.connect().then(async (client) => {
+        clientref = client;
+        await client.query(
+            "SELECT * FROM orders WHERE customer_id= $1" + offsetLimitString,
+            add
+        ).then(result => {
+            res = result
+        });
+    }).catch((err) => {
+        logger.error({ err }, 'Terjadi error database di restaurant!');
+        throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
+    }).finally(async () => {
+        await clientref.release();
+    });
+    return res;
+}
+
+async function getOrders(offset, limit) {
+    let res, clientref;
+    let offsetLimitString = "";
+    let add = [];
+    let c = 1;
+    if (limit) {
+        offsetLimitString += " LIMIT $" + c++;
+        add.push(limit);
+    }
+    if (offset) {
+        offsetLimitString += " OFFSET $" + c++;
+        add.push(offset);
+    }
+
+    await db.connect().then(async (client) => {
+        clientref = client;
+        await client.query(
+            "SELECT * FROM orders" + offsetLimitString,
+            add
+        ).then(result => {
+            res = result
+        });
+    }).catch((err) => {
         logger.error({ err }, 'Terjadi error database di restaurant!');
         throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
     }).finally(async () => {
@@ -196,5 +287,9 @@ module.exports = {
     getItemInCustomerCart,
     updateCustomerCartItem,
     deleteCustomerCartItem,
-    deleteCustomerCart
+    deleteCustomerCart,
+    createOrder,
+    getOrderByID,
+    getOrderByUserID,
+    getOrders
 }

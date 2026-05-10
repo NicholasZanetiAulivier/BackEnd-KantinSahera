@@ -25,7 +25,7 @@ passport.use(
         async (payload, done) => {
             try {
                 await invalidJti(payload.jti);
-                
+
                 const user = userPayload(await userService.findById(parseUserId(payload.user_id)));
 
                 return done(null, { ...user, exp: payload.exp, jti: payload.jti } || false);
@@ -47,7 +47,7 @@ passport.use(
         async (payload, done) => {
             try {
                 await invalidJti(payload.jti);
-                
+
                 const admin = adminPayload(await adminService.findById(parseAdminId(payload.admin_id)));
 
                 return done(null, { ...admin, exp: payload.exp, jti: payload.jti } || false);
@@ -88,23 +88,23 @@ const passportAdminJwt = passport.authenticate('admin', { session: false });
 const passportSuperJwt = passport.authenticate('superadmin', { session: false });
 
 const userOptionalAuth = (req, res, next) => {
-    passport.authenticate('user', { session: false }, function(err, user, info) {
+    passport.authenticate('user', { session: false }, function (err, user, info) {
         if (err) throw err;
         if (user) {
             req.user = user;
         }
-        
+
         return next();
     })(req, res, next);
 };
 
 const adminOptionalAuth = (req, res, next) => {
-    passport.authenticate('admin', { session: false }, function(err, user, info) {
+    passport.authenticate('admin', { session: false }, function (err, admin, info) {
         if (err) throw err;
-        if (user) {
-            req.user = user;
+        if (admin) {
+            req.admin = admin;
         }
-        
+
         return next();
     })(req, res, next);
 };

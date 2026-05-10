@@ -15,7 +15,7 @@ function checkUserParamsTokenID(req) {
     const id_params = req.params.id;
 
     if (!(id === id_params)) {
-        throw errorResponder(errors.INVALID_CREDENTIALS, "User tidak memiliki hak akses untuk cart yang diminta!");
+        throw errorResponder(errors.INVALID_CREDENTIALS, "User tidak memiliki hak akses untuk data yang diminta!");
     }
     return id;
 }

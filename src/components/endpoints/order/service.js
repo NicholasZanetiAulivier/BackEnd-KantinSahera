@@ -41,11 +41,26 @@ async function getCartPrice(id, has_fee) {
     return price;
 }
 
-async function createOrder(id) {
-    const result = await repository.createOrder(id);
-    return;
+async function createOrder(id, location, note, has_fee, is_takeaway) {
+    const result = await repository.createOrder(id, location, note, has_fee, is_takeaway);
+    return result;
 }
 
+async function getOrderByID(id) {
+    const result = await repository.getOrderByID(id);
+    return result.rows[0];
+}
+
+async function getOrderByUserID(id, offset, limit) {
+    const result = await repository.getOrderByUserID(id, offset, limit);
+    return result.rows;
+}
+
+async function getOrders(offset, limit) {
+    const result = await repository.getOrders(offset, limit);
+    return result.rows;
+
+}
 
 
 module.exports = {
@@ -57,5 +72,8 @@ module.exports = {
     updateCustomerCartItem,
     deleteCustomerCartItem,
     deleteCustomerCart,
-    createOrder
+    createOrder,
+    getOrderByID,
+    getOrderByUserID,
+    getOrders
 }

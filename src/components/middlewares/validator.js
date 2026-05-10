@@ -151,10 +151,15 @@ const quantitySchema = Joi.number().min(1);
 const cartItemSchema = Joi.object({
     menu_id: Joi.number().required(),
     quantity: quantitySchema.required(),
-})
+});
 
 const cartItemQuantitySchema = Joi.object({
     quantity: quantitySchema.required(),
+});
+
+const orderSchema = Joi.object({
+    location: Joi.string().allow(null),
+    note: Joi.string().length(300).allow(null),
 })
 
 module.exports = {
@@ -176,5 +181,8 @@ module.exports = {
 
     //  cart
     cartItem: validator(cartItemSchema),
-    cartItemQuantity: validator(cartItemQuantitySchema)
+    cartItemQuantity: validator(cartItemQuantitySchema),
+
+    //order
+    order: validator(orderSchema)
 }
