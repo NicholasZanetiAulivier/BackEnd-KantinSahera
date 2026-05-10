@@ -1,6 +1,6 @@
 const { errorResponder, errors } = require('../../../core/errors');
 const db = require('../../../database/db');
-const {logger} = require('../../../core/logger');
+const { logger } = require('../../../core/logger');
 
 async function getSchedule(days = []) {
     console.log(days);
@@ -121,9 +121,7 @@ async function setStatus(status) {
         await client.query(
             "UPDATE restaurant_datas SET value = $1 WHERE key = 'status'",
             [status]
-        ).then(result => {
-            res = result
-        }).catch((err) => {
+        ).catch((err) => {
             logger.error({ err }, 'Terjadi error database di restaurant!');
             throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
         }).finally(() => {
@@ -159,8 +157,6 @@ async function setSchedule(schedule) {
             }
         }
         await client.query("COMMIT");
-    }).then(result => {
-        res = result
     }).catch(async (err) => {
         await clientref.query("ROLLBACK");
         logger.error({ err }, 'Terjadi error database di restaurant!');
@@ -183,8 +179,6 @@ async function setContacts(contacts) {
             "UPDATE restaurant_datas SET value = $1 WHERE key = 'contacts'",
             [s]
         );
-    }).then(result => {
-        res = result
     }).catch((err) => {
         logger.error({ err }, 'Terjadi error database di restaurant!');
         throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
@@ -206,8 +200,6 @@ async function setPhysical(physical_place) {
                 [key === 'day_closed' ? physical_place[key].join('|') : physical_place[key], "physical_" + key] // Simple way to do it, definitely guaranteed because of Joi validation
             );
         }
-    }).then(result => {
-        res = result
     }).catch((err) => {
         logger.error({ err }, 'Terjadi error database di restaurant!');
         throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
@@ -226,8 +218,6 @@ async function setAddress(address) {
             "UPDATE restaurant_datas SET value = $1 WHERE key = 'address'",
             [address]
         );
-    }).then(result => {
-        res = result
     }).catch((err) => {
         logger.error({ err }, 'Terjadi error database di restaurant!');
         throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");

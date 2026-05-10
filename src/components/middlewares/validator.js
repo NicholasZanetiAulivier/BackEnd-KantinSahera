@@ -144,6 +144,13 @@ const restaurantDataSchema = Joi.object({
     status: restaurantOpenStatusSchema.optional(),
 })
 
+/* Schema untuk carts & order */
+
+const cartItemSchema = Joi.object({
+    menu_id: Joi.number().required(),
+    quantity: Joi.number().min(1).required(),
+})
+
 module.exports = {
     //  auth
     register: validator(registerSchema),
@@ -159,5 +166,8 @@ module.exports = {
 
     //  restaurant
     status: validator(restaurantUpdateStatusSchema),
-    restaurant: validator(restaurantDataSchema)
+    restaurant: validator(restaurantDataSchema),
+
+    //  cart
+    cartItem: validator(cartItemSchema),
 }
