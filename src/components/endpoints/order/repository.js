@@ -53,6 +53,46 @@ async function addCustomerCartItem(id, menu_id, quantity) {
     return res;
 }
 
+async function updateCustomerCartItem(id, menu_id, quantity) {
+    let res, clientref;
+
+    await db.connect().then(async (client) => {
+        clientref = client;
+        await client.query(
+            "UPDATE carts SET quantity=$1 WHERE customer_id=$2 AND menu_id=$3",
+            [quantity, id, menu_id]
+        ).then(result => {
+            res = result
+        });
+    }).catch((err) => {
+        logger.error({ err }, 'Terjadi error database di restaurant!');
+        throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
+    }).finally(async () => {
+        await clientref.release();
+    });
+    return res;
+}
+
+async function deleteCustomerCartItem(id, menu_id) {
+    let res, clientref;
+
+    await db.connect().then(async (client) => {
+        clientref = client;
+        await client.query(
+            "DELETE FROM carts WHERE customer_id=$1 AND menu_id=$2;",
+            [id, menu_id]
+        ).then(result => {
+            res = result
+        });
+    }).catch((err) => {
+        logger.error({ err }, 'Terjadi error database di restaurant!');
+        throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
+    }).finally(async () => {
+        await clientref.release();
+    });
+    return res;
+}
+
 async function getItemInCustomerCart(id, menu_id) {
     let res, clientref;
 
@@ -76,5 +116,7 @@ async function getItemInCustomerCart(id, menu_id) {
 module.exports = {
     getCustomerCart,
     addCustomerCartItem,
-    getItemInCustomerCart
+    getItemInCustomerCart,
+    updateCustomerCartItem,
+    deleteCustomerCartItem
 }

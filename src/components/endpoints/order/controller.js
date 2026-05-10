@@ -2,16 +2,11 @@ const { errorResponder, errors, processJoiValidationError } = require('../../../
 const service = require('./service');
 const validate = require('../../middlewares/validator');
 const { parseUserId } = require('../../../utils/id-parser');
-const { checkInteger } = require('../../../utils/checks');
+const { checkInteger, checkUserParamsTokenID } = require('../../../utils/checks');
 
 async function getCustomerCart(req, res, next) {
     try {
-        const id = parseUserId(req.user.user_id);
-        const id_params = req.params.id;
-
-        if (!(id === id_params)) {
-            throw errorResponder(errors.INVALID_CREDENTIALS, "User tidak memiliki hak akses untuk cart yang diminta!");
-        }
+        const id = checkUserParamsTokenID(req);
 
         let { offset, limit } = req.query;
 
@@ -27,12 +22,7 @@ async function getCustomerCart(req, res, next) {
 
 async function addCustomerCartItem(req, res, next) {
     try {
-        const id = parseUserId(req.user.user_id);
-        const id_params = req.params.id;
-
-        if (!(id === id_params)) {
-            throw errorResponder(errors.INVALID_CREDENTIALS, "User tidak memiliki hak akses untuk cart yang diminta!");
-        }
+        const id = checkUserParamsTokenID(req);
 
         const { error, value } = validate.cartItem(req.body);
         processJoiValidationError(error);
@@ -50,8 +40,47 @@ async function addCustomerCartItem(req, res, next) {
     }
 }
 
+async function updateCustomerCartItem(req, res, next) {
+    try {
+        const id = checkUserParamsTokenID(req);
+        const { menuid: menu_id } = req.params;
+
+        const { error, value } = validate.cartItemQuantity(req.body);
+        processJoiValidationError(error);
+
+        const { quantity } = value;
+
+        if (!(await service.checkItemInCustomerCart(id, menu_id))) {
+            throw errorResponder(errors.UNPROCESSABLE_ENTITY, "ID pengguna atau menu tidak valid! Pastikan pengguna sudah memiliki cart untuk menu ini sebelumnya!");
+        }
+
+        await service.updateCustomerCartItem(id, menu_id, quantity);
+        return res.status(204).send();
+    } catch (err) {
+        return next(err);
+    }
+}
+
+async function deleteCustomerCartItem(req, res, next) {
+    try {
+        const id = checkUserParamsTokenID(req);
+        const { menuid: menu_id } = req.params;
+
+        if (!(await service.checkItemInCustomerCart(id, menu_id))) {
+            throw errorResponder(errors.UNPROCESSABLE_ENTITY, "ID pengguna atau menu tidak valid! Pastikan pengguna sudah memiliki cart untuk menu ini sebelumnya!");
+        }
+
+        await service.deleteCustomerCartItem(id, menu_id);
+        return res.status(204).send();
+    } catch (err) {
+        return next(err);
+    }
+}
+
 
 module.exports = {
     getCustomerCart,
-    addCustomerCartItem
+    addCustomerCartItem,
+    updateCustomerCartItem,
+    deleteCustomerCartItem
 }

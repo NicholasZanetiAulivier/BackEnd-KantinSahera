@@ -146,9 +146,15 @@ const restaurantDataSchema = Joi.object({
 
 /* Schema untuk carts & order */
 
+const quantitySchema = Joi.number().min(1);
+
 const cartItemSchema = Joi.object({
     menu_id: Joi.number().required(),
-    quantity: Joi.number().min(1).required(),
+    quantity: quantitySchema.required(),
+})
+
+const cartItemQuantitySchema = Joi.object({
+    quantity: quantitySchema.required(),
 })
 
 module.exports = {
@@ -170,4 +176,5 @@ module.exports = {
 
     //  cart
     cartItem: validator(cartItemSchema),
+    cartItemQuantity: validator(cartItemQuantitySchema)
 }

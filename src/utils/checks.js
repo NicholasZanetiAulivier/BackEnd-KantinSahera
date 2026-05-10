@@ -1,4 +1,5 @@
 const { errorResponder, errors } = require('../core/errors');
+const { parseUserId } = require('./id-parser')
 
 function checkInteger(i, minVal, name) {
     if (Number.isNaN(i))
@@ -9,4 +10,14 @@ function checkInteger(i, minVal, name) {
         throw errorResponder(errors.BAD_ID, "ID harus berupa angka bulat");
 }
 
-module.exports = { checkInteger };
+function checkUserParamsTokenID(req) {
+    const id = parseUserId(req.user.user_id);
+    const id_params = req.params.id;
+
+    if (!(id === id_params)) {
+        throw errorResponder(errors.INVALID_CREDENTIALS, "User tidak memiliki hak akses untuk cart yang diminta!");
+    }
+    return id;
+}
+
+module.exports = { checkInteger, checkUserParamsTokenID };
