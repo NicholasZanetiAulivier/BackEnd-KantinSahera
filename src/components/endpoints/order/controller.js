@@ -14,7 +14,7 @@ async function getCustomerCart(req, res, next) {
         if (limit) checkInteger(limit, 0, 'Limit');
 
         const result = await service.getCustomerCart(id, offset, limit);
-        return res.status(200).json({ items: result, offset: new Number(offset), limit: new Number(limit) }).send();
+        return res.status(200).json({ items: result, offset: new Number(offset), limit: new Number(limit) });
     } catch (err) {
         return next(err);
     }
@@ -34,7 +34,7 @@ async function addCustomerCartItem(req, res, next) {
         }
 
         await service.addCustomerCartItem(id, menu_id, quantity);
-        return res.status(204).send();
+        return res.status(204).end();
     } catch (err) {
         return next(err);
     }
@@ -55,7 +55,7 @@ async function updateCustomerCartItem(req, res, next) {
         }
 
         await service.updateCustomerCartItem(id, menu_id, quantity);
-        return res.status(204).send();
+        return res.status(204).end();
     } catch (err) {
         return next(err);
     }
@@ -71,7 +71,7 @@ async function deleteCustomerCartItem(req, res, next) {
         }
 
         await service.deleteCustomerCartItem(id, menu_id);
-        return res.status(204).send();
+        return res.status(204).end();
     } catch (err) {
         return next(err);
     }
@@ -82,7 +82,7 @@ async function deleteCustomerCart(req, res, next) {
         const id = parseUserId(req.user.user_id);
 
         await service.deleteCustomerCart(id);
-        return res.status(204).send();
+        return res.status(204).end();
     } catch (err) {
         return next(err);
     }
@@ -93,7 +93,7 @@ async function getCartPrice(req, res, next) {
         const id = parseUserId(req.user.user_id);
 
         const price = await service.getCartPrice(id, true);
-        return res.status(200).json({ price }).send();
+        return res.status(200).json({ price });
     } catch (err) {
         return next(err);
     }
@@ -120,7 +120,7 @@ async function createOrder(req, res, next) {
         }
 
         const result = await service.createOrder(id, location, note, true, is_takeaway); //CHANGE THIS FOR FEE IMPLEMENTATION
-        return res.status(200).json({ order: result }).send();
+        return res.status(200).json({ order: result });
     } catch (err) {
         return next(err);
     }
@@ -131,7 +131,7 @@ async function getOrderByID(req, res, next) {
         const id = req.params.id;
 
         const result = await service.getOrderByID(id);
-        return res.status(200).json({ order: result }).send();
+        return res.status(200).json({ order: result });
     } catch (err) {
         return next(err);
     }
@@ -151,7 +151,7 @@ async function getOrderByUserID(req, res, next) {
         if (limit) checkInteger(limit, 0, 'Limit');
 
         const result = await service.getOrderByUserID(id, offset, limit);
-        return res.status(200).json({ orders: result }).send();
+        return res.status(200).json({ orders: result });
     } catch (err) {
         return next(err);
     }
@@ -166,7 +166,7 @@ async function getOrders(req, res, next) {
         if (limit) checkInteger(limit, 0, 'Limit');
 
         const result = await service.getOrders(offset, limit);
-        return res.status(200).json({ orders: result }).send();
+        return res.status(200).json({ orders: result });
     } catch (err) {
         return next(err);
     }

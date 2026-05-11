@@ -13,10 +13,26 @@ const days = [
 ]
 
 async function main() {
+    const randPrices = [5000, 25000, 3000, 22000, 26000];
+    function getRandomInt(min, max) {
+        return Math.floor(Math.random() * (max - min)) + min;
+    }
+    const image_url = "dummy link here (change)";
+    const n = randPrices.length;
+
     let client;
     await db.connect().then(async (c) => {
         client = c;
         await client.query("BEGIN");
+        // dummy food data
+        for (let i = 0; i < 20; i++) {
+            let name = `Food ${i + 1}`;
+            let price = randPrices[getRandomInt(n, 0)]
+            await client.query(
+                `INSERT INTO menus (name, image_url, price) VALUES ($1, $2, $3)`,
+                [name, image_url, price]
+            )
+        }
         await client.query(`INSERT INTO admins (email, password, super_admin) VALUES ($1,$2,$3)`,
             [config.admin_account.email, await hashPassword(config.admin_account.password), true])
             .then(() => console.log("Added super admin!"))

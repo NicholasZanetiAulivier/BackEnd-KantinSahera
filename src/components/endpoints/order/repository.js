@@ -19,8 +19,9 @@ async function getCustomerCart(id, offset, limit) {
     await db.connect().then(async (client) => {
         clientref = client;
         await client.query(
-            "SELECT quantity, carts.menu_id , name , image_url, price, is_available FROM carts JOIN menus ON carts.menu_id=menus.menu_id WHERE carts.customer_id= $1" + offsetLimitString,
-            add
+            `SELECT quantity, carts.menu_id , name , image_url, price, is_available FROM carts 
+                JOIN menus ON carts.menu_id=menus.menu_id WHERE carts.customer_id= $1 " ${offsetLimitString},
+            ${add}`
         ).then(result => {
             res = result
         });
@@ -139,7 +140,8 @@ async function getCartPrice(id, has_fee) {
     await db.connect().then(async (client) => {
         clientref = client;
         let price = await client.query(
-            `SELECT SUM(menus.price*carts.quantity) "total" FROM carts JOIN menus ON carts.menu_id=menus.menu_id WHERE carts.customer_id=$1`,
+            `SELECT SUM(menus.price*carts.quantity) "total" FROM carts 
+                JOIN menus ON carts.menu_id=menus.menu_id WHERE carts.customer_id=$1`,
             [id]
         ).then(result => new Number(result.rows[0].total));
         if (has_fee) {
