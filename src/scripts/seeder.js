@@ -47,6 +47,7 @@ async function main() {
         await client.query("INSERT INTO restaurant_datas (key,value) VALUES ('physical_day_closed' , $1)", [physicalDayClosed.join('|')]); //physical_day_closed: saturday|sunday|... and so on
 
         await client.query("INSERT INTO restaurant_datas (key,value) VALUES ('status' , $1)", ['closed']); // status: open
+        await client.query("INSERT INTO restaurant_datas (key,value) VALUES ('fee' , $1)", ['2000']); // status: open
 
         await client.query("COMMIT");
         console.log("---Seeding process finished---")
