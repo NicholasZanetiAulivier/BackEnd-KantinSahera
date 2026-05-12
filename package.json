@@ -18,7 +18,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon --trace-warnings --env-file=.env src/index.js",
     "migrate": "node src/scripts/migration.js",
-    "seed": "node src/scripts/seeder.js"
+    "seed": "node src/scripts/seeder.js",
+    "test-midtrans": "node src/scripts/midtransTest.js"
   },
   "dependencies": {
     "@acpr/rate-limit-postgresql": "^1.4.1",
