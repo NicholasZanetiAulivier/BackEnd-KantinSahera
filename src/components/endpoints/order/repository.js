@@ -6,22 +6,22 @@ async function getCustomerCart(id, offset, limit) {
     let res, clientref;
     let offsetLimitString = "";
     let add = [id];
-    let c = 2;
+    let c = 1;
     if (limit) {
-        offsetLimitString += " LIMIT $" + c++;
+        offsetLimitString += `LIMIT $${c++}`;
         add.push(limit);
     }
     if (offset) {
-        offsetLimitString += " OFFSET $" + c++;
+        offsetLimitString +=  `OFFSET $${c++}`;
         add.push(offset);
     }
 
     await db.connect().then(async (client) => {
         clientref = client;
         await client.query(
-            `SELECT quantity, carts.menu_id , name , image_url, price, is_available FROM carts 
-                JOIN menus ON carts.menu_id=menus.menu_id WHERE carts.customer_id= $1 " ${offsetLimitString},
-            ${add}`
+            `SELECT quantity, carts.menu_id, name, image_url, price, is_available FROM carts 
+                JOIN menus ON carts.menu_id=menus.menu_id WHERE carts.customer_id= $1 ${offsetLimitString}`,
+                add // your code still throws error lah nichizaul
         ).then(result => {
             res = result
         });

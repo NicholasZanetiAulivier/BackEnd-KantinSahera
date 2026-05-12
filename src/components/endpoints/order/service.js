@@ -11,8 +11,8 @@ async function checkItemInCustomerCart(id, menu_id) {
     return result.rowCount > 0;
 }
 
-async function checkCustomerCartExists(id) {
-    const result = await getCustomerCart(id, undefined, undefined);
+async function checkCustomerCartExists(id, offset, limit) {
+    const result = await repository.getCustomerCart(id, offset, limit);
     return result.length > 0;
 }
 
