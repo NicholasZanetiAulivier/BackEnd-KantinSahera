@@ -110,7 +110,7 @@ const adminOptionalAuth = (req, res, next) => {
 };
 
 // default attach ke req.user
-const adminOrUser = passport.authenticate(['superadmin', 'admin', 'user'], { session: false });
+const adminOrUser = passport.authenticate(['admin', 'user'], { session: false });
 
 module.exports = {
     passportUserJwt,

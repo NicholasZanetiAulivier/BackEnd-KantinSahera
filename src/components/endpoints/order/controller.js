@@ -115,7 +115,9 @@ async function createOrder(req, res, next) {
 
         note = note || null;
 
-        if (!(await service.checkCustomerCartExists(id))) {
+        const exists = await service.checkCustomerCartExists(id);
+        console.log(exists);
+        if (!exists) {
             throw errorResponder(errors.NOT_FOUND, "Tidak ada data cart untuk pengguna ini!");
         }
 

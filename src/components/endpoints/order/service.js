@@ -13,7 +13,7 @@ async function checkItemInCustomerCart(id, menu_id) {
 
 async function checkCustomerCartExists(id, offset, limit) {
     const result = await repository.getCustomerCart(id, offset, limit);
-    return result.length > 0;
+    return result.rows.length > 0; // ini error jg
 }
 
 async function addCustomerCartItem(id, menu_id, quantity) {

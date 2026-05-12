@@ -147,7 +147,7 @@ async function getCartPrice(id, has_fee) {
         if (has_fee) {
             price += await client.query(
                 `SELECT NULLIF(value, '0') "value"  FROM restaurant_datas WHERE key ='fee'`
-            ).then(result => new Number(result.rows[0].value));
+            ).then(result => new Number(result.rows[0].value ? result.rows[0].value : 2000));
         }
         return price;
     }).then(price => { res = price }).catch((err) => {

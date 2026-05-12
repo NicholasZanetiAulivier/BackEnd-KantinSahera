@@ -157,7 +157,7 @@ const cartItemQuantitySchema = Joi.object({
 
 const orderSchema = Joi.object({
     location: Joi.string().allow(null),
-    note: Joi.string().length(300).allow(null),
+    note: Joi.string().allow(null),
 })
 
 module.exports = {
