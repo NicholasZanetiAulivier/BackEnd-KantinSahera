@@ -16,7 +16,9 @@ module.exports = {
         user: process.env.USER_SECRET_KEY,
         admin: process.env.ADMIN_SECRET_KEY,
         google_client_id: process.env.GOOGLE_CLIENT_ID,
-        google_client_secret: process.env.GOOGLE_CLIENT_SECRET // gak dipakai
+        google_client_secret: process.env.GOOGLE_CLIENT_SECRET, // gak dipakai
+        midtrans_server_key: process.env.SERVER_KEY,
+        midtrans_auth_string: btoa(process.env.SERVER_KEY + ":"),
     },
     admin_account: {
         email: process.env.ADMIN_ACCOUNT_EMAIL,
