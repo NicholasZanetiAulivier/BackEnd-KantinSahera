@@ -128,10 +128,33 @@ async function createOrder(req, res, next) {
 
 async function getOrderByID(req, res, next) {
     try {
-        const id = req.params.id;
+        const orderId = req.params.id;
+        const userId = req.user.user_id;
 
-        const result = await service.getOrderByID(id);
-        return res.status(200).json({ order: result });
+        const order = await service.getOrderByID(orderId);
+
+        const orderCustId = order.customer_id;
+
+        // NOT XOR, karena kita mau izinkan user yg matching atau payload dg id admin
+        // try this, this would throw an error
+        // userId = 1
+        // orderCustId = 2
+        // admin_id = undefined;
+
+        // try {
+        //     if (!((userId !== orderCustId) ^ (!admin_id))) {
+        //         throw new Error("Anda tidak diizinkan mengakses endpoint ini!");
+        //     }
+            
+        //     console.log("Akses diizinkan");
+        // } catch (err) {
+        //     console.log(err);
+        // }
+        if (!((userId !== orderCustId) ^ (!req.user.admin_id))) {
+            throw errorResponder(errors.INVALID_TOKEN, "Anda tidak diizinkan mengakses endpoint ini!");
+        }
+
+        return res.status(200).json({ order: order });
     } catch (err) {
         return next(err);
     }
@@ -143,7 +166,7 @@ async function getOrderByUserID(req, res, next) {
 
         const { offset, limit } = req.query;
 
-        if (!req.admin) {
+        if (!req.user.admin_id) {
             checkUserParamsTokenID(req);
         }
 

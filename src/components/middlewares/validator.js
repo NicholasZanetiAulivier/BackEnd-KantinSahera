@@ -70,7 +70,7 @@ const imageUrlSchema = Joi.string().uri({
         'string.uri': "URL gambar tidak valid atau tidak absolut!",
         'string.uriCustomScheme': 'URL harus menggunakan protokol HTTPS!',
         'any.invalid': 'Hanya Cloudinary dan Google picture domain yang diperbolehkan!'
-    }),
+    });
 
 const profileSchema = Joi.object({
     username: usernameSchema,
@@ -103,7 +103,7 @@ const menuSchema = Joi.object({
 
 const menuChangeSchema = Joi.object({
     name: menuNameSchema.optional(),
-    image_url: menuImageURLSchema.optional(),
+    image_url: imageUrlSchema.optional(),
     price: menuPriceSchema.optional(),
     is_available: Joi.bool().optional(),
 })

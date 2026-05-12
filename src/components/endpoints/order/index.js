@@ -1,6 +1,6 @@
 const express = require('express');
 const controller = require('./controller');
-const { passportAdminJwt, passportUserJwt, userOptionalAuth, adminOptionalAuth } = require('../../middlewares/authentication');
+const { passportAdminJwt, passportUserJwt, adminOrUser } = require('../../middlewares/authentication');
 
 const route = express.Router();
 
@@ -14,8 +14,8 @@ route.delete('/cart/', passportUserJwt, controller.deleteCustomerCart);
 
 route.post('/create', passportUserJwt, controller.createOrder);
 
-route.get('/user/:id', userOptionalAuth, adminOptionalAuth, controller.getOrderByUserID); // maybe make this more secure, but what are the chances anyone would know the specific order id of someone else's
-route.get('/:id', controller.getOrderByID); // maybe make this more secure, but what are the chances anyone would know the specific order id of someone else's
+route.get('/user/:id', adminOrUser, controller.getOrderByUserID); // maybe make this more secure, but what are the chances anyone would know the specific order id of someone else's
+route.get('/:id', adminOrUser, controller.getOrderByID); // maybe make this more secure, but what are the chances anyone would know the specific order id of someone else's
 route.get('/', passportAdminJwt, controller.getOrders); // Currently only supports offset and limit queries, should probably be able to query for upaid, paid, and/or fullfilled orders
 
 module.exports = route;
