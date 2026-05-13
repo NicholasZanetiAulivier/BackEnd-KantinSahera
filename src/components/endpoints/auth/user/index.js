@@ -21,5 +21,6 @@ route.post('/google', createLimiter('userGoogleAuth', 5), controller.handleGoogl
 route.post('/reset-password', userOptionalAuth, controller.resetPassword);
 route.post('/refresh', passportUserJwt, controller.refreshToken); // reject expired access token
 route.post('/logout', passportUserJwt, controller.logout);
+route.get('/me', passportUserJwt, controller.authMe); // buat cek session
 
 module.exports = route;
