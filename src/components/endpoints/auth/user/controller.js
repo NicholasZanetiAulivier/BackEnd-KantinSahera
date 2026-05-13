@@ -258,6 +258,14 @@ async function logout (req, res, next) {
     }
 }
 
+async function authMe(req, res, next) {
+    try {
+        if (req.user) return res.status(200).json(req.user);
+    } catch (err) {
+        return next(err);
+    }
+}
+
 module.exports = {
     register,
     login,
@@ -270,4 +278,5 @@ module.exports = {
     checkOtpMatched,
     refreshToken,
     logout,
+    authMe,
 }

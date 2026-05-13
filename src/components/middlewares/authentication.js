@@ -83,9 +83,42 @@ passport.use(
     )
 );
 
-const passportUserJwt = passport.authenticate('user', { session: false });
-const passportAdminJwt = passport.authenticate('admin', { session: false });
-const passportSuperJwt = passport.authenticate('superadmin', { session: false });
+const passportUserJwt = (req, res, next) => {
+    passport.authenticate('user', { session: false }, function (err, user, info) {
+        if (err) throw err;
+        if (!user) {
+            throw errorResponder(errors.UNAUTHORIZED);
+        }
+
+        req.user = user;
+
+        return next();
+    })(req, res, next);
+}
+const passportAdminJwt = (req, res, next) => {
+    passport.authenticate('admin', { session: false }, function (err, user, info) {
+        if (err) throw err;
+        if (!user) {
+            throw errorResponder(errors.UNAUTHORIZED);
+        }
+
+        req.user = user;
+
+        return next();
+    })(req, res, next);
+}
+const passportSuperJwt = (req, res, next) => {
+    passport.authenticate('superadmin', { session: false }, function (err, user, info) {
+        if (err) throw err;
+        if (!user) {
+            throw errorResponder(errors.UNAUTHORIZED);
+        }
+
+        req.user = user;
+
+        return next();
+    })(req, res, next);
+}
 
 const userOptionalAuth = (req, res, next) => {
     passport.authenticate('user', { session: false }, function (err, user, info) {
@@ -110,7 +143,18 @@ const adminOptionalAuth = (req, res, next) => {
 };
 
 // default attach ke req.user
-const adminOrUser = passport.authenticate(['admin', 'user'], { session: false });
+const adminOrUser = (req, res, next) => {
+    passport.authenticate(['admin', 'user'], { session: false }, function (err, user, info) {
+        if (err) throw err;
+        if (!user) {
+            throw errorResponder(errors.UNAUTHORIZED);
+        }
+
+        req.user = user;
+
+        return next();
+    })(req, res, next);
+}
 
 module.exports = {
     passportUserJwt,

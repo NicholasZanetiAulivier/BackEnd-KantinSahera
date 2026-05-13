@@ -88,6 +88,11 @@ const errors = {
         description: 'Maximun amount of requests has reached!',
         status: 429,
         code: 'TOO_MANY_REQUEST_ERROR'
+    },
+    UNAUTHORIZED: {
+        description: 'Unauthorized access!',
+        status: 401,
+        code: 'UNAUTHORIZED_ERROR'
     }
 };
 
