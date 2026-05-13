@@ -48,5 +48,12 @@ module.exports = {
         frontend_admin: process.env.FE_ADMIN_BASE_URL,
         frontend_user: process.env.FE_USER_BASE_URL,
         backend: process.env.BE_BASE_URL
+    },
+    cloudinary: {
+        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+        api_key: process.env.CLOUDINARY_API_KEY,
+        api_secret: process.env.CLOUDINARY_API_SECRET,
+        upload_folder: process.env.CLOUDINARY_UPLOAD_FOLDER,
+        upload_preset: process.env.CLOUDINARY_UPLOAD_PRESET
     }
 };

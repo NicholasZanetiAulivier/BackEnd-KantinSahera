@@ -12,8 +12,8 @@ async function checkItemInCustomerCart(id, menu_id) {
 }
 
 async function checkCustomerCartExists(id) {
-    const result = await getCustomerCart(id, undefined, undefined);
-    return result.length > 0;
+    const result = await repository.getCustomerCart(id, null, null);
+    return result.rows.length > 0; // ini error jg
 }
 
 async function addCustomerCartItem(id, menu_id, quantity) {

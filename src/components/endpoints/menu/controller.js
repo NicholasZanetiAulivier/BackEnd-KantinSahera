@@ -20,7 +20,7 @@ async function getMenu(req, res, next) {
         } else {
             result = await service.getMenuBySearch(offset, limit, search);
         }
-        return res.status(200).json({ data: result, offset, limit }).send();
+        return res.status(200).json({ data: result, offset, limit });
     } catch (err) {
         return next(err);
     }
@@ -35,7 +35,7 @@ async function createMenu(req, res, next) {
         const { name, image_url, price } = value;
 
         const result = await service.createMenu(name, image_url || undefined, price);
-        return res.status(201).json({ message: "Menu berhasil dibuat!", data: result }).send();
+        return res.status(201).json({ message: "Menu berhasil dibuat!", data: result });
     } catch (err) {
         return next(err);
     }
@@ -51,7 +51,7 @@ async function editMenu(req, res, next) {
         processJoiValidationError(error);
 
         await service.editMenu(id, value);
-        return res.status(204).send();
+        return res.status(204).end();
     } catch (err) {
         next(err);
     }
@@ -64,7 +64,7 @@ async function deleteMenu(req, res, next) {
         checkInteger(id, 1, "ID");
 
         await service.deleteMenu(id);
-        return res.status(204).send();
+        return res.status(204).end();
     } catch (err) {
         next(err);
     }

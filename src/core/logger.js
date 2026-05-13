@@ -15,7 +15,7 @@ const pinoPretty = {
 // if env production, use this
 const pinoProd = {
     target: 'pino/file',      // file — permanent record
-    options: { destination: './app.log', mkdir: true },
+    options: { destination: './logs/app.log', mkdir: true },
     level: config.pino_level || 'info' // save info and above to file
 }
 

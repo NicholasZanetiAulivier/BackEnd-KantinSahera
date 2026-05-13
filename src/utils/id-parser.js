@@ -3,7 +3,6 @@ const { errorResponder, errors } = require('../core/errors');
 
 function parseUserId(userId) {
     const id = userId.split(config.keys_prefix.user_id);
-    console.log(id);
     const idWithoutPrefix = id[1] || null;
 
     if (idWithoutPrefix) return idWithoutPrefix;

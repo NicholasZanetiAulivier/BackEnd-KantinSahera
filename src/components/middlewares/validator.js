@@ -54,9 +54,7 @@ const loginSchema = Joi.object({
     password: passwordSchema,
 })
 
-const profileSchema = Joi.object({
-    username: usernameSchema,
-    profile_image_url: Joi.string().uri({
+const imageUrlSchema = Joi.string().uri({
         scheme: ['https'],
         allowRelative: false,
     }).custom((value, helpers) => {
@@ -72,7 +70,11 @@ const profileSchema = Joi.object({
         'string.uri': "URL gambar tidak valid atau tidak absolut!",
         'string.uriCustomScheme': 'URL harus menggunakan protokol HTTPS!',
         'any.invalid': 'Hanya Cloudinary dan Google picture domain yang diperbolehkan!'
-    }),
+    });
+
+const profileSchema = Joi.object({
+    username: usernameSchema,
+    profile_image_url: imageUrlSchema,
     phone_number: phoneNumberSchema,
 });
 
@@ -88,10 +90,6 @@ const menuNameSchema = Joi.string().trim(true).min(1).messages({
     'string.empty': "Nama tidak boleh kosong"
 });
 
-const menuImageURLSchema = Joi.string().uri().messages({
-    'string.uri': "Image URL harus berupa URL yang valid"
-})
-
 const menuPriceSchema = Joi.number().precision(2).min(0).required().messages({
     'number.min': "Harga harus berupa angka positif",
     'number.precision': "Harga harus memiliki angka desimal 2 posisi di belakang koma"
@@ -99,13 +97,13 @@ const menuPriceSchema = Joi.number().precision(2).min(0).required().messages({
 
 const menuSchema = Joi.object({
     name: menuNameSchema.required(),
-    image_url: menuImageURLSchema.optional(),
+    image_url: imageUrlSchema.optional(),
     price: menuPriceSchema.required(),
 });
 
 const menuChangeSchema = Joi.object({
     name: menuNameSchema.optional(),
-    image_url: menuImageURLSchema.optional(),
+    image_url: imageUrlSchema.optional(),
     price: menuPriceSchema.optional(),
     is_available: Joi.bool().optional(),
 })
@@ -159,7 +157,7 @@ const cartItemQuantitySchema = Joi.object({
 
 const orderSchema = Joi.object({
     location: Joi.string().allow(null),
-    note: Joi.string().length(300).allow(null),
+    note: Joi.string().allow(null),
 })
 
 module.exports = {
