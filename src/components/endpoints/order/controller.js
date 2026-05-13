@@ -137,22 +137,7 @@ async function getOrderByID(req, res, next) {
 
         const orderCustId = order.customer_id;
 
-        // NOT XOR, karena kita mau izinkan user yg matching atau payload dg id admin
-        // try this, this would throw an error
-        // userId = 1
-        // orderCustId = 2
-        // admin_id = undefined;
-
-        // try {
-        //     if (!((userId !== orderCustId) ^ (!admin_id))) {
-        //         throw new Error("Anda tidak diizinkan mengakses endpoint ini!");
-        //     }
-            
-        //     console.log("Akses diizinkan");
-        // } catch (err) {
-        //     console.log(err);
-        // }
-        if (!((userId !== orderCustId) ^ (!req.user.admin_id))) {
+        if (!req.user.admin_id && userId !== orderCustId) {
             throw errorResponder(errors.INVALID_TOKEN, "Anda tidak diizinkan mengakses endpoint ini!");
         }
 

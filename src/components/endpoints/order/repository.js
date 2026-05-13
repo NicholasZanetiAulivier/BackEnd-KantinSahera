@@ -145,9 +145,10 @@ async function getCartPrice(id, has_fee) {
             [id]
         ).then(result => new Number(result.rows[0].total));
         if (has_fee) {
-            price += await client.query(
+            const parkingFee = await client.query(
                 `SELECT NULLIF(value, '0') "value"  FROM restaurant_datas WHERE key ='fee'`
-            ).then(result => new Number(result.rows[0].value ? result.rows[0].value : 2000));
+            ).then(result => new Number(result.rows[0].value));
+            price += parkingFee;
         }
         return price;
     }).then(price => { res = price }).catch((err) => {
