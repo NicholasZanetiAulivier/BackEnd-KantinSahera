@@ -14,5 +14,9 @@ route.post('/verify-email', controller.verifyAdminEmailByOtp);
 route.post('/reset-password', adminOptionalAuth, controller.resetPassword);
 route.post('/refresh', passportAdminJwt, controller.refreshToken);
 route.post('/logout', passportAdminJwt, controller.logout);
+// Kelola admin — super admin only
+route.get('/', passportSuperJwt, controller.getAdmins);
+route.patch('/:id', passportSuperJwt, controller.editAdmin);
+route.delete('/:id', passportSuperJwt, controller.deleteAdmin);
 
 module.exports = route;

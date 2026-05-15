@@ -83,6 +83,12 @@ const verifyOtpSchema = Joi.object({
     otp_code: otpSchema,
 })
 
+const adminEditSchema = Joi.object({
+    email: emailSchema.optional(),
+}).or('email').messages({
+    'object.missing': "Field harus di isi!"
+});
+
 /* Schema untuk menu */
 
 const menuNameSchema = Joi.string().trim(true).min(1).messages({
@@ -168,6 +174,7 @@ module.exports = {
     email: validator(emailSchema),
     verifyOtp: validator(verifyOtpSchema),
     resetPassword: validator(resetPasswordSchema),
+    adminEdit: validator(adminEditSchema),
 
     //  menu
     menu: validator(menuSchema),

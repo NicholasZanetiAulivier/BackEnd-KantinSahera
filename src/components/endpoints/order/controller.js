@@ -3,6 +3,7 @@ const service = require('./service');
 const validate = require('../../middlewares/validator');
 const { parseUserId } = require('../../../utils/id-parser');
 const { checkInteger, checkUserParamsTokenID } = require('../../../utils/checks');
+const restaurantService = require('../restaurant/service');
 
 async function getCustomerCart(req, res, next) {
     try {
@@ -114,6 +115,11 @@ async function createOrder(req, res, next) {
         else location = null;
 
         note = note || null;
+
+        const restaurantStatus = await restaurantService.getRestaurant();
+        if (restaurantStatus.status === "close") {
+            throw errorResponder(errors.SERVICE_UNAVAILABLE, "Restoran sedang tutup, tidak bisa melakukan pemesanan!");
+        }
 
         const exists = await service.checkCustomerCartExists(id);
         console.log(exists);

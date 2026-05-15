@@ -24,6 +24,30 @@ async function createAdmin(admin) {
     return res;
 }
 
+async function getAllAdmins() {
+ 
+    const res = await repository.getAllAdmins();
+ 
+    return res.rows;
+ 
+}
+
+async function updateAdmin(admin_id, email) {
+ 
+    const res = await repository.updateAdmin(admin_id, email);
+ 
+    return res;
+ 
+}
+
+async function deleteAdmin(admin_id) {
+ 
+    const res = await repository.deleteAdmin(admin_id);
+ 
+    return res;
+ 
+}
+
 async function createRefreshToken(accessToken) {
     // refresh dilakukan 5 menit sebelum expired
     let payload;
@@ -53,5 +77,8 @@ module.exports = {
     findByEmail,
     findById,
     createAdmin,
+    getAllAdmins,
+    updateAdmin,
+    deleteAdmin,
     createRefreshToken,
 }

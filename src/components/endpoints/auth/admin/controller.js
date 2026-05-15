@@ -199,6 +199,80 @@ async function logout(req, res, next) {
     }
 }
 
+async function getAdmins(req, res, next) {
+ 
+    try {
+ 
+        const admins = await service.getAllAdmins();
+ 
+        return res.status(200).json({ admins });
+    } catch (err) {
+        return next(err);
+    }
+}
+ 
+async function editAdmin(req, res, next) {
+    try {
+        const targetId = req.params.id;
+
+        const { error, value } = validate.adminEdit(req.body);
+
+        processJoiValidationError(error);
+
+        const { username, email } = value;
+
+        // Cek target admin ada
+        const target = await service.findById(parseAdminId(targetId));
+ 
+        if (!target) {
+            throw errorResponder(errors.NOT_FOUND, "Admin tidak ditemukan!");
+        }
+        // Jika email diubah, cek duplikat
+        if (email && email !== target.email) { 
+            const emailExists = await service.findByEmail(email);
+ 
+            if (emailExists) {
+                throw errorResponder(errors.DB_DUPLICATE_CONFLICT, "Email sudah digunakan admin lain!");
+            }
+        }
+
+        const result = await service.updateAdmin(parseAdminId(targetId), username, email);
+ 
+        if (result && result.rowCount > 0) {
+            return res.status(200).json({ message: "Data admin berhasil diperbarui." });
+        }
+        throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Gagal memperbarui data admin.");
+    } catch (err) {
+        return next(err);
+    }
+}
+
+async function deleteAdmin(req, res, next) {
+    try {
+        const targetId = req.params.id;
+
+        // Cek target admin ada
+        const target = await service.findById(parseAdminId(targetId));
+ 
+        if (!target) {
+            throw errorResponder(errors.NOT_FOUND, "Admin tidak ditemukan!");
+        }
+        // Tolak jika target adalah super admin
+        if (target.super_admin) {
+            throw errorResponder(errors.INVALID_CREDENTIALS, "Super admin tidak dapat dihapus!");
+        }
+
+        const result = await service.deleteAdmin(parseAdminId(targetId));
+
+        if (result && result.rowCount > 0) {
+            return res.status(204).end();
+        }
+        throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Gagal menghapus admin.");
+    } catch (err) {
+        return next(err);
+    }
+}
+
 module.exports = {
     register,
     login,
@@ -208,4 +282,7 @@ module.exports = {
     resetPassword,
     refreshToken,
     logout,
+    getAdmins,
+    editAdmin,
+    deleteAdmin
 }
