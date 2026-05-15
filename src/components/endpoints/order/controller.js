@@ -116,7 +116,7 @@ async function createOrder(req, res, next) {
 
         note = note || null;
 
-        const restaurantStatus = await restaurantService.getRestaurant();
+        const restaurantStatus = await restaurantService.getRestaurantStatus();
         if (restaurantStatus.status === "close") {
             throw errorResponder(errors.SERVICE_UNAVAILABLE, "Restoran sedang tutup, tidak bisa melakukan pemesanan!");
         }
@@ -128,7 +128,7 @@ async function createOrder(req, res, next) {
         }
 
         const result = await service.createOrder(id, location, note, true, is_takeaway); //CHANGE THIS FOR FEE IMPLEMENTATION
-        return res.status(200).json({ order: result });
+        return res.status(200).json(result);
     } catch (err) {
         return next(err);
     }
