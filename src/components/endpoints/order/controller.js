@@ -4,9 +4,8 @@ const validate = require('../../middlewares/validator');
 const { parseUserId } = require('../../../utils/id-parser');
 const { checkInteger, checkUserParamsTokenID } = require('../../../utils/checks');
 const restaurantService = require('../restaurant/service');
-const sha512 = require('js-sha512').sha512;
+const crypto = require('crypto');
 const config = require('../../../core/config');
-const { MIDTRANS_TRANSACTION_STATUS } = require('../../../utils/midtrans')
 
 async function getCustomerCart(req, res, next) {
     try {
@@ -179,17 +178,37 @@ async function getOrderByUserID(req, res, next) {
 async function getOrders(req, res, next) {
     try {
 
-        const { offset, limit } = req.query;
+        let { offset, limit, paid, fulfilled } = req.query;
 
         if (offset) checkInteger(offset, 0, 'Offset');
         if (limit) checkInteger(limit, 0, 'Limit');
 
-        const result = await service.getOrders(offset, limit);
+        if (paid) {
+            paid = paid.trim().toLowerCase() === 'true' ? true : false;
+        }
+        if (fulfilled) {
+            fulfilled = fulfilled.trim().toLowerCase() === 'true' ? true : false;
+        }
+
+        const result = await service.getOrders(offset, limit, paid, fulfilled);
         return res.status(200).json({ orders: result });
     } catch (err) {
         return next(err);
     }
 }
+
+const MIDTRANS_TRANSACTION_STATUS = [
+    "capture",
+    "settlement",
+    "pending",
+    "deny",
+    "cancel",
+    "expire",
+    "failure",
+    "refund",
+    "partial_refund",
+    "authorize",
+]
 
 async function handleMidtransNotifications(req, res, next) {
     try {
@@ -199,7 +218,7 @@ async function handleMidtransNotifications(req, res, next) {
             throw errorResponder(errors.INVALID_TOKEN, "The body does not contain a signature key");
         }
 
-        const hash = sha512(order_id + status_code + gross_amount + config.secret.midtrans_server_key);
+        const hash = crypto.createHash('sha512').update(order_id + status_code + gross_amount + config.secret.midtrans_server_key).digest('hex');
 
         if (hash !== signature_key) {
             throw errorResponder(errors.INVALID_TOKEN, "The signature key is not valid");
@@ -207,13 +226,11 @@ async function handleMidtransNotifications(req, res, next) {
 
         //We can check status through GET api after this, but honestly its kinda redundant (unless server key leaks)
 
-        const transacStatusCode = MIDTRANS_TRANSACTION_STATUS[transaction_status];
-
-        if (!transacStatusCode) {
+        if (!MIDTRANS_TRANSACTION_STATUS.includes(transaction_status)) {
             throw errorResponder(errors.BAD_REQUEST, "Transaction status is not valid");
         }
 
-        await service.updateOrderTransaction(order_id, transaction_id, transacStatusCode);
+        await service.updateOrderTransaction(order_id, transaction_id, transaction_status);
         return res.status(200).end();
     } catch (err) {
         return next(err);

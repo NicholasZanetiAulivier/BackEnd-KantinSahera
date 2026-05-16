@@ -36,7 +36,6 @@
     "google-auth-library": "^10.6.2",
     "joi": "^18.1.2",
     "joi-phone-number": "^5.1.1",
-    "js-sha512": "^0.9.0",
     "jsonwebtoken": "^9.0.3",
     "method-override": "^3.0.0",
     "nodemailer": "^8.0.7",
