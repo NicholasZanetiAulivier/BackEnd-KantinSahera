@@ -2,13 +2,14 @@ const { errorResponder, errors, processJoiValidationError } = require('../../../
 const validate = require('../../../middlewares/validator')
 const service = require('./service');
 const otpService = require('../verify/service');
-const jwtService = require('../jwt/service');
+const tokenService = require('../token/service');
 const { hashPassword, passwordMatched } = require('../../../../utils/password');
-const { generateUserJwt, refreshUserJwt } = require('../../../../utils/token');
+const { generateUserJwt, generateRefreshToken, REFRESH_TOKEN_EXPIRY_SECONDS } = require('../../../../utils/token');
 const { passportUserJwt } = require('../../../middlewares/authentication');
 const { parseUserId } = require('../../../../utils/id-parser');
 const config = require('../../../../core/config');
 const jwt = require('jsonwebtoken');
+const { addRefreshToken } = require('../token/repository');
 
 async function register(req, res, next) {
     try {
@@ -66,6 +67,28 @@ async function login(req, res, next) {
             if (!token) {
                 throw errorResponder(errors.INVALID_TOKEN, "Proses login gagal!");
             }
+
+            const refreshToken = await generateRefreshToken();
+
+            const tokenHash = await hashPassword(refreshToken);
+
+            if (!tokenHash) throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Terjadi error saat proses login!");
+
+            await tokenService.addRefreshToken(tokenHash, user.user_id, false)
+
+            // value = refresh token (unhashed)
+            // expiry = unix timestamp dalam detik
+            const expiryTimeSeconds = Math.floor(Date.now() / 1000) + REFRESH_TOKEN_EXPIRY_SECONDS
+            const obj = JSON.stringify({
+                value: refreshToken,
+                expiry: expiryTimeSeconds
+            });
+
+            // send json cookie
+            res.cookie('refresh_token', obj, {
+                httpOnly: true,
+                maxAge: REFRESH_TOKEN_EXPIRY_SECONDS * 1000, // express maxAge is in ms, http headers stores it in seconds tho
+            });
 
             return res.status(200).json({ token: token });
         } else {
@@ -175,7 +198,7 @@ async function handleGoogleAuth(req, res, next) {
 
         const result = await service.handleGoogleAuth(idTokenValid);
 
-        return res.status(200).json(result);
+        return res.status(200).json({ message, token } = result);
     } catch (err) {
         return next(err);
     }
@@ -202,7 +225,7 @@ async function resetPassword(req, res, next) {
             const result = await otpService.resetAccountPassword(email, password, false);
 
             if (result) {
-                if (jti) await jwtService.invalidateJti(jti);
+                if (jti) await tokenService.invalidateJti(jti);
 
                 return res.status(204).end();
             }
@@ -235,10 +258,18 @@ async function checkOtpMatched(req, res, next) {
 
 async function refreshToken(req, res, next) {
     try {
-        const authorization = req.headers.authorization;
-        const accessToken = authorization.split('Bearer ')[1];
+        const authHeader = req.headers.authorization.split(' ');
 
-        const result = await service.createRefreshToken(accessToken);
+        if (!authHeader.includes('Bearer')) throw errorResponder(errors.UNAUTHORIZED);
+
+        const refreshToken = req.cookies.refresh_token;
+        const accessToken = authHeader[1];
+
+        if (!refreshToken) {
+            throw errorResponder(errors.UNAUTHORIZED);
+        }
+
+        const result = await service.refreshAccessToken(refreshToken.value);
 
         if (result) return res.status(200).json({token: result}) 
     } catch (err) {
@@ -250,7 +281,7 @@ async function logout (req, res, next) {
     try {
         const { exp, jti } = req.user;
 
-        const result = await jwtService.invalidateJti(exp, jti);
+        const result = await tokenService.invalidateJti(exp, jti);
 
         if (result) return res.status(204).end();
     } catch (err) {

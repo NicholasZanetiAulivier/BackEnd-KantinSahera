@@ -2,7 +2,7 @@ const { errorResponder, errors, processJoiValidationError } = require('../../../
 const validate = require('../../../middlewares/validator')
 const service = require('./service');
 const otpService = require('../verify/service');
-const jwtService = require('../jwt/service');
+const tokenService = require('../token/service');
 const { hashPassword, passwordMatched } = require('../../../../utils/password');
 const { generateAdminJwt, refreshAdminJwt } = require('../../../../utils/token');
 const { auth } = require('google-auth-library');
@@ -164,7 +164,7 @@ async function resetPassword(req, res, next) {
             const result = await otpService.resetAccountPassword(email, password, true);
 
             if (result) {
-                if (jti) await jwtService.invalidateJti(token.jti);
+                if (jti) await tokenService.invalidateJti(token.jti);
 
                 return res.status(204).end();
             } 
@@ -191,7 +191,7 @@ async function logout(req, res, next) {
     try {
         const { exp, jti } = req.user;
 
-        const result = await jwtService.invalidateJti(exp, jti);
+        const result = await tokenService.invalidateJti(exp, jti);
 
         if (result) return res.status(204).end();
     } catch (err) {
