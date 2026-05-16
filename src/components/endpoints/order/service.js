@@ -61,7 +61,11 @@ async function getOrderByUserID(id, offset, limit) {
 async function getOrders(offset, limit) {
     const result = await repository.getOrders(offset, limit);
     return result.rows;
+}
 
+async function updateOrderTransaction(order_id, transaction_id, status) {
+    const result = await repository.updateOrderTransaction(order_id, transaction_id, status);
+    return result;
 }
 
 
@@ -77,5 +81,6 @@ module.exports = {
     createOrder,
     getOrderByID,
     getOrderByUserID,
-    getOrders
+    getOrders,
+    updateOrderTransaction
 }

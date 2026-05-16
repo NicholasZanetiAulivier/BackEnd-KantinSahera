@@ -98,7 +98,7 @@ const errors = {
         description: 'Midtrans returned a rejection and or error',
         status: 400,
         code: 'MIDTRANS_ERROR'
-    }
+    },
 };
 
 function errorResponder(code, status, description, message = "") {

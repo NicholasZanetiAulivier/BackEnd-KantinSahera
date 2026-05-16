@@ -318,6 +318,26 @@ async function getOrderByUserID(id, offset, limit) {
     return res;
 }
 
+async function updateOrderTransaction(order_id, transaction_id, status) {
+    let res, clientref;
+
+    await db.connect().then(async (client) => {
+        clientref = client;
+        await client.query(
+            "UPDATE orders SET transaction_id = $1, transaction_status = $2 WHERE order_id = $3",
+            [transaction_id, status, order_id]
+        ).then(result => {
+            res = result
+        });
+    }).catch((err) => {
+        logger.error({ err }, 'Terjadi error database di restaurant!');
+        throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
+    }).finally(async () => {
+        await clientref.release();
+    });
+    return res;
+}
+
 async function getOrders(offset, limit) {
     let res, clientref;
     let offsetLimitString = "";
@@ -361,5 +381,6 @@ module.exports = {
     createOrder,
     getOrderByID,
     getOrderByUserID,
-    getOrders
+    getOrders,
+    updateOrderTransaction,
 }
