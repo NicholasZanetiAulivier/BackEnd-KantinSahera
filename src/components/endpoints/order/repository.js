@@ -1,18 +1,18 @@
 const { errorResponder, errors } = require('../../../core/errors');
 const db = require('../../../database/db');
 const { logger } = require('../../../core/logger');
-
+const config = require('../../../core/config');
 async function getCustomerCart(id, offset, limit) {
     let res, clientref;
     let offsetLimitString = "";
     let add = [id];
-    let c = 1;
+    let c = 2;
     if (limit) {
         offsetLimitString += `LIMIT $${c++}`;
         add.push(limit);
     }
     if (offset) {
-        offsetLimitString +=  `OFFSET $${c++}`;
+        offsetLimitString += `OFFSET $${c++}`;
         add.push(offset);
     }
 
@@ -21,7 +21,28 @@ async function getCustomerCart(id, offset, limit) {
         await client.query(
             `SELECT quantity, carts.menu_id, name, image_url, price, is_available FROM carts 
                 JOIN menus ON carts.menu_id=menus.menu_id WHERE carts.customer_id= $1 ${offsetLimitString}`,
-                add // your code still throws error lah nichizaul
+            add // your code still throws error lah nichizaul, Nichizaul: no shit its wrong, c starts at 2
+        ).then(result => {
+            res = result
+        });
+    }).catch((err) => {
+        logger.error({ err }, 'Terjadi error database di restaurant!');
+        throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
+    }).finally(async () => {
+        await clientref.release();
+    });
+    return res;
+}
+
+async function getItemsByOrderID(id) {
+    let res, clientref;
+
+    await db.connect().then(async (client) => {
+        clientref = client;
+        await client.query(
+            `SELECT quantity, order_items.menu_id "menu_id", name, price FROM order_items 
+                JOIN menus ON order_items.menu_id=menus.menu_id WHERE order_items.order_id= $1`,
+            [id]
         ).then(result => {
             res = result
         });
@@ -174,7 +195,6 @@ async function createOrder(id, location, note, has_fee, is_takeaway) {
             VALUES ($1,$2,$3,$4,$5,$6) RETURNING *;`,
             [price, location, note, has_fee, id, is_takeaway]
         ).then(results => results.rows[0]);
-        console.log([price, location, note, has_fee, id, is_takeaway])
 
         await client.query(
             `WITH item_data AS (
@@ -183,13 +203,59 @@ async function createOrder(id, location, note, has_fee, is_takeaway) {
              SELECT $2, menu_id , quantity FROM item_data`,
             [id, order.order_id]
         ).then(result => {
-            res = order
+            result
         });
 
         await client.query(
             `DELETE FROM carts WHERE customer_id=$1`,
             [id]
         );
+
+        /*Midtrans request here so we can rollback if midtrans errors */
+        const headers = new Headers({
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "Authorization": "Basic " + config.secret.midtrans_auth_string
+        });
+
+        const transaction_details = {
+            order_id: order['order_id'],
+            gross_amount: Math.ceil(order['total_price']), //obviously ceil
+        };
+
+        const items = await getItemsByOrderID(order['order_id']);
+        const item_details = [];
+        for (const item of items.rows) {
+            item_details.push({
+                id: item['menu_id'],
+                price: Math.ceil(item['price']),
+                quantity: item['quantity'],
+                name: item['name'].substr(0, 50),
+            })
+        }
+
+        /* If we want and have the time, we could finish the whole list of optional attributes */
+        const midtransReturns = await fetch(
+            'https://app.sandbox.midtrans.com/snap/v1/transactions', {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ transaction_details, item_details })
+        }
+        ).then(async (res) => {
+            if (res.status == 201) {
+                return await res.json();
+            } else {
+                throw errorResponder(errors.MIDTRANS_BAD_REQUEST, "Transaksi tidak dibuat oleh Midtrans!");
+            }
+        }).catch(err => {
+            throw errorResponder(errors.MIDTRANS_BAD_REQUEST, "Error midtrans!");
+        });
+
+        res = {
+            order,
+            payment: midtransReturns
+        };
+
         await client.query('COMMIT');
     }).catch(async (err) => {
         await clientref.query('ROLLBACK');
@@ -252,6 +318,26 @@ async function getOrderByUserID(id, offset, limit) {
     return res;
 }
 
+async function updateOrderTransaction(order_id, transaction_id, status) {
+    let res, clientref;
+
+    await db.connect().then(async (client) => {
+        clientref = client;
+        await client.query(
+            "UPDATE orders SET transaction_id = $1, transaction_status = $2 WHERE order_id = $3",
+            [transaction_id, status, order_id]
+        ).then(result => {
+            res = result
+        });
+    }).catch((err) => {
+        logger.error({ err }, 'Terjadi error database di restaurant!');
+        throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
+    }).finally(async () => {
+        await clientref.release();
+    });
+    return res;
+}
+
 async function getOrders(offset, limit) {
     let res, clientref;
     let offsetLimitString = "";
@@ -285,6 +371,7 @@ async function getOrders(offset, limit) {
 
 module.exports = {
     getCustomerCart,
+    getItemsByOrderID,
     getCartPrice,
     addCustomerCartItem,
     getItemInCustomerCart,
@@ -294,5 +381,6 @@ module.exports = {
     createOrder,
     getOrderByID,
     getOrderByUserID,
-    getOrders
+    getOrders,
+    updateOrderTransaction,
 }

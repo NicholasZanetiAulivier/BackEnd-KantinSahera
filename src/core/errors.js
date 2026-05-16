@@ -93,7 +93,12 @@ const errors = {
         description: 'Unauthorized access!',
         status: 401,
         code: 'UNAUTHORIZED_ERROR'
-    }
+    },
+    MIDTRANS_BAD_REQUEST: {
+        description: 'Midtrans returned a rejection and or error',
+        status: 400,
+        code: 'MIDTRANS_ERROR'
+    },
 };
 
 function errorResponder(code, status, description, message = "") {

@@ -17,13 +17,30 @@ tables = {
         total_price DECIMAL(9,2) NOT NULL CHECK (total_price >= 0),
         location VARCHAR,
         date TIMESTAMP NOT NULL DEFAULT NOW(),
-        paid BOOLEAN NOT NULL DEFAULT false,
+        transaction_id VARCHAR UNIQUE,
+        transaction_status CHAR(1),
         fulfilled BOOLEAN NOT NULL DEFAULT false,
         note VARCHAR(300),
         has_fee BOOLEAN NOT NULL,
         customer_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
-        is_takeaway BOOLEAN
+        is_takeaway BOOLEAN,
+
+        CHECK (transaction_status IN ('c','s','p','d','0','x','f','r','/','a'))
     );`,
+    /*
+        Orders transaction_status definitions:
+        c:  capture
+        s:  settlement
+        p:  pending
+        d:  deny
+        0:  cancel
+        x:  expire
+        f:  failure
+        r:  refund
+        /:  partial refund
+        a:  authorize
+    */
+
     menus: `CREATE TABLE IF NOT EXISTS menus(
         menu_id SERIAL PRIMARY KEY,
         name VARCHAR NOT NULL,

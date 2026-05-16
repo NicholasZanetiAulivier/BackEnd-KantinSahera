@@ -1,5 +1,6 @@
 const repository = require('./repository');
 const adminPassport = require('../../middlewares/authentication');
+const { errorResponder, errors } = require('../../../core/errors');
 
 async function getCustomerCart(id, offset, limit) {
     const result = await repository.getCustomerCart(id, offset, limit);
@@ -43,6 +44,7 @@ async function getCartPrice(id, has_fee) {
 
 async function createOrder(id, location, note, has_fee, is_takeaway) {
     const result = await repository.createOrder(id, location, note, has_fee, is_takeaway);
+
     return result;
 }
 
@@ -59,7 +61,11 @@ async function getOrderByUserID(id, offset, limit) {
 async function getOrders(offset, limit) {
     const result = await repository.getOrders(offset, limit);
     return result.rows;
+}
 
+async function updateOrderTransaction(order_id, transaction_id, status) {
+    const result = await repository.updateOrderTransaction(order_id, transaction_id, status);
+    return result;
 }
 
 
@@ -75,5 +81,6 @@ module.exports = {
     createOrder,
     getOrderByID,
     getOrderByUserID,
-    getOrders
+    getOrders,
+    updateOrderTransaction
 }

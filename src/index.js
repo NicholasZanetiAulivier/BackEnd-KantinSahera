@@ -7,4 +7,6 @@ server(app);
 
 app.listen(config.api.port || 1982);
 
+console.log(`\nServer URL: localhost:${config.api.port || 1982}/api`)
+
 module.exports = app;

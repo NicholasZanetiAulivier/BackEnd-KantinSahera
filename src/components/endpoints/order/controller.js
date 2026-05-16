@@ -4,6 +4,9 @@ const validate = require('../../middlewares/validator');
 const { parseUserId } = require('../../../utils/id-parser');
 const { checkInteger, checkUserParamsTokenID } = require('../../../utils/checks');
 const restaurantService = require('../restaurant/service');
+const sha512 = require('js-sha512').sha512;
+const config = require('../../../core/config');
+const { MIDTRANS_TRANSACTION_STATUS } = require('../../../utils/midtrans')
 
 async function getCustomerCart(req, res, next) {
     try {
@@ -116,7 +119,7 @@ async function createOrder(req, res, next) {
 
         note = note || null;
 
-        const restaurantStatus = await restaurantService.getRestaurant();
+        const restaurantStatus = await restaurantService.getRestaurantStatus();
         if (restaurantStatus.status === "close") {
             throw errorResponder(errors.SERVICE_UNAVAILABLE, "Restoran sedang tutup, tidak bisa melakukan pemesanan!");
         }
@@ -128,7 +131,7 @@ async function createOrder(req, res, next) {
         }
 
         const result = await service.createOrder(id, location, note, true, is_takeaway); //CHANGE THIS FOR FEE IMPLEMENTATION
-        return res.status(200).json({ order: result });
+        return res.status(200).json(result);
     } catch (err) {
         return next(err);
     }
@@ -188,6 +191,35 @@ async function getOrders(req, res, next) {
     }
 }
 
+async function handleMidtransNotifications(req, res, next) {
+    try {
+        const { order_id, status_code, signature_key, gross_amount, transaction_id, transaction_status } = req.body;
+
+        if (!signature_key) {
+            throw errorResponder(errors.INVALID_TOKEN, "The body does not contain a signature key");
+        }
+
+        const hash = sha512(order_id + status_code + gross_amount + config.secret.midtrans_server_key);
+
+        if (hash !== signature_key) {
+            throw errorResponder(errors.INVALID_TOKEN, "The signature key is not valid");
+        }
+
+        //We can check status through GET api after this, but honestly its kinda redundant (unless server key leaks)
+
+        const transacStatusCode = MIDTRANS_TRANSACTION_STATUS[transaction_status];
+
+        if (!transacStatusCode) {
+            throw errorResponder(errors.BAD_REQUEST, "Transaction status is not valid");
+        }
+
+        await service.updateOrderTransaction(order_id, transaction_id, transacStatusCode);
+        return res.status(200).end();
+    } catch (err) {
+        return next(err);
+    }
+}
+
 
 module.exports = {
     getCustomerCart,
@@ -199,5 +231,6 @@ module.exports = {
     createOrder,
     getOrderByID,
     getOrderByUserID,
-    getOrders
+    getOrders,
+    handleMidtransNotifications
 }
