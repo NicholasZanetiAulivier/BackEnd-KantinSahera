@@ -187,7 +187,7 @@ async function handleGoogleAuth(req, res, next) {
         const result = await service.handleGoogleAuth(idTokenValid);
 
         // code duplication i know, buat implementasi cepat aja
-        const refreshTokenStr = await tokenService.createRefreshToken(user.user_id, false);
+        const refreshTokenStr = await tokenService.createRefreshToken(result.user_id, false);
 
         if (!refreshTokenStr) 
             throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Terjadi error pada saat proses login!");
