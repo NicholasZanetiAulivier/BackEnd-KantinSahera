@@ -102,12 +102,13 @@ tables = {
     //     PRIMARY KEY(jti)
     // );` // timestamp with time zone untuk menyesuaikan exp claim jwt
     refresh_tokens: `CREATE TABLE IF NOT EXISTS refresh_tokens(
+        id UUID DEFAULT gen_random_uuid() PRIMARY KEY, 
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         expires_at TIMESTAMPTZ NOT NULL DEFAULT NOW() + interval '7 days',
         token VARCHAR NOT NULL,
         account_id UUID NOT NULL,
         is_admin BOOLEAN NOT NULL DEFAULT FALSE,
-        PRIMARY KEY(token)
+        is_revoked BOOLEAN NOT NULL DEFAULT FALSE
     );`, // kita langsung insert expiry default value aj buat implementasi cepat
 }
 

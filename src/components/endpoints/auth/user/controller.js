@@ -3,7 +3,7 @@ const validate = require('../../../middlewares/validator')
 const service = require('./service');
 const otpService = require('../verify/service');
 const tokenService = require('../token/service');
-const { hashPassword, passwordMatched } = require('../../../../utils/password');
+const { hashPassword, passwordMatched, hashOpaqueString } = require('../../../../utils/password');
 const { generateUserJwt, generateRefreshToken, REFRESH_TOKEN_EXPIRY_SECONDS } = require('../../../../utils/token');
 const { passportUserJwt } = require('../../../middlewares/authentication');
 const { parseUserId } = require('../../../../utils/id-parser');
@@ -64,28 +64,16 @@ async function login(req, res, next) {
             // destructure object so only username and email is sent
             const token = await generateUserJwt(user);
 
-            if (!token) {
-                throw errorResponder(errors.INVALID_TOKEN, "Proses login gagal!");
-            }
+            if (!token) 
+                throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Terjadi error pada saat proses login!");
 
-            const refreshToken = await generateRefreshToken();
+            // uuid.opaquestr
+            const refreshTokenStr = await tokenService.createRefreshToken(user.user_id, false);
 
-            const tokenHash = await hashPassword(refreshToken);
+            if (!refreshTokenStr) 
+                throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Terjadi error pada saat proses login!");
 
-            if (!tokenHash) throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Terjadi error saat proses login!");
-
-            await tokenService.addRefreshToken(tokenHash, user.user_id, false)
-
-            // value = refresh token (unhashed)
-            // expiry = unix timestamp dalam detik
-            const expiryTimeSeconds = Math.floor(Date.now() / 1000) + REFRESH_TOKEN_EXPIRY_SECONDS
-            const obj = JSON.stringify({
-                value: refreshToken,
-                expiry: expiryTimeSeconds
-            });
-
-            // send json cookie
-            res.cookie('refresh_token', obj, {
+            res.cookie('refresh_token', refreshTokenStr, {
                 httpOnly: true,
                 maxAge: REFRESH_TOKEN_EXPIRY_SECONDS * 1000, // express maxAge is in ms, http headers stores it in seconds tho
             });
@@ -198,6 +186,19 @@ async function handleGoogleAuth(req, res, next) {
 
         const result = await service.handleGoogleAuth(idTokenValid);
 
+        // code duplication i know, buat implementasi cepat aja
+        const refreshTokenStr = await tokenService.createRefreshToken(user.user_id, false);
+
+        if (!refreshTokenStr) 
+            throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Terjadi error pada saat proses login!");
+
+        // hapus refresh token lama
+        res.clearCookie('refresh_token');
+        res.cookie('refresh_token', refreshTokenStr, {
+            httpOnly: true,
+            maxAge: REFRESH_TOKEN_EXPIRY_SECONDS * 1000,
+        });
+
         return res.status(200).json({ message, token } = result);
     } catch (err) {
         return next(err);
@@ -226,6 +227,9 @@ async function resetPassword(req, res, next) {
 
             if (result) {
                 if (jti) await tokenService.invalidateJti(jti);
+
+                // log out dari semua sesi saat password berhasil diubah
+                await tokenService.clearRefreshTokens(user.user_id, false);
 
                 return res.status(204).end();
             }
@@ -256,7 +260,7 @@ async function checkOtpMatched(req, res, next) {
     }
 }
 
-async function refreshToken(req, res, next) {
+async function refresh(req, res, next) {
     try {
         const authHeader = req.headers.authorization.split(' ');
 
@@ -265,13 +269,22 @@ async function refreshToken(req, res, next) {
         const refreshToken = req.cookies.refresh_token;
         const accessToken = authHeader[1];
 
-        if (!refreshToken) {
-            throw errorResponder(errors.UNAUTHORIZED);
-        }
+        if (!refreshToken) throw errorResponder(errors.UNAUTHORIZED);
 
-        const result = await service.refreshAccessToken(refreshToken.value);
+        const result = await service.refreshAccessToken(accessToken, refreshToken);
 
-        if (result) return res.status(200).json({token: result}) 
+        // code duplication i know, buat implementasi cepat aja
+        const refreshTokenStr = await tokenService.createRefreshToken(result.userId, false);
+
+        if (!refreshTokenStr) 
+            throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Terjadi error pada saat proses login!");
+
+        res.cookie('refresh_token', refreshTokenStr, {
+            httpOnly: true,
+            maxAge: REFRESH_TOKEN_EXPIRY_SECONDS * 1000,
+        });
+
+        if (result) return res.status(200).json({token: result.accessToken}) 
     } catch (err) {
         return next(err);
     }
@@ -307,7 +320,7 @@ module.exports = {
     handleGoogleAuth,
     resetPassword,
     checkOtpMatched,
-    refreshToken,
+    refresh,
     logout,
     authMe,
 }

@@ -19,7 +19,7 @@ route.post('/google', createLimiter('userGoogleAuth', 5), controller.handleGoogl
 // jadi form ada dua, form untuk isi otp dan form untuk input password baru (beda page)
 // Kode OTP kirim sekalian dg field password baru
 route.post('/reset-password', userOptionalAuth, controller.resetPassword);
-route.post('/refresh', controller.refreshToken); // reject expired refresh token
+route.post('/refresh', controller.refresh); // reject expired refresh token
 route.post('/logout', passportUserJwt, controller.logout);
 route.get('/me', passportUserJwt, controller.authMe); // buat cek session
 

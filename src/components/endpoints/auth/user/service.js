@@ -2,10 +2,13 @@ const repository = require('./repository');
 const {OAuth2Client} = require('google-auth-library');
 const config = require('../../../../core/config');
 const {logger} = require('../../../../core/logger');
+const tokenService = require('../token/service');
 const {errors, errorResponder} = require('../../../../core/errors');
 const { generateUserJwt, refreshUserJwt } = require('../../../../utils/token');
 const jwt = require('jsonwebtoken');
 const { parseUserId } = require('../../../../utils/id-parser');
+const { compareOpaqueStringHash } = require('../../../../utils/password');
+const { compare } = require('bcrypt');
 
 // per platform harus beda client, cuma sekarang kita web doang
 const client = new OAuth2Client(config.secret.google_client_id);
@@ -141,12 +144,11 @@ async function handleGoogleAuth(googlePayload){
 }
 
 async function refreshAccessToken(accessToken, refreshToken) {
-    // refresh dilakukan 5 menit sebelum expired
     let payload;
-    await jwt.verify(accessToken, config.secret.user, (err, decoded) => {
+    jwt.verify(accessToken, config.secret.user, (err, decoded) => {
         if (err) {
             // bolehkan jwt yg expired, karena tujuan kita generate access token baru (jwt baru)
-            if (err.name = 'TokenExpiredError') {
+            if (err.name === 'TokenExpiredError') {
                 payload = jwt.decode(accessToken);
             }
             else {
@@ -158,16 +160,25 @@ async function refreshAccessToken(accessToken, refreshToken) {
         payload = decoded;
     });
 
+    const splittedRefreshToken = refreshToken.split('.');
+    const refreshId = splittedRefreshToken[0];
+    const opaqueStr = splittedRefreshToken[1];
+
     const data = await repository.findById(parseUserId(payload.user_id));
     const user = data.rows[0];
 
     if (!user) throw errorResponder(errors.NOT_FOUND, "User tidak ditemukan!");
 
+    await tokenService.verifyRefreshToken(refreshId, opaqueStr, user.user_id, false);
+
     const newAccessToken = await generateUserJwt(user);
 
-    if (!newAccessToken) throw errorResponder(errors.INVALID_TOKEN, "Gagal membuat token baru!");
+    if (!newAccessToken) throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Terjadi error pada saat proses refresh token!");
 
-    return newAccessToken;
+    return {
+        accessToken: newAccessToken,
+        userId: user.user_id,
+    };
 }
 
 module.exports = {
