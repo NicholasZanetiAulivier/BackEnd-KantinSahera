@@ -209,7 +209,7 @@ async function resetPassword(req, res, next) {
     try {
         const { error, value } = validate.resetPassword(req.body);
 
-        const { jti } = req.user;
+        // const { jti } = req.user;
 
         processJoiValidationError(error);
 
@@ -226,7 +226,7 @@ async function resetPassword(req, res, next) {
             const result = await otpService.resetAccountPassword(email, password, false);
 
             if (result) {
-                if (jti) await tokenService.invalidateJti(jti);
+                // if (jti) await tokenService.invalidateJti(jti);
 
                 // log out dari semua sesi saat password berhasil diubah
                 await tokenService.clearRefreshTokens(user.user_id, false);
@@ -292,9 +292,16 @@ async function refresh(req, res, next) {
 
 async function logout (req, res, next) {
     try {
-        const { exp, jti } = req.user;
+        const { exp, jti, user_id } = req.user;
+        const userId = parseUserId(user_id);
 
-        const result = await tokenService.invalidateJti(exp, jti);
+        // uuid.token
+        const refreshTokenCookie = req.cookies.refresh_token;
+        const refreshTokenId = refreshTokenCookie.split('.')[0];
+
+        // const result = await tokenService.invalidateJti(exp, jti);
+        const result = await tokenService.clearOneRefreshToken(refreshTokenId, userId, false);
+        res.clearCookie('refresh_token');
 
         if (result) return res.status(204).end();
     } catch (err) {

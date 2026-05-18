@@ -84,7 +84,7 @@ async function requestAdminOtp(req, res, next) {
             max = Math.floor(5000);
             const simulatedTime = Math.floor(Math.random() * (max - min + 1)) + min;
 
-            return setTimeout(() => {
+            setTimeout(() => {
                 return res.status(204).end();
             }, simulatedTime);
         }
