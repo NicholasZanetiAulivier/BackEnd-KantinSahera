@@ -2,10 +2,13 @@ const repository = require('./repository');
 const {OAuth2Client} = require('google-auth-library');
 const config = require('../../../../core/config');
 const {logger} = require('../../../../core/logger');
+const tokenService = require('../token/service');
 const {errors, errorResponder} = require('../../../../core/errors');
 const { generateUserJwt, refreshUserJwt } = require('../../../../utils/token');
 const jwt = require('jsonwebtoken');
 const { parseUserId } = require('../../../../utils/id-parser');
+const { compareOpaqueStringHash } = require('../../../../utils/password');
+const { compare } = require('bcrypt');
 
 // per platform harus beda client, cuma sekarang kita web doang
 const client = new OAuth2Client(config.secret.google_client_id);
@@ -136,32 +139,46 @@ async function handleGoogleAuth(googlePayload){
         throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Proses login gagal!");
     }
    
-    return { message: returnMessage, token: token }
+    // return non-prefixed account id for refresh token issuing purposes
+    return { message: returnMessage, token: token, user_id: user.user_id }
 }
 
-async function createRefreshToken(accessToken) {
-    // refresh dilakukan 5 menit sebelum expired
+async function refreshAccessToken(accessToken, refreshToken) {
     let payload;
-    await jwt.verify(accessToken, config.secret.user, (err, decoded) => {
+    jwt.verify(accessToken, config.secret.user, (err, decoded) => {
         if (err) {
-            logger.error({err}, "Terjadi error saat validasi token refresh!");
-            if (err.name = 'TokenExpiredError') throw errorResponder(errors.TOKEN_EXPIRED, "Token sudah expired!");
-            else throw errorResponder(errors.INVALID_TOKEN, "Token yang diberikan tidak valid!");
+            // bolehkan jwt yg expired, karena tujuan kita generate access token baru (jwt baru)
+            if (err.name === 'TokenExpiredError') {
+                payload = jwt.decode(accessToken);
+            }
+            else {
+                logger.error({err}, "Terjadi error saat validasi token refresh!");
+                throw errorResponder(errors.INVALID_TOKEN, "Token yang diberikan tidak valid!");
+            } 
         }
 
         payload = decoded;
     });
+
+    const splittedRefreshToken = refreshToken.split('.');
+    const refreshId = splittedRefreshToken[0];
+    const opaqueStr = splittedRefreshToken[1];
 
     const data = await repository.findById(parseUserId(payload.user_id));
     const user = data.rows[0];
 
     if (!user) throw errorResponder(errors.NOT_FOUND, "User tidak ditemukan!");
 
-    const refreshToken = await refreshUserJwt(user);
+    await tokenService.verifyRefreshToken(refreshId, opaqueStr, user.user_id, false);
 
-    if (!refreshToken) throw errorResponder(errors.INVALID_TOKEN, "Gagal membuat token baru!");
+    const newAccessToken = await generateUserJwt(user);
 
-    return refreshToken;
+    if (!newAccessToken) throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Terjadi error pada saat proses refresh token!");
+
+    return {
+        accessToken: newAccessToken,
+        userId: user.user_id,
+    };
 }
 
 module.exports = {
@@ -172,5 +189,5 @@ module.exports = {
     getProfileById,
     verifyGoogleIdToken,
     handleGoogleAuth,
-    createRefreshToken,
+    refreshAccessToken,
 }
