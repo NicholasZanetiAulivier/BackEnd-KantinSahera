@@ -2,17 +2,17 @@ const passport = require('passport');
 const config = require('../../core/config');
 const userService = require('../endpoints/auth/user/service');
 const adminService = require('../endpoints/auth/admin/service');
-const jwtService = require('../endpoints/auth/jwt/service');
+const jwtService = require('../endpoints/auth/token/service');
 const { errorResponder, errors } = require('../../core/errors');
 const { Strategy: JwtStrategy, ExtractJwt } = require('passport-jwt');
 const { userPayload, adminPayload } = require('../../utils/jwt-payload');
 const { parseUserId, parseAdminId } = require('../../utils/id-parser');
 
-invalidJti = async (jti) => {
-    const invalid = await jwtService.isInvalidJti(jti);
+// invalidJti = async (jti) => {
+//     const invalid = await jwtService.isInvalidJti(jti);
 
-    if (invalid) throw errorResponder(errors.INVALID_TOKEN, "Token yang diberikan tidak valid!");
-}
+//     if (invalid) throw errorResponder(errors.INVALID_TOKEN, "Token yang diberikan tidak valid!");
+// }
 
 passport.use(
     'user',
@@ -24,7 +24,7 @@ passport.use(
 
         async (payload, done) => {
             try {
-                await invalidJti(payload.jti);
+                // await invalidJti(payload.jti);
 
                 const user = userPayload(await userService.findById(parseUserId(payload.user_id)));
 
@@ -46,7 +46,7 @@ passport.use(
 
         async (payload, done) => {
             try {
-                await invalidJti(payload.jti);
+                // await invalidJti(payload.jti);
 
                 const admin = adminPayload(await adminService.findById(parseAdminId(payload.admin_id)));
 
@@ -68,7 +68,7 @@ passport.use(
 
         async (payload, done) => {
             try {
-                await invalidJti(payload.jti);
+                // await invalidJti(payload.jti);
 
                 const admin = adminPayload(await adminService.findById(parseAdminId(payload.admin_id)));
 

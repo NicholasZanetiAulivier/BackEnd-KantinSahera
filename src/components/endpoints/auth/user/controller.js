@@ -2,13 +2,14 @@ const { errorResponder, errors, processJoiValidationError } = require('../../../
 const validate = require('../../../middlewares/validator')
 const service = require('./service');
 const otpService = require('../verify/service');
-const jwtService = require('../jwt/service');
-const { hashPassword, passwordMatched } = require('../../../../utils/password');
-const { generateUserJwt, refreshUserJwt } = require('../../../../utils/token');
+const tokenService = require('../token/service');
+const { hashPassword, passwordMatched, hashOpaqueString } = require('../../../../utils/password');
+const { generateUserJwt, generateRefreshToken, REFRESH_TOKEN_EXPIRY_SECONDS } = require('../../../../utils/token');
 const { passportUserJwt } = require('../../../middlewares/authentication');
 const { parseUserId } = require('../../../../utils/id-parser');
 const config = require('../../../../core/config');
 const jwt = require('jsonwebtoken');
+const { addRefreshToken } = require('../token/repository');
 
 async function register(req, res, next) {
     try {
@@ -63,9 +64,19 @@ async function login(req, res, next) {
             // destructure object so only username and email is sent
             const token = await generateUserJwt(user);
 
-            if (!token) {
-                throw errorResponder(errors.INVALID_TOKEN, "Proses login gagal!");
-            }
+            if (!token) 
+                throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Terjadi error pada saat proses login!");
+
+            // uuid.opaquestr
+            const refreshTokenStr = await tokenService.createRefreshToken(user.user_id, false);
+
+            if (!refreshTokenStr) 
+                throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Terjadi error pada saat proses login!");
+
+            res.cookie('refresh_token', refreshTokenStr, {
+                httpOnly: true,
+                maxAge: REFRESH_TOKEN_EXPIRY_SECONDS * 1000, // express maxAge is in ms, http headers stores it in seconds tho
+            });
 
             return res.status(200).json({ token: token });
         } else {
@@ -175,7 +186,20 @@ async function handleGoogleAuth(req, res, next) {
 
         const result = await service.handleGoogleAuth(idTokenValid);
 
-        return res.status(200).json(result);
+        // code duplication i know, buat implementasi cepat aja
+        const refreshTokenStr = await tokenService.createRefreshToken(result.user_id, false);
+
+        if (!refreshTokenStr) 
+            throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Terjadi error pada saat proses login!");
+
+        // hapus refresh token lama
+        res.clearCookie('refresh_token');
+        res.cookie('refresh_token', refreshTokenStr, {
+            httpOnly: true,
+            maxAge: REFRESH_TOKEN_EXPIRY_SECONDS * 1000,
+        });
+
+        return res.status(200).json({ message, token } = result);
     } catch (err) {
         return next(err);
     }
@@ -185,7 +209,7 @@ async function resetPassword(req, res, next) {
     try {
         const { error, value } = validate.resetPassword(req.body);
 
-        const { jti } = req.user;
+        // const { jti } = req.user;
 
         processJoiValidationError(error);
 
@@ -202,7 +226,10 @@ async function resetPassword(req, res, next) {
             const result = await otpService.resetAccountPassword(email, password, false);
 
             if (result) {
-                if (jti) await jwtService.invalidateJti(jti);
+                // if (jti) await tokenService.invalidateJti(jti);
+
+                // log out dari semua sesi saat password berhasil diubah
+                await tokenService.clearRefreshTokens(user.user_id, false);
 
                 return res.status(204).end();
             }
@@ -233,14 +260,31 @@ async function checkOtpMatched(req, res, next) {
     }
 }
 
-async function refreshToken(req, res, next) {
+async function refresh(req, res, next) {
     try {
-        const authorization = req.headers.authorization;
-        const accessToken = authorization.split('Bearer ')[1];
+        const authHeader = req.headers.authorization.split(' ');
 
-        const result = await service.createRefreshToken(accessToken);
+        if (!authHeader.includes('Bearer')) throw errorResponder(errors.UNAUTHORIZED);
 
-        if (result) return res.status(200).json({token: result}) 
+        const refreshToken = req.cookies.refresh_token;
+        const accessToken = authHeader[1];
+
+        if (!refreshToken) throw errorResponder(errors.UNAUTHORIZED);
+
+        const result = await service.refreshAccessToken(accessToken, refreshToken);
+
+        // code duplication i know, buat implementasi cepat aja
+        const refreshTokenStr = await tokenService.createRefreshToken(result.userId, false);
+
+        if (!refreshTokenStr) 
+            throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Terjadi error pada saat proses login!");
+
+        res.cookie('refresh_token', refreshTokenStr, {
+            httpOnly: true,
+            maxAge: REFRESH_TOKEN_EXPIRY_SECONDS * 1000,
+        });
+
+        if (result) return res.status(200).json({token: result.accessToken}) 
     } catch (err) {
         return next(err);
     }
@@ -248,9 +292,16 @@ async function refreshToken(req, res, next) {
 
 async function logout (req, res, next) {
     try {
-        const { exp, jti } = req.user;
+        const { exp, jti, user_id } = req.user;
+        const userId = parseUserId(user_id);
 
-        const result = await jwtService.invalidateJti(exp, jti);
+        // uuid.token
+        const refreshTokenCookie = req.cookies.refresh_token;
+        const refreshTokenId = refreshTokenCookie.split('.')[0];
+
+        // const result = await tokenService.invalidateJti(exp, jti);
+        const result = await tokenService.clearOneRefreshToken(refreshTokenId, userId, false);
+        res.clearCookie('refresh_token');
 
         if (result) return res.status(204).end();
     } catch (err) {
@@ -276,7 +327,7 @@ module.exports = {
     handleGoogleAuth,
     resetPassword,
     checkOtpMatched,
-    refreshToken,
+    refresh,
     logout,
     authMe,
 }
