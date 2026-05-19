@@ -26,6 +26,18 @@ const createLimiter = (prefix = "", requestLimit = 3) => ERT.rateLimit({
     logger: logger
 })
 
+// default ke 100 RPM
+const globalLimiterMinute = (requestLimit = 100) => ERT.rateLimit({
+    windowMs: 1000 * 60, 
+    limit: requestLimit,
+    legacyHeaders: false, // rekomendasi Docs nya
+    standardHeaders: true,
+    store: new postgresStores.PostgresStore(CONNECTION_CONFIGURATION, prefix),
+    ipv6Subnet: 56, // Default, ubah kalo perluh,
+    logger: logger
+})
+
 module.exports = {
     createLimiter,
+    globalLimiterMinute
 }
