@@ -162,6 +162,7 @@ async function verifyUserEmailByOtp(req, res, next) {
 
         if (!user) return res.status(204).end();
 
+        // lakukan pengecekan otp hash terlebih dahulu
         const valid = await otpService.verifyOTP(email, otp_code, false);
 
         if (valid) {
@@ -269,7 +270,7 @@ async function refresh(req, res, next) {
         const refreshToken = req.cookies.refresh_token;
         const accessToken = authHeader[1];
 
-        if (!refreshToken) throw errorResponder(errors.UNAUTHORIZED);
+        if (!refreshToken) throw errorResponder(errors.UNAUTHORIZED, "Refresh token tidak ada atau tidak sesuai!");
 
         const result = await service.refreshAccessToken(accessToken, refreshToken);
 
@@ -297,6 +298,7 @@ async function logout (req, res, next) {
 
         // uuid.token
         const refreshTokenCookie = req.cookies.refresh_token;
+        if (!refreshTokenCookie) throw errorResponder(errors.BAD_REQUEST, "Refresh Token tidak ada!");
         const refreshTokenId = refreshTokenCookie.split('.')[0];
 
         // const result = await tokenService.invalidateJti(exp, jti);

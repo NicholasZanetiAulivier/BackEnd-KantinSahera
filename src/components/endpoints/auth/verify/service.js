@@ -66,6 +66,7 @@ async function sendOTP(email, is_admin = false) {
     }
 }
 
+// mengecek hash dan increment percobaan saat otp salah
 async function verifyOTP(email, plaintext_otp, is_admin = false) {
     try {
         const query = await repository.findOTP(email, is_admin);
@@ -101,6 +102,7 @@ async function verifyOTP(email, plaintext_otp, is_admin = false) {
     }
 }
 
+// hanya mengecek hash, tidak increment percobaan jika hash salah
 async function checkOtpMatched(email, plaintext_otp, is_admin = false) {
     try {
         const query = await repository.findOTP(email, is_admin);

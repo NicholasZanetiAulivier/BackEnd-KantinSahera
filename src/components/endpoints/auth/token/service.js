@@ -22,15 +22,16 @@ async function isInvalidJti(jti) {
 }
 
 async function clearOneRefreshToken(token_id, account_id, is_admin) {
-    const result = await repository.deleteRefreshToken(account_id, is_admin);
+    const result = await repository.deleteRefreshToken(token_id, account_id, is_admin);
+    console.log(result);
 
-    if (result.rows.length > 0) return true;
+    if (result) return true;
 }
 
 async function clearRefreshTokens(account_id, is_admin) {
     const result = await repository.deleteRefreshTokens(account_id, is_admin);
 
-    if (result.rows.length > 0) return true;
+    if (result) return true;
 }
 
 async function getRefreshToken(token_id, account_id, is_admin) {
