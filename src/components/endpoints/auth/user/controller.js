@@ -232,6 +232,8 @@ async function resetPassword(req, res, next) {
                 // log out dari semua sesi saat password berhasil diubah
                 await tokenService.clearRefreshTokens(user.user_id, false);
 
+                res.clearCookie('refresh_token');
+
                 return res.status(204).end();
             }
         }

@@ -181,6 +181,8 @@ async function resetPassword(req, res, next) {
                 // if (jti) await tokenService.invalidateJti(token.jti);
                 await tokenService.clearRefreshTokens(admin.admin_id, true);
 
+                res.clearCookie('refresh_token');
+
                 return res.status(204).end();
             } 
         }
