@@ -32,7 +32,7 @@ const globalLimiterMinute = (requestLimit = 100) => ERT.rateLimit({
     limit: requestLimit,
     legacyHeaders: false, // rekomendasi Docs nya
     standardHeaders: true,
-    store: new postgresStores.PostgresStore(CONNECTION_CONFIGURATION, prefix),
+    store: new postgresStores.PostgresStore(CONNECTION_CONFIGURATION, "global-rpm"),
     ipv6Subnet: 56, // Default, ubah kalo perluh,
     logger: logger
 })
