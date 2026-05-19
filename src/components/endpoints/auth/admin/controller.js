@@ -147,7 +147,7 @@ async function checkOtpMatched(req, res, next) {
         // generalisasikan error untuk mencegah account enumeration
         if (!admin) throw errorResponder(errors.INVALID_CREDENTIALS, "OTP yang dimasukkan tidak sesuai!");
 
-        const valid = await otpService.checkOtpMatched(email, otp_code, true);
+        const valid = await otpService.verifyOTP(email, otp_code, true);
 
         if (valid) return res.status(204).end();
         else throw errorResponder(errors.INVALID_CREDENTIALS, "OTP yang dimasukkan tidak sesuai!");

@@ -69,11 +69,6 @@ const errors = {
         status: 500,
         code: 'INTERNAL_SERVER ERROR',
     },
-    OTP_EXPIRED: {
-        description: 'Provided OTP has expired!',
-        status: 403,
-        code: 'OTP_EXPIRED_ERROR',
-    },
     GOOGLE_ACCOUNT_UNVERIFIED: {
         description: 'Provided Google Account has unverified email!',
         status: 401,
