@@ -3,6 +3,7 @@ const { parseAdminId } = require('../../../../utils/id-parser');
 const jwt = require('jsonwebtoken');
 const config = require('../../../../core/config');
 const { refreshAdminJwt } = require('../../../../utils/token')
+const tokenService = require('../token/service')
 
 async function findByEmail(email) {
     const res = await repository.findByEmail(email);
@@ -48,29 +49,43 @@ async function deleteAdmin(admin_id) {
  
 }
 
-async function createRefreshToken(accessToken) {
-    // refresh dilakukan 5 menit sebelum expired
+async function refreshAccessToken(accessToken, refreshToken) {
     let payload;
-    await jwt.verify(accessToken, config.secret.admin, (err, decoded) => {
+    jwt.verify(accessToken, config.secret.admin, (err, decoded) => {
         if (err) {
-            logger.error({err}, "Terjadi error saat validasi token refresh!");
-            if (err.name = 'TokenExpiredError') throw errorResponder(errors.TOKEN_EXPIRED, "Token sudah expired!");
-            else throw errorResponder(errors.INVALID_TOKEN, "Token yang diberikan tidak valid!");
+            // bolehkan jwt yg expired, karena tujuan kita generate access token baru (jwt baru)
+            if (err.name === 'TokenExpiredError') {
+                payload = jwt.decode(accessToken);
+            }
+            else {
+                logger.error({err}, "Terjadi error saat validasi token refresh!");
+                throw errorResponder(errors.INVALID_TOKEN, "Token yang diberikan tidak valid!");
+            } 
         }
 
         payload = decoded;
     });
 
-    const data = await repository.findById(parseAdminId(payload.admin_id));
+    const splittedRefreshToken = refreshToken.split('.');
+    const refreshId = splittedRefreshToken[0];
+    const opaqueStr = splittedRefreshToken[1];
+
+    const payloadAdminId = parseAdminId(payload.admin_id);
+    const data = await repository.findById(payloadAdminId);
     const admin = data.rows[0];
 
-    if (!admin) throw errorResponder(errors.NOT_FOUND, "Admin tidak ditemukan!");
+    if (!admin) throw errorResponder(errors.NOT_FOUND, "User tidak ditemukan!");
 
-    const refreshToken = await refreshAdminJwt(admin);
+    await tokenService.verifyRefreshToken(refreshId, opaqueStr, admin.admin_id, true);
 
-    if (!refreshToken) throw errorResponder(errors.INVALID_TOKEN, "Gagal membuat token baru!");
+    const newAccessToken = await generateUserJwt(admin);
 
-    return refreshToken;
+    if (!newAccessToken) throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Terjadi error pada saat proses refresh token!");
+
+    return {
+        accessToken: newAccessToken,
+        adminId: admin.user_id,
+    };
 }
 
 module.exports = {
@@ -80,5 +95,5 @@ module.exports = {
     getAllAdmins,
     updateAdmin,
     deleteAdmin,
-    createRefreshToken,
+    refreshAccessToken,
 }

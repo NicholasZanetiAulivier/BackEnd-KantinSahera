@@ -162,6 +162,7 @@ async function verifyUserEmailByOtp(req, res, next) {
 
         if (!user) return res.status(204).end();
 
+        // lakukan pengecekan otp hash terlebih dahulu
         const valid = await otpService.verifyOTP(email, otp_code, false);
 
         if (valid) {
@@ -231,6 +232,8 @@ async function resetPassword(req, res, next) {
                 // log out dari semua sesi saat password berhasil diubah
                 await tokenService.clearRefreshTokens(user.user_id, false);
 
+                res.clearCookie('refresh_token');
+
                 return res.status(204).end();
             }
         }
@@ -251,7 +254,7 @@ async function checkOtpMatched(req, res, next) {
         // generalisasikan error untuk mencegah account enumeration
         if (!user) throw errorResponder(errors.INVALID_CREDENTIALS, "OTP yang dimasukkan tidak sesuai!");
 
-        const valid = await otpService.checkOtpMatched(email, otp_code, false);
+        const valid = await otpService.verifyOTP(email, otp_code, false);
 
         if (valid) return res.status(204).end();
         else throw errorResponder(errors.INVALID_CREDENTIALS, "OTP yang dimasukkan tidak sesuai!");
@@ -269,7 +272,7 @@ async function refresh(req, res, next) {
         const refreshToken = req.cookies.refresh_token;
         const accessToken = authHeader[1];
 
-        if (!refreshToken) throw errorResponder(errors.UNAUTHORIZED);
+        if (!refreshToken) throw errorResponder(errors.UNAUTHORIZED, "Refresh token tidak ada atau tidak sesuai!");
 
         const result = await service.refreshAccessToken(accessToken, refreshToken);
 
@@ -297,6 +300,7 @@ async function logout (req, res, next) {
 
         // uuid.token
         const refreshTokenCookie = req.cookies.refresh_token;
+        if (!refreshTokenCookie) throw errorResponder(errors.BAD_REQUEST, "Refresh Token tidak ada!");
         const refreshTokenId = refreshTokenCookie.split('.')[0];
 
         // const result = await tokenService.invalidateJti(exp, jti);

@@ -120,7 +120,8 @@ async function deleteRefreshTokens(account_id = "", is_admin) {
     await db.connect().then(async (client) => {
         clientref = client;
         await client.query(
-            `DELETE FROM refresh_tokens WHERE account_id = $1 AND is_admin = $2`,
+            `DELETE FROM refresh_tokens WHERE account_id = $1 AND is_admin = $2
+                RETURNING 1`,
             [account_id, is_admin]
         ).then(result => {
             res = result
@@ -142,7 +143,8 @@ async function deleteRefreshToken(token_id = "", account_id = "", is_admin) {
     await db.connect().then(async (client) => {
         clientref = client;
         await client.query(
-            `DELETE FROM refresh_tokens WHERE account_id = $1 AND is_admin = $2 AND id = $3`,
+            `DELETE FROM refresh_tokens WHERE account_id = $1 AND is_admin = $2 AND id = $3
+                RETURNING 1`,
             [account_id, is_admin, token_id]
         ).then(result => {
             res = result
@@ -162,6 +164,7 @@ module.exports = {
     findJti,
     addRefreshToken,
     deleteRefreshTokens,
+    deleteRefreshToken,
     findRefreshToken,
     setRefreshTokenRevoked
 }
