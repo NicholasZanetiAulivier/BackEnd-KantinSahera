@@ -4,7 +4,8 @@ const service = require('./service');
 const otpService = require('../verify/service');
 const tokenService = require('../token/service');
 const { hashPassword, passwordMatched } = require('../../../../utils/password');
-const { generateAdminJwt, refreshAdminJwt } = require('../../../../utils/token');
+const { generateAdminJwt, refreshAdminJwt, REFRESH_TOKEN_EXPIRY_SECONDS } = require('../../../../utils/token');
+const {parseAdminId} = require('../../../../utils/id-parser')
 const { auth } = require('google-auth-library');
 
 async function register(req, res, next) {
@@ -56,6 +57,19 @@ async function login(req, res, next) {
             if (!token) {
                 throw errorResponder(errors.INVALID_TOKEN, "Proses login gagal!");
             }
+
+            // code duplication i know, buat implementasi cepat aja (tabel akun ada 2 cuy)
+            // remember what they've said: implement first, optimize later when needed
+            // uuid.opaquestr
+            const refreshTokenStr = await tokenService.createRefreshToken(admin.admin_id, true);
+
+            if (!refreshTokenStr) 
+                throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Terjadi error pada saat proses login!");
+
+            res.cookie('refresh_token', refreshTokenStr, {
+                httpOnly: true,
+                maxAge: REFRESH_TOKEN_EXPIRY_SECONDS * 1000, // express maxAge is in ms, http headers stores it in seconds tho
+            });
 
             return res.status(200).json({ token: token });
         } else {
@@ -133,7 +147,7 @@ async function checkOtpMatched(req, res, next) {
         // generalisasikan error untuk mencegah account enumeration
         if (!admin) throw errorResponder(errors.INVALID_CREDENTIALS, "OTP yang dimasukkan tidak sesuai!");
 
-        const valid = await otpService.checkOtpMatched(email, otp_code, true);
+        const valid = await otpService.verifyOTP(email, otp_code, true);
 
         if (valid) return res.status(204).end();
         else throw errorResponder(errors.INVALID_CREDENTIALS, "OTP yang dimasukkan tidak sesuai!");
@@ -152,9 +166,9 @@ async function resetPassword(req, res, next) {
 
         const { email, otp_code, password, confirm_password } = value;
 
-        const user = await service.findByEmail(email);
+        const admin = await service.findByEmail(email);
 
-        if (!user) return res.status(204).end();
+        if (!admin) return res.status(204).end();
 
         // set boolean flag ke true untuk email akun admin
         const valid = await otpService.verifyOTP(email, otp_code, true);
@@ -164,7 +178,10 @@ async function resetPassword(req, res, next) {
             const result = await otpService.resetAccountPassword(email, password, true);
 
             if (result) {
-                if (jti) await tokenService.invalidateJti(token.jti);
+                // if (jti) await tokenService.invalidateJti(token.jti);
+                await tokenService.clearRefreshTokens(admin.admin_id, true);
+
+                res.clearCookie('refresh_token');
 
                 return res.status(204).end();
             } 
@@ -174,14 +191,32 @@ async function resetPassword(req, res, next) {
     }
 }
 
-async function refreshToken(req, res, next) {
+async function refresh(req, res, next) {
     try {
-        const authorization = req.headers.authorization;
-        const accessToken = authorization.split('Bearer ')[1];
+        // emang duplikasi kode ini (biar cepat aj)
+        const authHeader = req.headers.authorization.split(' ');
 
-        const result = await service.createRefreshToken(accessToken);
+        if (!authHeader.includes('Bearer')) throw errorResponder(errors.UNAUTHORIZED);
 
-        if (result) return res.status(200).json({token: result}) 
+        const refreshToken = req.cookies.refresh_token;
+        const accessToken = authHeader[1];
+
+        if (!refreshToken) throw errorResponder(errors.UNAUTHORIZED, "Refresh token tidak ada atau tidak sesuai!");
+
+        const result = await service.refreshAccessToken(accessToken, refreshToken);
+
+        // code duplication i know, buat implementasi cepat aja
+        const refreshTokenStr = await tokenService.createRefreshToken(result.adminId, true);
+
+        if (!refreshTokenStr) 
+            throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Terjadi error pada saat proses login!");
+
+        res.cookie('refresh_token', refreshTokenStr, {
+            httpOnly: true,
+            maxAge: REFRESH_TOKEN_EXPIRY_SECONDS * 1000,
+        });
+
+        if (result) return res.status(200).json({token: result.accessToken}) 
     } catch (err) {
         return next(err);
     }
@@ -189,9 +224,19 @@ async function refreshToken(req, res, next) {
 
 async function logout(req, res, next) {
     try {
-        const { exp, jti } = req.user;
+        const { exp, jti, admin_id } = req.user;
 
-        const result = await tokenService.invalidateJti(exp, jti);
+        const adminId = parseAdminId(admin_id);
+
+        // uuid.token
+        const refreshTokenCookie = req.cookies.refresh_token;
+
+        if (!refreshTokenCookie) throw errorResponder(errors.BAD_REQUEST, "Refresh Token tidak ada!");
+        const refreshTokenId = refreshTokenCookie.split('.')[0];
+
+        // const result = await tokenService.invalidateJti(exp, jti);
+        const result = await tokenService.clearOneRefreshToken(refreshTokenId, adminId, true);
+        res.clearCookie('refresh_token');
 
         if (result) return res.status(204).end();
     } catch (err) {
@@ -280,7 +325,7 @@ module.exports = {
     verifyAdminEmailByOtp,
     checkOtpMatched,
     resetPassword,
-    refreshToken,
+    refresh,
     logout,
     getAdmins,
     editAdmin,

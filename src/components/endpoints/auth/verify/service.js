@@ -66,6 +66,7 @@ async function sendOTP(email, is_admin = false) {
     }
 }
 
+// mengecek hash dan increment percobaan saat otp salah
 async function verifyOTP(email, plaintext_otp, is_admin = false) {
     try {
         const query = await repository.findOTP(email, is_admin);
@@ -79,14 +80,13 @@ async function verifyOTP(email, plaintext_otp, is_admin = false) {
         const data = query.rows[0];
 
         if (data.attempt_count >= 3) {
-            throw errorResponder(errors.TOO_MANY_REQUEST, "Anda telah mencapai maksimum percobaan OTP!");
+            throw errorResponder(errors.TOO_MANY_REQUEST);
         }
 
         const expired = new Date(data.expires_at) < Date.now();
 
-        if (expired) {
-            throw errorResponder(errors.OTP_EXPIRED, "OTP yang diberikan sudah expired!");
-        }
+        if (expired) 
+            throw errorResponder(errors.INVALID_CREDENTIALS, invalidMessage);
 
         const matched = await passwordMatched(plaintext_otp, data.otp);
 
@@ -101,26 +101,28 @@ async function verifyOTP(email, plaintext_otp, is_admin = false) {
     }
 }
 
-async function checkOtpMatched(email, plaintext_otp, is_admin = false) {
-    try {
-        const query = await repository.findOTP(email, is_admin);
+// ini bakal aku delete, setelah dipikir2 kalo nyediakan fungsi ginian malah bikin otp check rawan brute force attack
+// // hanya mengecek hash, tidak increment percobaan jika hash salah
+// async function checkOtpMatched(email, plaintext_otp, is_admin = false) {
+//     try {
+//         const query = await repository.findOTP(email, is_admin);
 
-        // generalisasikan untuk otp yang tidak ada, anggap ini otp salah
-        if (query.rowCount === 0) return false;
+//         // generalisasikan untuk otp yang tidak ada, anggap ini otp salah
+//         if (query.rowCount === 0) return false;
 
-        const data = query.rows[0];
+//         const data = query.rows[0];
 
-        const matched = await passwordMatched(plaintext_otp, data.otp);
+//         const matched = await passwordMatched(plaintext_otp, data.otp);
 
-        if (!matched) {
-            return false;
-        } else {
-            return true;
-        }
-    } catch (err) {
-        throw err;
-    }
-}
+//         if (!matched) {
+//             return false;
+//         } else {
+//             return true;
+//         }
+//     } catch (err) {
+//         throw err;
+//     }
+// }
 
 async function resetAccountPassword(email, plaintext_password, is_admin = false) {
     try {
@@ -148,7 +150,7 @@ async function markAccountAsVerified(email, is_admin = false) {
 module.exports = {
     sendOTP,
     verifyOTP,
-    checkOtpMatched,
+    // checkOtpMatched,
     resetAccountPassword,
     markAccountAsVerified,
 }

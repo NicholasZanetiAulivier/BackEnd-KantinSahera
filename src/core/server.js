@@ -8,6 +8,7 @@ const router = require('../components/routes');
 const { errorResponder, errors } = require('./errors');
 const compression = require('compression');
 const cookieParser = require('cookie-parser');
+const { globalLimiterMinute } = require('../components/middlewares/limiter');
 
 module.exports = (app) => {
 
@@ -50,6 +51,8 @@ module.exports = (app) => {
     app.get('/favicon.ico', (req, res, next) => {
         return res.status(204).end();
     })
+
+    app.use(globalLimiterMinute(100));
 
     //Main Router
     app.use(config.api.prefix, router);

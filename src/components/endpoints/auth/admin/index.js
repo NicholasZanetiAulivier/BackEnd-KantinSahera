@@ -12,7 +12,7 @@ route.post('/otp/check', createLimiter('adminOTPCheck', 3), controller.checkOtpM
 route.post('/verify-email', controller.verifyAdminEmailByOtp);
 // TO-DO: Invalidate current jwt, jika endpoint reset password diakses saat kondisi login 
 route.post('/reset-password', adminOptionalAuth, controller.resetPassword);
-route.post('/refresh', passportAdminJwt, controller.refreshToken);
+route.post('/refresh', passportAdminJwt, controller.refresh);
 route.post('/logout', passportAdminJwt, controller.logout);
 // Kelola admin — super admin only
 route.get('/', passportSuperJwt, controller.getAdmins);
