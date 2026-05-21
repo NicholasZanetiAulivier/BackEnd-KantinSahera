@@ -60,6 +60,7 @@ async function createRefreshToken(account_id = "", is_admin) {
 
     // send id as unique identifier (fast lookup) and unhashed opaque string, delimiter is . 
     const refreshTokenStr = `${tokenId}.${refreshToken}`
+    console.log(refreshTokenStr);
 
     return refreshTokenStr;
 }
