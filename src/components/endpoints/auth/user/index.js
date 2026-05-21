@@ -10,7 +10,8 @@ route.post('/login', createLimiter('userLogin', 100), controller.login);
 route.patch('/profile', passportUserJwt, controller.changeProfile);
 route.get('/profile', passportUserJwt, controller.getProfile);
 route.post('/otp/request', createLimiter('userOTPRequest', 3), controller.requestUserOtp);
-route.post('/otp/check', createLimiter('userOTPCheck', 3), controller.checkOtpMatched); // untuk sekedar check OTP dengan OTP database
+// untuk sekedar check OTP dengan OTP database, increment banyak percobaan jika otp client salah
+route.post('/otp/check', createLimiter('userOTPCheck', 3), controller.checkOtpMatched); 
 route.post('/verify-email', controller.verifyUserEmailByOtp); // ganti nama endpoint buat menjiwai
 route.post('/google', createLimiter('userGoogleAuth', 5), controller.handleGoogleAuth);
 // NOTE BUAT FRONTEND:
