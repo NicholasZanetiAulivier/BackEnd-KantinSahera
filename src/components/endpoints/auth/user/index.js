@@ -13,7 +13,7 @@ route.post('/otp/request', createLimiter('userOTPRequest', 3), controller.reques
 // untuk sekedar check OTP dengan OTP database, increment banyak percobaan jika otp client salah
 route.post('/otp/check', createLimiter('userOTPCheck', 3), controller.checkOtpMatched); 
 route.post('/verify-email', controller.verifyUserEmailByOtp); // ganti nama endpoint buat menjiwai
-route.post('/google', createLimiter('userGoogleAuth', 5), controller.handleGoogleAuth);
+route.post('/google', createLimiter('userGoogleAuth', 50), controller.handleGoogleAuth);
 // NOTE BUAT FRONTEND:
 // panggil OTP request dulu
 // biar user tau kalo otp yang diinput bener, panggil /otp/check
