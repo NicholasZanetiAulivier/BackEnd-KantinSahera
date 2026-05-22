@@ -265,7 +265,8 @@ async function checkOtpMatched(req, res, next) {
 
 async function refresh(req, res, next) {
     try {
-        const authHeader = req.headers.authorization.split(' ');
+        const authorization = req.headers.authorization || " "
+        const authHeader = authorization.split(' ');
 
         if (!authHeader.includes('Bearer')) throw errorResponder(errors.UNAUTHORIZED);
 

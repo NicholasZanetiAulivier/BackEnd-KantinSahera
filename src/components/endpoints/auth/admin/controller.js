@@ -194,7 +194,8 @@ async function resetPassword(req, res, next) {
 async function refresh(req, res, next) {
     try {
         // emang duplikasi kode ini (biar cepat aj)
-        const authHeader = req.headers.authorization.split(' ');
+        const authorization = req.headers.authorization || " ";
+        const authHeader = authorization.split(' ');
 
         if (!authHeader.includes('Bearer')) throw errorResponder(errors.UNAUTHORIZED);
 
