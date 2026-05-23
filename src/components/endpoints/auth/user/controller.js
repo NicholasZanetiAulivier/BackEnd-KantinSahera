@@ -283,10 +283,10 @@ async function refresh(req, res, next) {
         if (!refreshTokenStr) 
             throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Terjadi error pada saat proses login!");
 
-        // res.cookie('refresh_token', refreshTokenStr, {
-        //     httpOnly: true,
-        //     maxAge: REFRESH_TOKEN_EXPIRY_SECONDS * 1000,
-        // });
+        res.cookie('refresh_token', refreshTokenStr, {
+            httpOnly: true,
+            maxAge: REFRESH_TOKEN_EXPIRY_SECONDS * 1000,
+        });
 
         if (result) return res.status(200).json({token: result.accessToken}) 
     } catch (err) {
