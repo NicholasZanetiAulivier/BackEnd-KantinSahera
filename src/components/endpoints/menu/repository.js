@@ -1,6 +1,6 @@
 const { errorResponder, errors } = require('../../../core/errors');
 const db = require('../../../database/db');
-const {logger} = require('../../../core/logger');
+const { logger } = require('../../../core/logger');
 
 async function getMenuByIDs(ids) {
     let res, clientref;
@@ -18,7 +18,7 @@ async function getMenuByIDs(ids) {
         ).then(result => {
             res = result
         }).catch((err) => {
-            logger.error({err}, 'Terjadi error database di modul menu!');
+            logger.error({ err }, 'Terjadi error database di modul menu!');
             throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
         }).finally(() => {
             clientref.release();
@@ -34,7 +34,7 @@ async function getMenuBySearch(offset, limit, search) {
     let add = [];
     let c = 1;
     if (search) {
-        query += " WHERE name ~ $" + c++;
+        query += " WHERE name ~* $" + c++;
         add.push(search);
     }
     if (limit) {
@@ -56,7 +56,27 @@ async function getMenuBySearch(offset, limit, search) {
         ).then(result => {
             res = result
         }).catch((err) => {
-            logger.error({err}, 'Terjadi error database di modul menu!');
+            logger.error({ err }, 'Terjadi error database di modul menu!');
+            throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
+        }).finally(() => {
+            clientref.release();
+        });
+    });
+
+    return res;
+}
+async function getMenuCount(search) {
+    let res, clientref;
+
+    await db.connect().then(async (client) => {
+        clientref = client;
+        await client.query(
+            `SELECT COUNT(*) FROM menus ${search ? "WHERE name ~* $1" : ""};`,
+            search ? [search] : []
+        ).then(result => {
+            res = result
+        }).catch((err) => {
+            logger.error({ err }, 'Terjadi error database di modul menu!');
             throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
         }).finally(() => {
             clientref.release();
@@ -87,7 +107,7 @@ async function createMenu(name, image_url, price) {
         ).then(result => {
             res = result
         }).catch((err) => {
-            logger.error({err}, 'Terjadi error database di modul menu!');
+            logger.error({ err }, 'Terjadi error database di modul menu!');
             throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
         }).finally(() => {
             clientref.release();
@@ -123,7 +143,7 @@ async function editMenu(id, data) {
         ).then(result => {
             res = result
         }).catch((err) => {
-            logger.error({err}, 'Terjadi error database di modul menu!');
+            logger.error({ err }, 'Terjadi error database di modul menu!');
             throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
         }).finally(() => {
             clientref.release();
@@ -144,7 +164,7 @@ async function deleteMenu(id) {
         ).then(result => {
             res = result
         }).catch((err) => {
-            logger.error({err}, 'Terjadi error database di modul menu!');
+            logger.error({ err }, 'Terjadi error database di modul menu!');
             throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
         }).finally(() => {
             clientref.release();
@@ -158,6 +178,7 @@ async function deleteMenu(id) {
 module.exports = {
     getMenuByIDs,
     getMenuBySearch,
+    getMenuCount,
     createMenu,
     editMenu,
     deleteMenu
