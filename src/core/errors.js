@@ -21,7 +21,7 @@ const errors = {
     },
     INVALID_TOKEN: {
         description: "Invalid token",
-        status: 403,
+        status: 401,
         code: 'INVALID_TOKEN_ERROR'
     },
     DB: {
@@ -56,7 +56,7 @@ const errors = {
     },
     TOKEN_EXPIRED: {
         description: 'Provided token has expired!',
-        status: 403,
+        status: 401,
         code: 'TOKEN_EXPIRED_ERROR',
     },
     UNPROCESSABLE_ENTITY: {
@@ -94,6 +94,11 @@ const errors = {
         status: 400,
         code: 'MIDTRANS_ERROR'
     },
+    SECURITY: {
+        description: 'User\'s account security breach detected!',
+        status: 403,
+        code: 'SECURITY_ERROR'
+    }
 };
 
 function errorResponder(code, status, description, message = "") {
