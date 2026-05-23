@@ -15,20 +15,21 @@ module.exports = (app) => {
     // app.enable('trust proxy');
     // Trust proxy gak compatible dengan IP based rate limiting, karena bisa di bypass
 
-    // app.use(cors({
-    //     origin: [
-    //         config.base_url.frontend_user,
-    //         config.base_url.frontend_admin
-    //     ],
-    // }));
-    app.use(cors());
+    app.use(cors({
+        origin: [
+            config.base_url.frontend_user,
+            config.base_url.frontend_admin
+        ],
+        credentials: true,
+    }));
+    // app.use(cors());
 
     app.use(methodOverride('_method'));
 
     // buat GSI
     app.use(cookieParser());
 
-    app.use(bodyParser.json({ limit: '20mb' })); // ini gk kegedean?
+    app.use(bodyParser.json({ limit: '1mb' })); // ini gk kegedean?
 
     app.use(bodyParser.urlencoded({ extended: false }));
 
