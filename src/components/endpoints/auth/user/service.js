@@ -160,6 +160,9 @@ async function refreshAccessToken(accessToken, refreshToken) {
         payload = decoded;
     });
 
+    // fallback measures
+    if (!payload) payload = jwt.decode(accessToken);
+
     const splittedRefreshToken = refreshToken.split('.');
     const refreshId = splittedRefreshToken[0];
     const opaqueStr = splittedRefreshToken[1];
