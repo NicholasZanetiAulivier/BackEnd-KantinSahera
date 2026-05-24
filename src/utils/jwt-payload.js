@@ -3,6 +3,7 @@ const config = require('../core/config')
 const userPayload = user => ({
     user_id: config.keys_prefix.user_id + user.user_id,
     username: user.username || 'Tanpa Nama',
+    profile_image_url: user.profile_image_url,
     email: user.email,
     verified: user.verified
 }) 
