@@ -25,7 +25,7 @@ db.connect(function (err) {
             throw err;
         }
         // logger.info("Database is connected");
-        console.log(result.rows[0]);
+        // console.log(result.rows[0]);
         // db.end(function (err) {
         //     if (err) throw err;
         // });

@@ -58,8 +58,8 @@ async function getOrderByUserID(id, offset, limit) {
     return result.rows;
 }
 
-async function getOrders(offset, limit) {
-    const result = await repository.getOrders(offset, limit);
+async function getOrders(offset, limit, paid, fulfilled) {
+    const result = await repository.getOrders(offset, limit, paid, fulfilled);
     return result.rows;
 }
 

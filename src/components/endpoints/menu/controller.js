@@ -20,7 +20,7 @@ async function getMenu(req, res, next) {
         } else {
             result = await service.getMenuBySearch(offset, limit, search);
         }
-        return res.status(200).json({ data: result, offset, limit });
+        return res.status(200).json({ data: result, offset, limit, count: await service.getMenuCount(search) });
     } catch (err) {
         return next(err);
     }

@@ -338,11 +338,22 @@ async function updateOrderTransaction(order_id, transaction_id, status) {
     return res;
 }
 
-async function getOrders(offset, limit) {
+async function getOrders(offset, limit, paid, fulfilled) {
     let res, clientref;
     let offsetLimitString = "";
+    let whereString = " WHERE ";
+    let p;
     let add = [];
     let c = 1;
+
+    if ((typeof paid) == 'boolean') {//No need for prepared statement here cuz these are definitely booleans
+        whereString += ` transaction_status ${paid ? ' ' : ' NOT '} IN ('capture' , 'settlement') `;
+        p = true;
+    }
+    if ((typeof fulfilled) == 'boolean') {
+        whereString += ` ${p ? 'AND ' : ' '} fulfilled = ${fulfilled} `;
+        p = true;
+    }
     if (limit) {
         offsetLimitString += " LIMIT $" + c++;
         add.push(limit);
@@ -352,10 +363,11 @@ async function getOrders(offset, limit) {
         add.push(offset);
     }
 
+
     await db.connect().then(async (client) => {
         clientref = client;
         await client.query(
-            "SELECT * FROM orders" + offsetLimitString,
+            "SELECT * FROM orders " + (p ? whereString : '') + offsetLimitString,
             add
         ).then(result => {
             res = result
