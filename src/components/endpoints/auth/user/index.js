@@ -21,7 +21,7 @@ route.post('/google', createLimiter('userGoogleAuth', 50), controller.handleGoog
 // Kode OTP kirim sekalian dg field password baru
 route.post('/reset-password', userOptionalAuth, controller.resetPassword);
 route.post('/refresh', controller.refresh); // reject expired refresh token
-route.post('/logout', passportUserJwt, controller.logout);
+route.post('/logout', controller.logout);
 route.get('/me', passportUserJwt, controller.authMe); // buat cek session
 
 module.exports = route;

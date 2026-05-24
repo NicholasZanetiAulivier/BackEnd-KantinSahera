@@ -132,7 +132,8 @@ async function handleGoogleAuth(googlePayload){
         user_id: user.user_id,
         username: user.username,
         email: user.email,
-        verified: user.verified
+        verified: user.verified,
+        profile_image_url: user.profile_image_url
     });
 
     if (!token) {
@@ -144,21 +145,7 @@ async function handleGoogleAuth(googlePayload){
 }
 
 async function refreshAccessToken(accessToken, refreshToken) {
-    let payload;
-    jwt.verify(accessToken, config.secret.user, (err, decoded) => {
-        if (err) {
-            // bolehkan jwt yg expired, karena tujuan kita generate access token baru (jwt baru)
-            if (err.name === 'TokenExpiredError') {
-                payload = jwt.decode(accessToken);
-            }
-            else {
-                logger.error({err}, "Terjadi error saat validasi token refresh!");
-                throw errorResponder(errors.INVALID_TOKEN, "Token yang diberikan tidak valid!");
-            } 
-        }
-
-        payload = decoded;
-    });
+    let payload = decodeUserPayload(accessToken);
 
     // fallback measures
     if (!payload) payload = jwt.decode(accessToken);
@@ -184,6 +171,26 @@ async function refreshAccessToken(accessToken, refreshToken) {
     };
 }
 
+function decodeUserPayload(accessToken) {
+    let payload;
+    jwt.verify(accessToken, config.secret.user, (err, decoded) => {
+        if (err) {
+            // bolehkan jwt yg expired, karena tujuan kita generate access token baru (jwt baru)
+            if (err.name === 'TokenExpiredError') {
+                payload = jwt.decode(accessToken);
+            }
+            else {
+                logger.error({err}, "Terjadi error saat validasi token refresh!");
+                throw errorResponder(errors.INVALID_TOKEN, "Token yang diberikan tidak valid!");
+            } 
+        }
+
+        payload = decoded;
+    });
+
+    return payload;
+}
+
 module.exports = {
     findByEmail,
     findById,
@@ -193,4 +200,5 @@ module.exports = {
     verifyGoogleIdToken,
     handleGoogleAuth,
     refreshAccessToken,
+    decodeUserPayload,
 }

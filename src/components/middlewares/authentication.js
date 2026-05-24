@@ -7,6 +7,7 @@ const { errorResponder, errors } = require('../../core/errors');
 const { Strategy: JwtStrategy, ExtractJwt } = require('passport-jwt');
 const { userPayload, adminPayload } = require('../../utils/jwt-payload');
 const { parseUserId, parseAdminId } = require('../../utils/id-parser');
+const {logger} = require('../../core/logger')
 
 // invalidJti = async (jti) => {
 //     const invalid = await jwtService.isInvalidJti(jti);
@@ -30,6 +31,7 @@ passport.use(
 
                 return done(null, { ...user, exp: payload.exp, jti: payload.jti } || false);
             } catch (err) {
+                logger.error('Error di User JWT', {err})
                 return done(err, false);
             }
         }
