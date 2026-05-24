@@ -19,10 +19,10 @@ const usernameSchema = Joi.string().min(1).max(32).trim().messages({
     'string.max': "Panjang username tidak boleh lebih dari 32 karakter!"
 })
 
-const passwordSchema = Joi.string().required().min(12).pattern(new RegExp('^[a-zA-Z0-9]{3,30}$')).messages({
+const passwordSchema = Joi.string().required().min(12).pattern(new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[#@$!%*?&])[A-Za-z\\d#@$!%*?&]{3,30}$')).messages({ //What the hell is this (stackoverflow)
     'any.required': "Password wajib ada!",
     'string.min': 'Panjang password harus 12 karakter ke atas!',
-    'string.pattern.base': "Password harus berupa alphanumeric!",
+    'string.pattern.base': "Password harus memiliki huruf besar, huruf kecil, dan karakter spesial, dengan panjang 3-30 karakter!",
     'any.only': "Password dan confirm password tidak sesuai!"
 })
 
@@ -55,22 +55,22 @@ const loginSchema = Joi.object({
 })
 
 const imageUrlSchema = Joi.string().uri({
-        scheme: ['https'],
-        allowRelative: false,
-    }).custom((value, helpers) => {
-        const allowedDomains = ['res.cloudinary.com', 'lh3.googleusercontent.com'];
-        const url = new URL(value);
-        if (!allowedDomains.some(domain => url.hostname.includes(domain))) {
-            return helpers.error('any.invalid', {
-                message: 'Hanya Cloudinary dan Google picture domain yang diperbolehkan!'
-            });
-        }
-        return value;
-    }).messages({
-        'string.uri': "URL gambar tidak valid atau tidak absolut!",
-        'string.uriCustomScheme': 'URL harus menggunakan protokol HTTPS!',
-        'any.invalid': 'Hanya Cloudinary dan Google picture domain yang diperbolehkan!'
-    });
+    scheme: ['https'],
+    allowRelative: false,
+}).custom((value, helpers) => {
+    const allowedDomains = ['res.cloudinary.com', 'lh3.googleusercontent.com'];
+    const url = new URL(value);
+    if (!allowedDomains.some(domain => url.hostname.includes(domain))) {
+        return helpers.error('any.invalid', {
+            message: 'Hanya Cloudinary dan Google picture domain yang diperbolehkan!'
+        });
+    }
+    return value;
+}).messages({
+    'string.uri': "URL gambar tidak valid atau tidak absolut!",
+    'string.uriCustomScheme': 'URL harus menggunakan protokol HTTPS!',
+    'any.invalid': 'Hanya Cloudinary dan Google picture domain yang diperbolehkan!'
+});
 
 const profileSchema = Joi.object({
     username: usernameSchema,
