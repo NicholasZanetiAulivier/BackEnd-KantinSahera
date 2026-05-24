@@ -76,7 +76,7 @@ async function verifyRefreshToken(id = "", token = "", account_id = "", is_admin
     if (dbToken.is_revoked) {
         // hapus semua refresh token yg dimiliku sebuah akun
         await clearRefreshTokens(account_id, is_admin);
-        throw errorResponder(errors.UNAUTHORIZED, "Terdeteksi aktivitas mencurigakan! Melakukan logout dari semua sesi...")
+        throw errorResponder(errors.SECURITY, "Terdeteksi aktivitas mencurigakan! Melakukan logout dari semua sesi...")
     }
 
     // timestamptz to js unix time

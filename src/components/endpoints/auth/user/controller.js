@@ -46,7 +46,7 @@ async function login(req, res, next) {
         let invalidField = null;
 
         const user = await service.findByEmail(email);
-
+        
         if (!user) {
             throw errorResponder(errors.INVALID_CREDENTIALS, "Email atau kata sandi salah!");
         }
@@ -271,7 +271,7 @@ async function refresh(req, res, next) {
         if (!authHeader.includes('Bearer')) throw errorResponder(errors.UNAUTHORIZED);
 
         const refreshToken = req.cookies.refresh_token;
-        const accessToken = authHeader[1];
+        const accessToken = authHeader[1] || "";
 
         if (!refreshToken) throw errorResponder(errors.UNAUTHORIZED, "Refresh token tidak ada atau tidak sesuai!");
 
@@ -296,7 +296,20 @@ async function refresh(req, res, next) {
 
 async function logout (req, res, next) {
     try {
-        const { exp, jti, user_id } = req.user;
+        // logout accepts expired access token
+        const authorization = req.headers.authorization || " "
+        // console.log(authorization);
+        const authHeader = authorization.split(' ');
+
+        if (!authHeader.includes('Bearer')) throw errorResponder(errors.UNAUTHORIZED);
+
+        const refreshToken = req.cookies.refresh_token;
+        const accessToken = authHeader[1] || "";
+
+        const payload = service.decodeUserPayload(accessToken);
+        // console.log('logout paylaod', payload);
+
+        const { exp, jti, user_id } = payload;
         const userId = parseUserId(user_id);
 
         // uuid.token

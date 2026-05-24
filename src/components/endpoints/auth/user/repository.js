@@ -8,7 +8,7 @@ async function findByEmail(email) {
     await db.connect().then(async (client) => {
         clientref = client;
         await client.query(
-            'SELECT user_id, google_id, email, username, password, verified FROM users WHERE email = $1',
+            'SELECT user_id, google_id, profile_image_url, email, username, password, verified FROM users WHERE email = $1',
             [email]
         ).then(result => {
             res = result
@@ -29,7 +29,7 @@ async function findById(user_id) {
     await db.connect().then(async (client) => {
         clientref = client;
         await client.query(
-            'SELECT user_id, google_id, email, username, verified FROM users WHERE user_id = $1',
+            'SELECT user_id, google_id, email, profile_image_url, username, verified FROM users WHERE user_id = $1',
             [user_id]
         ).then(result => {
             res = result
@@ -104,8 +104,9 @@ async function changeProfileWhereId(profile, user_id) {
 // nambahin return kolom yang perlu (user_id dan verified), 
 // jadi selain untuk return info profil juga bisa buat semacam /auth/me (biar gk ribet)
 async function getProfileById(id) {
+    let res, clientref
     await db.connect().then(async (client) => {
-        clientref = client;
+        clientref = client
 
         await client.query(
             `SELECT user_id, username, email, profile_image_url, phone_no, verified FROM users WHERE user_id = $1`,
@@ -127,6 +128,8 @@ async function createOrUpsertGoogleUser(googleUser) {
     const user = googleUser;
     
     const { google_id, username, email, profile_image_url } = user;
+
+    let res, clientref;
 
     await db.connect().then(async (client) => {
         clientref = client;

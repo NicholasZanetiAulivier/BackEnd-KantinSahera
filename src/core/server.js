@@ -53,7 +53,7 @@ module.exports = (app) => {
         return res.status(204).end();
     })
 
-    app.use(globalLimiterMinute(100));
+    app.use(globalLimiterMinute(1000));
 
     //Main Router
     app.use(config.api.prefix, router);
@@ -82,7 +82,7 @@ module.exports = (app) => {
             statusCode: err.status || 500,
             error: err.code || 'UNKNOWN_ERROR',
             description: err.description || 'Unknown error',
-            message: err.message || 'An error has occurred',
+            message: 'An error has occurred',
         });
     });
 }

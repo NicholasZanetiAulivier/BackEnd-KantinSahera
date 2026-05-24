@@ -200,7 +200,7 @@ async function refresh(req, res, next) {
         if (!authHeader.includes('Bearer')) throw errorResponder(errors.UNAUTHORIZED);
 
         const refreshToken = req.cookies.refresh_token;
-        const accessToken = authHeader[1];
+        const accessToken = authHeader[1] || "";
 
         if (!refreshToken) throw errorResponder(errors.UNAUTHORIZED, "Refresh token tidak ada atau tidak sesuai!");
 
