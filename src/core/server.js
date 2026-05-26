@@ -18,7 +18,8 @@ module.exports = (app) => {
     app.use(cors({
         origin: [
             config.base_url.frontend_user,
-            config.base_url.frontend_admin
+            config.base_url.frontend_admin,
+            config.base_url.frontend_another_user
         ],
         credentials: true,
     }));
