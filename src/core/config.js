@@ -47,6 +47,7 @@ module.exports = {
     base_url: {
         frontend_admin: process.env.FE_ADMIN_BASE_URL,
         frontend_user: process.env.FE_USER_BASE_URL,
+        frontend_another_user: process.env.FE_ANOTHER_USER_BASE_URL,
         backend: process.env.BE_BASE_URL
     },
     cloudinary: {
