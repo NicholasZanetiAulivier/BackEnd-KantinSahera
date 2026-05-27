@@ -2,6 +2,8 @@ const ERT = require('express-rate-limit');
 const postgresStores = require('@acpr/rate-limit-postgresql')
 const config = require('../../core/config');
 const {logger} = require('../../core/logger');
+const { errorMonitor } = require('nodemailer/lib/xoauth2');
+const { errorResponder, errors } = require('../../core/errors');
 
 const CONNECTION_CONFIGURATION = {
     user: config.database.user,
@@ -23,7 +25,10 @@ const createLimiter = (prefix = "", requestLimit = 3) => ERT.rateLimit({
     standardHeaders: true,
     store: new postgresStores.PostgresStore(CONNECTION_CONFIGURATION, prefix),
     ipv6Subnet: 56, // Default, ubah kalo perluh,
-    logger: logger
+    logger: logger,
+    handler: (req, res, next) => {
+        return next(errorResponder(errors.TOO_MANY_REQUEST));
+    }
 })
 
 // default ke 100 RPM
@@ -34,7 +39,10 @@ const globalLimiterMinute = (requestLimit = 100) => ERT.rateLimit({
     standardHeaders: true,
     store: new postgresStores.PostgresStore(CONNECTION_CONFIGURATION, "global-rpm"),
     ipv6Subnet: 56, // Default, ubah kalo perluh,
-    logger: logger
+    logger: logger,
+    handler: (req, res, next) => {
+        return next(errorResponder(errors.TOO_MANY_REQUEST));
+    }
 })
 
 module.exports = {

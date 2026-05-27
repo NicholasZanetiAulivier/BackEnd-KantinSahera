@@ -13,7 +13,7 @@ const initializeUploadWidget = async () => {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZG1pbl9pZCI6ImFkbWluLTdmODI3YTExLWNjY2MtNGFiOC1iYzExLWViYmViMGM0MzBjNiIsInVzZXJuYW1lIjoiQWRtaW4iLCJlbWFpbCI6InZpbmNlbnRoZW5kcnkwNkBnbWFpbC5jb20iLCJzdXBlcl9hZG1pbiI6ZmFsc2UsInZlcmlmaWVkIjp0cnVlLCJpYXQiOjE3Nzg2MjkxMjAsImV4cCI6MTc3ODYzMDAyMCwianRpIjoiZmJlMjFlYjQtOTU0YS00NzZkLWI2NjgtODRmNTBlYTNjOGUwIn0.KLXDP61DTI4De8smGe-7WyZZZWHal4cbx2D2BphZvAA'
+                'Authorization': 'Bearer'
             }
         });
 

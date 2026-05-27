@@ -54,7 +54,7 @@ module.exports = (app) => {
         return res.status(204).end();
     })
 
-    app.use(globalLimiterMinute(1000));
+    app.use(globalLimiterMinute(100));
 
     //Main Router
     app.use(config.api.prefix, router);
