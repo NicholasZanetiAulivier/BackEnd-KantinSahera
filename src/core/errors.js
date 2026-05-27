@@ -98,6 +98,11 @@ const errors = {
         description: 'User\'s account security breach detected!',
         status: 403,
         code: 'SECURITY_ERROR'
+    },
+    TOO_MANY_REQUESTS: {
+        description: 'Too many request is made! Please try again later.',
+        status: 429,
+        code: 'TOO_MANY_REQUESTS_ERROR'
     }
 };
 
