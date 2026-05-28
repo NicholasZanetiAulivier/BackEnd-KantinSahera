@@ -89,10 +89,10 @@ const errors = {
         status: 401,
         code: 'UNAUTHORIZED_ERROR'
     },
-    MIDTRANS_BAD_REQUEST: {
-        description: 'Midtrans returned a rejection and or error',
+    DOKU_BAD_REQUEST: {
+        description: 'Doku returned a rejection and or error',
         status: 400,
-        code: 'MIDTRANS_ERROR'
+        code: 'DOKU_ERROR'
     },
     SECURITY: {
         description: 'User\'s account security breach detected!',

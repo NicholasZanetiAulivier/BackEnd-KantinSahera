@@ -97,8 +97,6 @@ async function getCartPrice(req, res, next) {
         const { building } = req.query;
 
         const price = await service.getCartPrice(id, building == undefined ? false : true); //We assume for now a flat fee. Although this should depend on the building
-
-        const price = await service.getCartPrice(id, true);
         return res.status(200).json({ price });
     } catch (err) {
         return next(err);
@@ -112,11 +110,10 @@ async function createOrder(req, res, next) {
         const { error, value } = validate.order(req.body);
         processJoiValidationError(error);
 
-        let { location, note } = value;
+        let { location, note } = value; //Encoded location building|floor|extra
 
         let is_takeaway = false;
         if (location) is_takeaway = true;
-
         else location = null;
 
         note = note || null;
@@ -132,7 +129,7 @@ async function createOrder(req, res, next) {
             throw errorResponder(errors.NOT_FOUND, "Tidak ada data cart untuk pengguna ini!");
         }
 
-        const result = await service.createOrder(id, location, note, true, is_takeaway); //CHANGE THIS FOR FEE IMPLEMENTATION
+        const result = await service.createOrder(id, location, note, !is_takeaway, is_takeaway); //CHANGE THIS FOR FEE IMPLEMENTATION
         return res.status(200).json(result);
     } catch (err) {
         return next(err);
