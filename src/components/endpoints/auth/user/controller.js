@@ -46,7 +46,7 @@ async function login(req, res, next) {
         let invalidField = null;
 
         const user = await service.findByEmail(email);
-        
+
         if (!user) {
             throw errorResponder(errors.INVALID_CREDENTIALS, "Email atau kata sandi salah!");
         }
@@ -64,14 +64,15 @@ async function login(req, res, next) {
             // destructure object so only username and email is sent
             const token = await generateUserJwt(user);
 
-            if (!token) 
+            if (!token)
                 throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Terjadi error pada saat proses login!");
 
             // uuid.opaquestr
             const refreshTokenStr = await tokenService.createRefreshToken(user.user_id, false);
 
-            if (!refreshTokenStr) 
+            if (!refreshTokenStr)
                 throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Terjadi error pada saat proses login!");
+            console.log(refreshTokenStr);
 
             res.cookie('refresh_token', refreshTokenStr, {
                 httpOnly: true,
@@ -190,7 +191,7 @@ async function handleGoogleAuth(req, res, next) {
         // code duplication i know, buat implementasi cepat aja
         const refreshTokenStr = await tokenService.createRefreshToken(result.user_id, false);
 
-        if (!refreshTokenStr) 
+        if (!refreshTokenStr)
             throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Terjadi error pada saat proses login!");
 
         // hapus refresh token lama
@@ -278,9 +279,10 @@ async function refresh(req, res, next) {
         const result = await service.refreshAccessToken(accessToken, refreshToken);
 
         // code duplication i know, buat implementasi cepat aja
+        await tokenService.clearRefreshTokens(result.userId, false);
         const refreshTokenStr = await tokenService.createRefreshToken(result.userId, false);
 
-        if (!refreshTokenStr) 
+        if (!refreshTokenStr)
             throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Terjadi error pada saat proses login!");
 
         res.cookie('refresh_token', refreshTokenStr, {
@@ -288,13 +290,13 @@ async function refresh(req, res, next) {
             maxAge: REFRESH_TOKEN_EXPIRY_SECONDS * 1000,
         });
 
-        if (result) return res.status(200).json({token: result.accessToken}) 
+        if (result) return res.status(200).json({ token: result.accessToken })
     } catch (err) {
         return next(err);
     }
 }
 
-async function logout (req, res, next) {
+async function logout(req, res, next) {
     try {
         // logout accepts expired access token
         const authorization = req.headers.authorization || " "

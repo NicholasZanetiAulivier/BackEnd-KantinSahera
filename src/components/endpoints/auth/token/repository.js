@@ -1,6 +1,6 @@
 const { errorResponder, errors } = require('../../../../core/errors');
 const db = require('../../../../database/db');
-const {logger} = require('../../../../core/logger');
+const { logger } = require('../../../../core/logger');
 const config = require('../../../../core/config');
 const { v4: uuidv4 } = require('uuid');
 
