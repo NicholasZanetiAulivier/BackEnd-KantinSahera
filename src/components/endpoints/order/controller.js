@@ -33,7 +33,7 @@ async function addCustomerCartItem(req, res, next) {
         const { menu_id, quantity } = value;
 
         if (await service.checkItemInCustomerCart(id, menu_id)) {
-            throw errorResponder(errors.DB_DUPLICATE_CONFLICT, "Sudah ada item ini di dalam cart!, gunakan PUT untuk mengupdate!");
+            throw errorResponder(errors.DB_DUPLICATE_CONFLICT, "Sudah ada item ini di dalam cart!, gunakan PATCH untuk mengupdate!");
         }
 
         await service.addCustomerCartItem(id, menu_id, quantity);
@@ -94,8 +94,9 @@ async function deleteCustomerCart(req, res, next) {
 async function getCartPrice(req, res, next) {
     try {
         const id = parseUserId(req.user.user_id);
+        const { building } = req.query;
 
-        const price = await service.getCartPrice(id, true);
+        const price = await service.getCartPrice(id, building == undefined ? false : true); //We assume for now a flat fee. Although this should depend on the building
         return res.status(200).json({ price });
     } catch (err) {
         return next(err);
