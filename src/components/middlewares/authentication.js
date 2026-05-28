@@ -7,7 +7,7 @@ const { errorResponder, errors } = require('../../core/errors');
 const { Strategy: JwtStrategy, ExtractJwt } = require('passport-jwt');
 const { userPayload, adminPayload } = require('../../utils/jwt-payload');
 const { parseUserId, parseAdminId } = require('../../utils/id-parser');
-const {logger} = require('../../core/logger')
+const { logger } = require('../../core/logger')
 const jwt = require('jsonwebtoken');
 
 // invalidJti = async (jti) => {
@@ -32,7 +32,7 @@ passport.use(
 
                 return done(null, { ...user, exp: payload.exp, jti: payload.jti } || false);
             } catch (err) {
-                logger.error('Error di User JWT', {err})
+                logger.error('Error di User JWT', { err })
                 return done(err, false);
             }
         }
@@ -168,9 +168,7 @@ function isAccountVerified(req, res, next) {
         // undefined anggap 401 aja
         if (!account) throw errorResponder(errors.ACCOUNT_UNVERIFIED, message);
 
-        const decoded = jwt.decode(account);
-
-        if (!decoded.verified) throw errorResponder(errors.ACCOUNT_UNVERIFIED, message);
+        if (!account.verified) throw errorResponder(errors.ACCOUNT_UNVERIFIED, message);
 
         return next();
     } catch (err) {

@@ -33,7 +33,7 @@ async function addCustomerCartItem(req, res, next) {
         const { menu_id, quantity } = value;
 
         if (await service.checkItemInCustomerCart(id, menu_id)) {
-            throw errorResponder(errors.DB_DUPLICATE_CONFLICT, "Sudah ada item ini di dalam cart!, gunakan PUT untuk mengupdate!");
+            throw errorResponder(errors.DB_DUPLICATE_CONFLICT, "Sudah ada item ini di dalam cart!, gunakan PATCH untuk mengupdate!");
         }
 
         await service.addCustomerCartItem(id, menu_id, quantity);
@@ -94,8 +94,9 @@ async function deleteCustomerCart(req, res, next) {
 async function getCartPrice(req, res, next) {
     try {
         const id = parseUserId(req.user.user_id);
+        const { building } = req.query;
 
-        const price = await service.getCartPrice(id, true);
+        const price = await service.getCartPrice(id, building == undefined ? false : true); //We assume for now a flat fee. Although this should depend on the building
         return res.status(200).json({ price });
     } catch (err) {
         return next(err);
@@ -109,11 +110,10 @@ async function createOrder(req, res, next) {
         const { error, value } = validate.order(req.body);
         processJoiValidationError(error);
 
-        let { location, note } = value;
+        let { location, note } = value; //Encoded location building|floor|extra
 
         let is_takeaway = false;
         if (location) is_takeaway = true;
-
         else location = null;
 
         note = note || null;
@@ -124,12 +124,12 @@ async function createOrder(req, res, next) {
         }
 
         const exists = await service.checkCustomerCartExists(id);
-        console.log(exists);
+        // console.log(exists);
         if (!exists) {
             throw errorResponder(errors.NOT_FOUND, "Tidak ada data cart untuk pengguna ini!");
         }
 
-        const result = await service.createOrder(id, location, note, true, is_takeaway); //CHANGE THIS FOR FEE IMPLEMENTATION
+        const result = await service.createOrder(id, location, note, !is_takeaway, is_takeaway); //CHANGE THIS FOR FEE IMPLEMENTATION
         return res.status(200).json(result);
     } catch (err) {
         return next(err);
