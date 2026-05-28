@@ -103,6 +103,11 @@ const errors = {
         description: 'Too many request is made! Please try again later.',
         status: 429,
         code: 'TOO_MANY_REQUESTS_ERROR'
+    },
+    ACCOUNT_UNVERIFIED: {
+        description: 'Provided Account has unverified email!',
+        status: 401,
+        code: 'ACCOUNT_UNVERIFIED_ERROR'
     }
 };
 

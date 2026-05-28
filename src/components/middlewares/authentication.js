@@ -8,6 +8,7 @@ const { Strategy: JwtStrategy, ExtractJwt } = require('passport-jwt');
 const { userPayload, adminPayload } = require('../../utils/jwt-payload');
 const { parseUserId, parseAdminId } = require('../../utils/id-parser');
 const {logger} = require('../../core/logger')
+const jwt = require('jsonwebtoken');
 
 // invalidJti = async (jti) => {
 //     const invalid = await jwtService.isInvalidJti(jti);
@@ -158,6 +159,25 @@ const adminOrUser = (req, res, next) => {
     })(req, res, next);
 }
 
+// you MUST mount this after passport middleware
+function isAccountVerified(req, res, next) {
+    try {
+        const message = "Anda tidak diizinkan mengakses fitur ini karena email Anda belum terverifikasi!";
+        const account = req.user;
+
+        // undefined anggap 401 aja
+        if (!account) throw errorResponder(errors.ACCOUNT_UNVERIFIED, message);
+
+        const decoded = jwt.decode(account);
+
+        if (!decoded.verified) throw errorResponder(errors.ACCOUNT_UNVERIFIED, message);
+
+        return next();
+    } catch (err) {
+        return next(err);
+    }
+}
+
 module.exports = {
     passportUserJwt,
     passportAdminJwt,
@@ -165,4 +185,5 @@ module.exports = {
     userOptionalAuth,
     adminOptionalAuth,
     adminOrUser,
+    isAccountVerified
 };
