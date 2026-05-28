@@ -31,10 +31,17 @@ async function deleteMenu(id) {
     return;
 }
 
+async function countMenus() {
+    const res = await repository.countMenus();
+
+    return res.rows[0].count;
+}
+
 module.exports = {
     getMenuByIDs,
     getMenuBySearch,
     createMenu,
     editMenu,
     deleteMenu,
+    countMenus,
 }
