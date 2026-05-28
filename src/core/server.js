@@ -83,7 +83,7 @@ module.exports = (app) => {
             statusCode: err.status || 500,
             error: err.code || 'UNKNOWN_ERROR',
             description: err.description || 'Unknown error',
-            message: 'An error has occurred',
+            message: err.message || 'An error has occurred',
         });
     });
 }
