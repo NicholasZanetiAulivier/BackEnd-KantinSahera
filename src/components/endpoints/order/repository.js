@@ -21,7 +21,7 @@ async function getCustomerCart(id, offset, limit) {
         await client.query(
             `SELECT quantity, carts.menu_id, name, image_url, price, is_available FROM carts 
                 JOIN menus ON carts.menu_id=menus.menu_id WHERE carts.customer_id= $1 ${offsetLimitString}`,
-            add // your code still throws error lah nichizaul, Nichizaul: no shit its wrong, c starts at 2
+            add 
         ).then(result => {
             res = result
         });

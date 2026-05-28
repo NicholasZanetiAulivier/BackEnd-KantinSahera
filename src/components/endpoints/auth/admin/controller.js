@@ -193,8 +193,7 @@ async function resetPassword(req, res, next) {
 
 async function refresh(req, res, next) {
     try {
-        // emang duplikasi kode ini (biar cepat aj)
-        const authorization = req.headers.authorization || " ";
+        const authorization = req.headers.authorization || " "
         const authHeader = authorization.split(' ');
 
         if (!authHeader.includes('Bearer')) throw errorResponder(errors.UNAUTHORIZED);
@@ -225,13 +224,24 @@ async function refresh(req, res, next) {
 
 async function logout(req, res, next) {
     try {
-        const { exp, jti, admin_id } = req.user;
+        // logout accepts expired access token
+        const authorization = req.headers.authorization || " "
+        // console.log(authorization);
+        const authHeader = authorization.split(' ');
 
+        if (!authHeader.includes('Bearer')) throw errorResponder(errors.UNAUTHORIZED);
+
+        const refreshToken = req.cookies.refresh_token;
+        const accessToken = authHeader[1] || "";
+
+        const payload = service.decodeAdminPayload(accessToken);
+        // console.log('logout paylaod', payload);
+
+        const { exp, jti, admin_id } = payload;
         const adminId = parseAdminId(admin_id);
 
         // uuid.token
         const refreshTokenCookie = req.cookies.refresh_token;
-
         if (!refreshTokenCookie) throw errorResponder(errors.BAD_REQUEST, "Refresh Token tidak ada!");
         const refreshTokenId = refreshTokenCookie.split('.')[0];
 

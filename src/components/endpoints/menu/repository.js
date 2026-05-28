@@ -33,6 +33,8 @@ async function getMenuBySearch(offset, limit, search) {
     let query = "SELECT * FROM menus";
     let add = [];
     let c = 1;
+    
+    query += ' ORDER BY menu_id'
     if (search) {
         query += " WHERE name ~* $" + c++;
         add.push(search);
@@ -174,6 +176,26 @@ async function deleteMenu(id) {
     return res;
 }
 
+// beda query, karena count return satu row saja, sama kebanyakan sumber nyaranin bedain query
+async function countMenus() {
+    let res, clientref;
+
+    await db.connect().then(async (client) => {
+        clientref = client;
+        await client.query(
+            "SELECT COUNT(DISTINCT(menus.menu_id)) AS count FROM menus",
+        ).then(result => {
+            res = result
+        }).catch((err) => {
+            logger.error({err}, 'Terjadi error database di modul menu!');
+            throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
+        }).finally(() => {
+            clientref.release();
+        });
+    });
+
+    return res;
+}
 
 module.exports = {
     getMenuByIDs,
@@ -181,5 +203,6 @@ module.exports = {
     getMenuCount,
     createMenu,
     editMenu,
-    deleteMenu
+    deleteMenu,
+    countMenus,
 }

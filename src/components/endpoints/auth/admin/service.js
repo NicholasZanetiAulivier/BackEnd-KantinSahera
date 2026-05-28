@@ -4,6 +4,8 @@ const jwt = require('jsonwebtoken');
 const config = require('../../../../core/config');
 const { refreshAdminJwt } = require('../../../../utils/token')
 const tokenService = require('../token/service')
+const {logger} = require('../../../../core/logger');
+const {errors, errorResponder} = require('../../../../core/errors')
 
 async function findByEmail(email) {
     const res = await repository.findByEmail(email);
@@ -59,7 +61,7 @@ async function refreshAccessToken(accessToken, refreshToken) {
             }
             else {
                 logger.error({err}, "Terjadi error saat validasi token refresh!");
-                throw errorResponder(errors.INVALID_TOKEN, "Token yang diberikan tidak valid!");
+                throw errorResponder(errors.UNAUTHORIZED, "Token yang diberikan tidak valid!");
             } 
         }
 
@@ -88,6 +90,27 @@ async function refreshAccessToken(accessToken, refreshToken) {
     };
 }
 
+function decodeAdminPayload(accessToken) {
+    let payload;
+    jwt.verify(accessToken, config.secret.admin, (err, decoded) => {
+        if (err) {
+            // bolehkan jwt yg expired, karena tujuan kita generate access token baru (jwt baru)
+            if (err.name === 'TokenExpiredError') {
+                payload = jwt.decode(accessToken);
+            }
+            else {
+                logger.error({err}, "Terjadi error saat validasi token refresh!");
+                throw errorResponder(errors.UNAUTHORIZED, "Token yang diberikan tidak valid!");
+            } 
+        }
+
+        payload = decoded;
+    });
+
+        console.log(payload);
+    return payload;
+}
+
 module.exports = {
     findByEmail,
     findById,
@@ -96,4 +119,5 @@ module.exports = {
     updateAdmin,
     deleteAdmin,
     refreshAccessToken,
+    decodeAdminPayload,
 }

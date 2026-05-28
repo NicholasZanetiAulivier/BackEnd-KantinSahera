@@ -181,7 +181,7 @@ function decodeUserPayload(accessToken) {
             }
             else {
                 logger.error({err}, "Terjadi error saat validasi token refresh!");
-                throw errorResponder(errors.INVALID_TOKEN, "Token yang diberikan tidak valid!");
+                throw errorResponder(errors.UNAUTHORIZED, "Token yang diberikan tidak valid!");
             } 
         }
 

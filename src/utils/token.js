@@ -12,7 +12,7 @@ async function generateUserJwt(user) {
 }
 
 async function generateAdminJwt(admin) {
-    return jwt.sign(adminPayload(admin), config.secret.admin, { expiresIn: '15m', jwtid: uuidv4() })
+    return jwt.sign(adminPayload(admin), config.secret.admin, { expiresIn: '10s', jwtid: uuidv4() })
 }
 
 // generate opaque string
