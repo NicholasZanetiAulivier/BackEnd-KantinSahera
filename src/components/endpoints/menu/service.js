@@ -12,6 +12,11 @@ async function getMenuBySearch(offset, limit, search) {
     return res.rows;
 }
 
+async function getMenuCount(search) {
+    const count = (await repository.getMenuCount(search)).rows[0]['count'];
+    return count;
+}
+
 async function createMenu(name, image_url, price) {
     const res = await repository.createMenu(name, image_url, price);
 
@@ -40,6 +45,7 @@ async function countMenus() {
 module.exports = {
     getMenuByIDs,
     getMenuBySearch,
+    getMenuCount,
     createMenu,
     editMenu,
     deleteMenu,
