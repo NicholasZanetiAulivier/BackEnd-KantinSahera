@@ -10,14 +10,13 @@ function checkInteger(i, minVal, name) {
         throw errorResponder(errors.BAD_ID, "ID harus berupa angka bulat");
 }
 
-function checkUserParamsTokenID(req) {
-    const id = parseUserId(req.user.user_id);
-    const id_params = req.params.id;
-
-    if (!(id === id_params)) {
+function checkUserParamsTokenID(userId, paramUserId) {
+    // kedua id prefixed
+    if (!(userId === paramUserId)) {
         throw errorResponder(errors.INVALID_CREDENTIALS, "User tidak memiliki hak akses untuk data yang diminta!");
     }
-    return id;
+    // return userId;
+    return true;
 }
 
 module.exports = { checkInteger, checkUserParamsTokenID };
