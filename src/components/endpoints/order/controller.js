@@ -161,15 +161,23 @@ async function getOrderByUserID(req, res, next) {
 
         const { offset, limit } = req.query;
 
-        if (!req.user.admin_id) {
-            checkUserParamsTokenID(req);
+        const userId = req.user.user_id;
+
+        let validId;
+        if (req.user.user_id) {
+            // checkUserParamsTokenID(req); // gak bisa kayak gini nikkkk
+            validId = checkUserParamsTokenID(userId, req.params.id)
         }
 
-        if (offset) checkInteger(offset, 0, 'Offset');
-        if (limit) checkInteger(limit, 0, 'Limit');
+        if (validId) {
+            if (offset) checkInteger(offset, 0, 'Offset');
+            if (limit) checkInteger(limit, 0, 'Limit');
 
-        const result = await service.getOrderByUserID(id, offset, limit);
-        return res.status(200).json({ orders: result });
+            const parsedId = parseUserId(userId)
+
+            const result = await service.getOrderByUserID(parsedId, offset, limit);
+            return res.status(200).json({ orders: result });
+        }
     } catch (err) {
         return next(err);
     }
