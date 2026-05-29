@@ -19,11 +19,13 @@
     "dev": "nodemon --trace-warnings --env-file=.env src/index.js",
     "migrate": "node src/scripts/migration.js",
     "seed": "node src/scripts/seeder.js",
-    "test-midtrans": "node src/scripts/midtransTest.js",
+    "test-doku": "node src/scripts/dokuTest.js",
     "test": "npm run migrate && npm run seed && mocha --env-file=.env"
   },
   "dependencies": {
     "@acpr/rate-limit-postgresql": "^1.4.1",
+    "@node-minify/core": "^10.5.0",
+    "@node-minify/jsonminify": "^10.5.0",
     "bcrypt": "^6.0.0",
     "body-parser": "^2.2.2",
     "cloudinary": "^2.10.0",

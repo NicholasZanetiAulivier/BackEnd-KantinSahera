@@ -21,6 +21,9 @@ module.exports = {
         doku_secret_key: process.env.DOKU_SECRET_KEY,
         doku_api_key: process.env.DOKU_API_KEY,
         doku_public_key: process.env.DOKU_PUBLIC_KEY,
+        ssl_private_key: fs.readFileSync('./private.key').toString(),
+        ssl_encrypted_private_key: fs.readFileSync('./pkcs8.key').toString(),
+        ssl_public_key: fs.readFileSync('./public.pem').toString()
     },
     admin_account: {
         email: process.env.ADMIN_ACCOUNT_EMAIL,
@@ -51,7 +54,7 @@ module.exports = {
         frontend_user: process.env.FE_USER_BASE_URL,
         frontend_another_user: process.env.FE_ANOTHER_USER_BASE_URL,
         backend: process.env.BE_BASE_URL,
-        doku_api: process.env.DOKU_API || "https://api-sandbox.doku.com",
+        doku_api: process.env.NODE_ENV === "development" ? "https://api-sandbox.doku.com" : "https://api.doku.com",
     },
     cloudinary: {
         cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
