@@ -33,11 +33,11 @@ const logger = pino({
         paths: ['password', '*.password', 'token', 'auth'],
         censor: '[REDACTED]',
     },
-    },
-    pino.transport(pinoPretty)
+},
+    pino.transport(config.env == 'development' ? pinoPretty : pinoProd)
 );
 
 module.exports = {
     logger,
 }
-    
+

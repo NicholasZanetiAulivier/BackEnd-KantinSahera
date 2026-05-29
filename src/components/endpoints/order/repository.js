@@ -2,6 +2,8 @@ const { errorResponder, errors } = require('../../../core/errors');
 const db = require('../../../database/db');
 const { logger } = require('../../../core/logger');
 const config = require('../../../core/config');
+const { createHash, createHmac } = require('crypto');
+
 async function getCustomerCart(id, offset, limit) {
     let res, clientref;
     let offsetLimitString = "";
@@ -211,49 +213,63 @@ async function createOrder(id, location, note, has_fee, is_takeaway) {
             [id]
         );
 
-        /*Midtrans request here so we can rollback if midtrans errors */
-        const headers = new Headers({
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-            "Authorization": "Basic " + config.secret.midtrans_auth_string
-        });
+        /*Doku request here so we can rollback if doku errors */
+        const clientID = config.secret.doku_client_id;
+        const requestID = order.order_id;
+        let date = new Date();
+        const requestTimestamp = date.toISOString();
 
-        const transaction_details = {
-            order_id: order['order_id'],
-            gross_amount: Math.ceil(order['total_price']), //obviously ceil
+        const requestTarget = "/checkout/v1/payment";
+
+        let body = {
+            order: {
+                amount: Math.ceil(order.total_price),
+                invoice_number: order.total_price,
+                // callback_url_result: config.base_url.frontend_user,
+                auto_redirect: true,
+            },
+            payment: {
+                payemnt_due_date: 30,
+            },
+            customer: {
+                id: order.customer_id
+            }
         };
 
-        const items = await getItemsByOrderID(order['order_id']);
-        const item_details = [];
-        for (const item of items.rows) {
-            item_details.push({
-                id: item['menu_id'],
-                price: Math.ceil(item['price']),
-                quantity: item['quantity'],
-                name: item['name'].substr(0, 50),
-            })
-        }
+        const digest = createHash('sha256').update(JSON.stringify(body)).digest('base64');
+        let rawSign = `Client-Id:${clientID}\nRequest-Id:${requestID}\nRequest-Timestamp:${requestTimestamp}\nRequest-Target:${requestTarget}\nDigest:${digest}`;
+        const sign = createHmac('sha256', config.secret.doku_secret_key).update(rawSign).digest('base64');
+
+        const headers = new Headers({
+            "Content-Type": "application/json",
+            "Client-Id": clientID,
+            "Request-Id": requestID,
+            "Request-TimeStamp": requestTimestamp,
+            "Signature": "HMACSHA256=" + sign
+        });
 
         /* If we want and have the time, we could finish the whole list of optional attributes */
-        const midtransReturns = await fetch(
-            'https://app.sandbox.midtrans.com/snap/v1/transactions', {
+        const dokuReturns = await fetch(
+            "https://api-sandbox.doku.com/checkout/v1/payment", {
             method: 'POST',
             headers,
-            body: JSON.stringify({ transaction_details, item_details })
+            body: JSON.stringify(body)
         }
         ).then(async (res) => {
-            if (res.status == 201) {
+            if (res.status == 200) {
                 return await res.json();
             } else {
-                throw errorResponder(errors.MIDTRANS_BAD_REQUEST, "Transaksi tidak dibuat oleh Midtrans!");
+                console.log(await res.json());
+                console.log(res.status);
+                throw errorResponder(errors.DOKU_BAD_REQUEST, "Transaksi tidak dibuat oleh Doku!");
             }
         }).catch(err => {
-            throw errorResponder(errors.MIDTRANS_BAD_REQUEST, "Error midtrans!");
+            throw errorResponder(errors.DOKU_BAD_REQUEST, "Error midtrans!");
         });
 
         res = {
             order,
-            payment: midtransReturns
+            payment: dokuReturns.payment
         };
 
         await client.query('COMMIT');
@@ -338,11 +354,22 @@ async function updateOrderTransaction(order_id, transaction_id, status) {
     return res;
 }
 
-async function getOrders(offset, limit) {
+async function getOrders(offset, limit, paid, fulfilled) {
     let res, clientref;
     let offsetLimitString = "";
+    let whereString = " WHERE ";
+    let p;
     let add = [];
     let c = 1;
+
+    if ((typeof paid) == 'boolean') {//No need for prepared statement here cuz these are definitely booleans
+        whereString += ` transaction_status ${paid ? ' ' : ' NOT '} IN ('capture' , 'settlement') `;
+        p = true;
+    }
+    if ((typeof fulfilled) == 'boolean') {
+        whereString += ` ${p ? 'AND ' : ' '} fulfilled = ${fulfilled} `;
+        p = true;
+    }
     if (limit) {
         offsetLimitString += " LIMIT $" + c++;
         add.push(limit);
@@ -352,10 +379,11 @@ async function getOrders(offset, limit) {
         add.push(offset);
     }
 
+
     await db.connect().then(async (client) => {
         clientref = client;
         await client.query(
-            "SELECT * FROM orders" + offsetLimitString,
+            "SELECT * FROM orders " + (p ? whereString : '') + offsetLimitString,
             add
         ).then(result => {
             res = result

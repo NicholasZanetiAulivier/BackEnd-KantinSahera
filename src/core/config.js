@@ -1,8 +1,8 @@
 const fs = require('fs');
 
-process.env.NODE_ENV = (process.env.NODE_ENV || 'development').toLowerCase();
 const { loadEnvFile } = require('node:process');
 loadEnvFile('.env');
+process.env.NODE_ENV = (process.env.NODE_ENV || 'development').toLowerCase();
 module.exports = {
     name: 'Kirno-API',
     pino_level: process.env.PINO_LEVEL,
@@ -17,8 +17,10 @@ module.exports = {
         admin: process.env.ADMIN_SECRET_KEY,
         google_client_id: process.env.GOOGLE_CLIENT_ID,
         google_client_secret: process.env.GOOGLE_CLIENT_SECRET, // gak dipakai
-        midtrans_server_key: process.env.SERVER_KEY,
-        midtrans_auth_string: btoa(process.env.SERVER_KEY + ":"),
+        doku_client_id: process.env.DOKU_CLIENT_ID,
+        doku_secret_key: process.env.DOKU_SECRET_KEY,
+        doku_api_key: process.env.DOKU_API_KEY,
+        doku_public_key: process.env.DOKU_PUBLIC_KEY,
     },
     admin_account: {
         email: process.env.ADMIN_ACCOUNT_EMAIL,
@@ -48,7 +50,8 @@ module.exports = {
         frontend_admin: process.env.FE_ADMIN_BASE_URL,
         frontend_user: process.env.FE_USER_BASE_URL,
         frontend_another_user: process.env.FE_ANOTHER_USER_BASE_URL,
-        backend: process.env.BE_BASE_URL
+        backend: process.env.BE_BASE_URL,
+        doku_api: process.env.DOKU_API || "https://api-sandbox.doku.com",
     },
     cloudinary: {
         cloud_name: process.env.CLOUDINARY_CLOUD_NAME,

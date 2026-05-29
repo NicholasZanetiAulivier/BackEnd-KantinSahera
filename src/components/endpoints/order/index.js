@@ -6,11 +6,11 @@ const route = express.Router();
 
 //Carts
 route.get('/cart/price', passportUserJwt, controller.getCartPrice);
-route.get('/cart/', passportUserJwt, controller.getCustomerCart);
-route.post('/cart/', passportUserJwt, controller.addCustomerCartItem);
+route.get('/cart', passportUserJwt, controller.getCustomerCart);
+route.post('/cart', passportUserJwt, controller.addCustomerCartItem);
 route.patch('/cart/:menuid', passportUserJwt, controller.updateCustomerCartItem);
 route.delete('/cart/:menuid', passportUserJwt, controller.deleteCustomerCartItem);
-route.delete('/cart/', passportUserJwt, controller.deleteCustomerCart);
+route.delete('/cart', passportUserJwt, controller.deleteCustomerCart);
 
 route.post('/create', passportUserJwt, isAccountVerified, controller.createOrder);
 
@@ -19,6 +19,6 @@ route.post('/notifications', controller.handleMidtransNotifications); //We might
 
 route.get('/user/:id', adminOrUser, controller.getOrderByUserID); // maybe make this more secure, but what are the chances anyone would know the specific order id of someone else's
 route.get('/:id', adminOrUser, controller.getOrderByID); // maybe make this more secure, but what are the chances anyone would know the specific order id of someone else's
-route.get('/', passportAdminJwt, controller.getOrders); // Currently only supports offset and limit queries, should probably be able to query for upaid, paid, and/or fullfilled orders
+route.get('/', passportAdminJwt, controller.getOrders);
 
 module.exports = route;

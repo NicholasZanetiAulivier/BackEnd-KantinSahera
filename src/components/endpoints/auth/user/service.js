@@ -1,9 +1,9 @@
 const repository = require('./repository');
-const {OAuth2Client} = require('google-auth-library');
+const { OAuth2Client } = require('google-auth-library');
 const config = require('../../../../core/config');
-const {logger} = require('../../../../core/logger');
+const { logger } = require('../../../../core/logger');
 const tokenService = require('../token/service');
-const {errors, errorResponder} = require('../../../../core/errors');
+const { errors, errorResponder } = require('../../../../core/errors');
 const { generateUserJwt, refreshUserJwt } = require('../../../../utils/token');
 const jwt = require('jsonwebtoken');
 const { parseUserId } = require('../../../../utils/id-parser');
@@ -39,7 +39,7 @@ async function verifyGoogleIdToken(token) {
         const emailVerified = String(payload['email_verified']);
 
         if (emailVerified !== "true") {
-            throw errorResponder(errors.GOOGLE_ACCOUNT_UNVERIFIED, 
+            throw errorResponder(errors.GOOGLE_ACCOUNT_UNVERIFIED,
                 "Akun Google Anda belum terverifikasi dari sistem Google!")
         }
 
@@ -52,7 +52,7 @@ async function verifyGoogleIdToken(token) {
 
         return { google_id: userid, username: name, email, profile_image_url: picture };
     } catch (err) {
-        logger.error({err}, "Gagal memverifikasi id token Google pengguna!");
+        logger.error({ err }, "Gagal memverifikasi id token Google pengguna!");
         throw errorResponder(errors.INVALID_TOKEN, "Gagal mengvalidasi token!");
     }
 }
@@ -91,7 +91,7 @@ async function getProfileById(id) {
     return res.rows[0];
 }
 
-async function handleGoogleAuth(googlePayload){
+async function handleGoogleAuth(googlePayload) {
     const status = {
         register: 'Anda berhasil membuat akun dengan Google!',
         login: 'Berhasil login dengan Google!',
@@ -139,7 +139,7 @@ async function handleGoogleAuth(googlePayload){
     if (!token) {
         throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Proses login gagal!");
     }
-   
+
     // return non-prefixed account id for refresh token issuing purposes
     return { message: returnMessage, token: token, user_id: user.user_id }
 }
@@ -180,9 +180,9 @@ function decodeUserPayload(accessToken) {
                 payload = jwt.decode(accessToken);
             }
             else {
-                logger.error({err}, "Terjadi error saat validasi token refresh!");
-                throw errorResponder(errors.UNAUTHORIZED, "Token yang diberikan tidak valid!");
-            } 
+                logger.error({ err }, "Terjadi error saat validasi token refresh!");
+                throw errorResponder(errors.INVALID_TOKEN, "Token yang diberikan tidak valid!");
+            }
         }
 
         payload = decoded;

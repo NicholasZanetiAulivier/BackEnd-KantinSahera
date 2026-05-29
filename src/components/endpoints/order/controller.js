@@ -4,9 +4,8 @@ const validate = require('../../middlewares/validator');
 const { parseUserId } = require('../../../utils/id-parser');
 const { checkInteger, checkUserParamsTokenID } = require('../../../utils/checks');
 const restaurantService = require('../restaurant/service');
-const sha512 = require('js-sha512').sha512;
+const crypto = require('crypto');
 const config = require('../../../core/config');
-const { MIDTRANS_TRANSACTION_STATUS } = require('../../../utils/midtrans')
 
 async function getCustomerCart(req, res, next) {
     try {
@@ -34,7 +33,7 @@ async function addCustomerCartItem(req, res, next) {
         const { menu_id, quantity } = value;
 
         if (await service.checkItemInCustomerCart(id, menu_id)) {
-            throw errorResponder(errors.DB_DUPLICATE_CONFLICT, "Sudah ada item ini di dalam cart!, gunakan PUT untuk mengupdate!");
+            throw errorResponder(errors.DB_DUPLICATE_CONFLICT, "Sudah ada item ini di dalam cart!, gunakan PATCH untuk mengupdate!");
         }
 
         await service.addCustomerCartItem(id, menu_id, quantity);
@@ -95,8 +94,9 @@ async function deleteCustomerCart(req, res, next) {
 async function getCartPrice(req, res, next) {
     try {
         const id = parseUserId(req.user.user_id);
+        const { building } = req.query;
 
-        const price = await service.getCartPrice(id, true);
+        const price = await service.getCartPrice(id, building == undefined ? false : true); //We assume for now a flat fee. Although this should depend on the building
         return res.status(200).json({ price });
     } catch (err) {
         return next(err);
@@ -110,11 +110,10 @@ async function createOrder(req, res, next) {
         const { error, value } = validate.order(req.body);
         processJoiValidationError(error);
 
-        let { location, note } = value;
+        let { location, note } = value; //Encoded location building|floor|extra
 
         let is_takeaway = false;
         if (location) is_takeaway = true;
-
         else location = null;
 
         note = note || null;
@@ -125,12 +124,12 @@ async function createOrder(req, res, next) {
         }
 
         const exists = await service.checkCustomerCartExists(id);
-        console.log(exists);
+        // console.log(exists);
         if (!exists) {
             throw errorResponder(errors.NOT_FOUND, "Tidak ada data cart untuk pengguna ini!");
         }
 
-        const result = await service.createOrder(id, location, note, true, is_takeaway); //CHANGE THIS FOR FEE IMPLEMENTATION
+        const result = await service.createOrder(id, location, note, !is_takeaway, is_takeaway); //CHANGE THIS FOR FEE IMPLEMENTATION
         return res.status(200).json(result);
     } catch (err) {
         return next(err);
@@ -187,17 +186,37 @@ async function getOrderByUserID(req, res, next) {
 async function getOrders(req, res, next) {
     try {
 
-        const { offset, limit } = req.query;
+        let { offset, limit, paid, fulfilled } = req.query;
 
         if (offset) checkInteger(offset, 0, 'Offset');
         if (limit) checkInteger(limit, 0, 'Limit');
 
-        const result = await service.getOrders(offset, limit);
+        if (paid) {
+            paid = paid.trim().toLowerCase() === 'true' ? true : false;
+        }
+        if (fulfilled) {
+            fulfilled = fulfilled.trim().toLowerCase() === 'true' ? true : false;
+        }
+
+        const result = await service.getOrders(offset, limit, paid, fulfilled);
         return res.status(200).json({ orders: result });
     } catch (err) {
         return next(err);
     }
 }
+
+const MIDTRANS_TRANSACTION_STATUS = [
+    "capture",
+    "settlement",
+    "pending",
+    "deny",
+    "cancel",
+    "expire",
+    "failure",
+    "refund",
+    "partial_refund",
+    "authorize",
+]
 
 async function handleMidtransNotifications(req, res, next) {
     try {
@@ -207,7 +226,7 @@ async function handleMidtransNotifications(req, res, next) {
             throw errorResponder(errors.INVALID_TOKEN, "The body does not contain a signature key");
         }
 
-        const hash = sha512(order_id + status_code + gross_amount + config.secret.midtrans_server_key);
+        const hash = crypto.createHash('sha512').update(order_id + status_code + gross_amount + config.secret.midtrans_server_key).digest('hex');
 
         if (hash !== signature_key) {
             throw errorResponder(errors.INVALID_TOKEN, "The signature key is not valid");
@@ -215,13 +234,11 @@ async function handleMidtransNotifications(req, res, next) {
 
         //We can check status through GET api after this, but honestly its kinda redundant (unless server key leaks)
 
-        const transacStatusCode = MIDTRANS_TRANSACTION_STATUS[transaction_status];
-
-        if (!transacStatusCode) {
+        if (!MIDTRANS_TRANSACTION_STATUS.includes(transaction_status)) {
             throw errorResponder(errors.BAD_REQUEST, "Transaction status is not valid");
         }
 
-        await service.updateOrderTransaction(order_id, transaction_id, transacStatusCode);
+        await service.updateOrderTransaction(order_id, transaction_id, transaction_status);
         return res.status(200).end();
     } catch (err) {
         return next(err);
