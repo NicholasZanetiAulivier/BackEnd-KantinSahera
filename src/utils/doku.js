@@ -90,12 +90,12 @@ async function nonSnapSignature(body, clientId, requestId, timestamp, target) {
     return signature
 }
 
-async function dokuCheckout(orderId, timestamp,) {
+async function dokuCheckout(orderId, timestamp, orderAmount) {
     const target = '/checkout/v1/payment';
 
     const body = {
         "order": {
-            "amount": 20000,
+            "amount": orderAmount,
             "invoice_number": uuidv4() // This is fine, just differentiate in case we need to replace an order's payment details
         },
         "payment": {
@@ -116,8 +116,14 @@ async function dokuCheckout(orderId, timestamp,) {
         method: "POST",
         headers: header,
         body: JSON.stringify(body)
-    }
-    ).then(res => res.json());
+    })
+        .then(res => {
+            if (res.ok)
+                return res.json();
+            else
+                throw new Error("Doku returned an error. Util side");
+        })
+        .catch(e => { throw e });
 
     return result;
 }
