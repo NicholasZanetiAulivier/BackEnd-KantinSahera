@@ -42,8 +42,8 @@ async function getCartPrice(id, has_fee) {
     return price;
 }
 
-async function createOrder(id, location, note, has_fee, is_takeaway) {
-    const result = await repository.createOrder(id, location, note, has_fee, is_takeaway);
+async function createOrder(id, building, floor, extra, note, has_fee, is_takeaway, name, phone_number) {
+    const result = await repository.createOrder(id, building, floor, extra, note, has_fee, is_takeaway, name, phone_number);
 
     return result;
 }

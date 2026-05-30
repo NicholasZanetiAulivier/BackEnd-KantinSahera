@@ -183,7 +183,7 @@ async function getCartPrice(id, has_fee) {
     return res;
 }
 
-async function createOrder(id, location, note, has_fee, is_takeaway) {
+async function createOrder(id, building, floor, extra, note, has_fee, is_takeaway, contact_name, contact_number) {
     let res, clientref;
 
     await db.connect().then(async (client) => {
@@ -193,9 +193,9 @@ async function createOrder(id, location, note, has_fee, is_takeaway) {
 
         let price = await getCartPrice(id, has_fee);
         let order = await client.query(`
-            INSERT INTO orders(total_price,location,note,has_fee,customer_id,is_takeaway)
-            VALUES ($1,$2,$3,$4,$5,$6) RETURNING *;`,
-            [price, location, note, has_fee, id, is_takeaway]
+            INSERT INTO orders(total_price,building,floor,extra,note,has_fee,customer_id,is_takeaway,contact_name,contact_number)
+            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *;`,
+            [price, building, floor, extra, note, has_fee, id, is_takeaway, contact_name, contact_number]
         ).then(results => results.rows[0]);
 
         await client.query(
@@ -226,7 +226,7 @@ async function createOrder(id, location, note, has_fee, is_takeaway) {
         );
 
         res = {
-            order: order.rows,
+            order: order.rows[0],
             payment: {
                 token: dokuResponse.payment.token_id,
                 url: dokuResponse.payment.url

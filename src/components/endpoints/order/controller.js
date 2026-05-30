@@ -92,12 +92,14 @@ async function deleteCustomerCart(req, res, next) {
     }
 }
 
+const feeBuildings = ['L', 'J', 'R'];
+
 async function getCartPrice(req, res, next) {
     try {
         const id = parseUserId(req.user.user_id);
         const { building } = req.query;
 
-        const price = await service.getCartPrice(id, building == undefined ? false : true); //We assume for now a flat fee. Although this should depend on the building
+        const price = await service.getCartPrice(id, building == undefined ? false : feeBuildings.includes(building));
         return res.status(200).json({ price });
     } catch (err) {
         return next(err);
@@ -111,13 +113,17 @@ async function createOrder(req, res, next) {
         const { error, value } = validate.order(req.body);
         processJoiValidationError(error);
 
-        let { location, note } = value; //Encoded location building|floor|extra
+        let { building, floor, extra, note, name, phone_number } = value;
 
         let is_takeaway = false;
-        if (location) is_takeaway = true;
-        else location = null;
+        if (building) {
+            is_takeaway = true;
+        }
 
         note = note || null;
+        building = building || null;
+        floor = floor || null;
+        extra = extra || null;
 
         const restaurantStatus = await restaurantService.getRestaurantStatus();
         if (restaurantStatus.status === "close") {
@@ -130,7 +136,7 @@ async function createOrder(req, res, next) {
             throw errorResponder(errors.NOT_FOUND, "Tidak ada data cart untuk pengguna ini!");
         }
 
-        const result = await service.createOrder(id, location, note, !is_takeaway, is_takeaway); //CHANGE THIS FOR FEE IMPLEMENTATION
+        const result = await service.createOrder(id, building, floor, extra, note, feeBuildings.includes(building), is_takeaway, name, phone_number);
         return res.status(200).json(result);
     } catch (err) {
         return next(err);
@@ -222,12 +228,12 @@ async function handleNonSnapDokuNotifications(req, res, next) {
 
         const signature = await nonSnapSignature(req.body, clientID, requestID, timestamp, target);
         const originSignature = req.get("Signature");
-        // console.log(signature + "\n" + originSignature);
+        console.log(signature + "\n" + originSignature);
 
         // This doesnt work
-        // if (!(signature === originSignature)) {
-        //     throw errorResponder(errors.INVALID_TOKEN, "Signature does not match!");
-        // }
+        if (!(signature === originSignature)) {
+            throw errorResponder(errors.INVALID_TOKEN, "Signature does not match!");
+        }
 
         if (!order) {
             throw errorResponder(errors.INVALID_ARGUMENT, "Request body is missing order component");

@@ -84,7 +84,7 @@ async function nonSnapSignature(body, clientId, requestId, timestamp, target) {
 
     const hashedBody = crypto.createHash('sha256').update(minified).digest('base64');
     const textToSign = `Client-Id:${clientId}\nRequest-Id:${requestId}\nRequest-Timestamp:${timestamp}\nRequest-Target:${target}\nDigest:${hashedBody}`;
-    // console.log(textToSign);
+    console.log(textToSign);
 
     const signature = "HMACSHA256=" + crypto.createHmac('sha256', DOKU_SECRET_KEY).update(textToSign).digest("base64");
 
@@ -97,7 +97,8 @@ async function dokuCheckout(orderId, timestamp, orderAmount) {
     const body = {
         "order": {
             "amount": orderAmount,
-            "invoice_number": uuidv4() // This is fine, just differentiate in case we need to replace an order's payment details
+            "invoice_number": uuidv4(), // This is fine, just differentiate in case we need to replace an order's payment details
+            "callback_url_result": config.base_url.frontend_user
         },
         "payment": {
             "payment_due_date": 30

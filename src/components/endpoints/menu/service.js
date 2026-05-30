@@ -36,8 +36,8 @@ async function deleteMenu(id) {
     return;
 }
 
-async function countMenus() {
-    const res = await repository.countMenus();
+async function countMenus(search) {
+    const res = await repository.countMenus(search);
 
     return res.rows[0].count;
 }

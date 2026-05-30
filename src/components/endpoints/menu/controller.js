@@ -21,7 +21,7 @@ async function getMenu(req, res, next) {
             result = await service.getMenuBySearch(offset, limit, search);
         }
 
-        const count = await service.countMenus()
+        const count = await service.countMenus(search) //Check repository.js
         return res.status(200).json({ data: result, offset, limit, count: new Number(count) });
     } catch (err) {
         return next(err);
