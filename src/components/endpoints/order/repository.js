@@ -23,7 +23,7 @@ async function getCustomerCart(id, offset, limit) {
         await client.query(
             `SELECT quantity, carts.menu_id, name, image_url, price, is_available FROM carts 
                 JOIN menus ON carts.menu_id=menus.menu_id WHERE carts.customer_id= $1 ${offsetLimitString}`,
-            add 
+            add
         ).then(result => {
             res = result
         });
@@ -215,24 +215,21 @@ async function createOrder(id, location, note, has_fee, is_takeaway) {
 
         /*Doku request here so we can rollback if doku errors */
         const clientID = config.secret.doku_client_id;
-        const requestID = order.order_id;
+        const requestID = "Create" + order.order_id;
         let date = new Date();
         const requestTimestamp = date.toISOString();
 
         const requestTarget = "/checkout/v1/payment";
 
+
         let body = {
             order: {
                 amount: Math.ceil(order.total_price),
-                invoice_number: order.total_price,
-                // callback_url_result: config.base_url.frontend_user,
-                auto_redirect: true,
+                invoice_number: "1829",
             },
             payment: {
-                payemnt_due_date: 30,
-            },
-            customer: {
-                id: order.customer_id
+                payment_due_date: 30,
+                payment_method_types: ["QRIS"]
             }
         };
 
@@ -248,6 +245,14 @@ async function createOrder(id, location, note, has_fee, is_takeaway) {
             "Signature": "HMACSHA256=" + sign
         });
 
+        console.log(`Client ID : ${clientID}`);
+        console.log(`Request ID : ${requestID}`);
+        console.log(`requestTimeStamp : ${requestTimestamp}`);
+        console.log(`Body: ${body}`);
+        console.log(`BodyJSON: ${JSON.stringify(body)}`);
+        console.log(`digest: ${digest}`);
+        console.log(`rawSIgn: ${rawSign}`);
+        console.log(`sign: ${sign}`);
         /* If we want and have the time, we could finish the whole list of optional attributes */
         const dokuReturns = await fetch(
             "https://api-sandbox.doku.com/checkout/v1/payment", {
@@ -264,7 +269,7 @@ async function createOrder(id, location, note, has_fee, is_takeaway) {
                 throw errorResponder(errors.DOKU_BAD_REQUEST, "Transaksi tidak dibuat oleh Doku!");
             }
         }).catch(err => {
-            throw errorResponder(errors.DOKU_BAD_REQUEST, "Error midtrans!");
+            throw errorResponder(errors.DOKU_BAD_REQUEST, "Error Doku!");
         });
 
         res = {
