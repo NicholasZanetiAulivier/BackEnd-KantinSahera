@@ -8,3 +8,5 @@ ca.pem
 logs
 .vercel
 app.log
+*.key
+*.pem
