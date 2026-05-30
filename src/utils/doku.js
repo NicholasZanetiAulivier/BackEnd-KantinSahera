@@ -2,8 +2,9 @@ const config = require("../core/config");
 const { minify } = require('@node-minify/core');
 const { jsonMinify } = require('@node-minify/jsonminify')
 const crypto = require('crypto');
+const { v4: uuidv4 } = require('uuid');
 
-const DOKU_PRIVATE_KEY = config.secret.doku_secret_key;
+const DOKU_SECRET_KEY = config.secret.doku_secret_key;
 const DOKU_CLIENT_ID = config.secret.doku_client_id;
 const API_URL = config.base_url.doku_api;
 
@@ -40,7 +41,7 @@ async function preAsymmetricSignToken(timestamp) {
     sign.write(stringToSign);
     sign.end();
     const signature = sign.sign(config.secret.ssl_private_key, 'base64');
-    
+
     return signature;
 }
 
@@ -71,11 +72,68 @@ async function B2BGetToken(signature, timestamp) {
     }).then(async res => {
         return res.json();
     })
-    console.log(response)
+    return response;
+}
+
+async function nonSnapSignature(body, clientId, requestId, timestamp, target) {
+    const json = JSON.stringify(body);
+    const minified = await minify({
+        compressor: jsonMinify,
+        content: json
+    }); //Minify in case it needs to be minified
+
+    const hashedBody = crypto.createHash('sha256').update(minified).digest('base64');
+    const textToSign = `Client-Id:${clientId}\nRequest-Id:${requestId}\nRequest-Timestamp:${timestamp}\nRequest-Target:${target}\nDigest:${hashedBody}`;
+    console.log(textToSign);
+
+    const signature = "HMACSHA256=" + crypto.createHmac('sha256', DOKU_SECRET_KEY).update(textToSign).digest("base64");
+
+    return signature
+}
+
+async function dokuCheckout(orderId, timestamp, orderAmount) {
+    const target = '/checkout/v1/payment';
+
+    const body = {
+        "order": {
+            "amount": orderAmount,
+            "invoice_number": uuidv4(), // This is fine, just differentiate in case we need to replace an order's payment details
+            "callback_url_result": config.base_url.frontend_user
+        },
+        "payment": {
+            "payment_due_date": 30
+        }
+    };
+
+    const header = new Headers({
+        "Client-Id": DOKU_CLIENT_ID,
+        "Request-Id": orderId,
+        "Request-Timestamp": timestamp,
+        "Signature": await nonSnapSignature(body, DOKU_CLIENT_ID, orderId, timestamp, target),
+        "Content-Type": "application/json"
+    });
+
+    const result = await fetch(
+        API_URL + target, {
+        method: "POST",
+        headers: header,
+        body: JSON.stringify(body)
+    })
+        .then(res => {
+            if (res.ok)
+                return res.json();
+            else
+                throw new Error("Doku returned an error. Util side");
+        })
+        .catch(e => { throw e });
+
+    return result;
 }
 
 module.exports = {
     preAsymmetricSignTransaction,
     preAsymmetricSignToken,
     B2BGetToken,
+    nonSnapSignature,
+    dokuCheckout
 }

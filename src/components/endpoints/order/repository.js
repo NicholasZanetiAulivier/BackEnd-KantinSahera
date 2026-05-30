@@ -2,7 +2,7 @@ const { errorResponder, errors } = require('../../../core/errors');
 const db = require('../../../database/db');
 const { logger } = require('../../../core/logger');
 const config = require('../../../core/config');
-const { createHash, createHmac } = require('crypto');
+const { dokuCheckout } = require('../../../utils/doku');
 
 async function getCustomerCart(id, offset, limit) {
     let res, clientref;
@@ -183,7 +183,7 @@ async function getCartPrice(id, has_fee) {
     return res;
 }
 
-async function createOrder(id, location, note, has_fee, is_takeaway) {
+async function createOrder(id, building, floor, extra, note, has_fee, is_takeaway, contact_name, contact_number) {
     let res, clientref;
 
     await db.connect().then(async (client) => {
@@ -193,9 +193,9 @@ async function createOrder(id, location, note, has_fee, is_takeaway) {
 
         let price = await getCartPrice(id, has_fee);
         let order = await client.query(`
-            INSERT INTO orders(total_price,location,note,has_fee,customer_id,is_takeaway)
-            VALUES ($1,$2,$3,$4,$5,$6) RETURNING *;`,
-            [price, location, note, has_fee, id, is_takeaway]
+            INSERT INTO orders(total_price,building,floor,extra,note,has_fee,customer_id,is_takeaway,contact_name,contact_number)
+            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *;`,
+            [price, building, floor, extra, note, has_fee, id, is_takeaway, contact_name, contact_number]
         ).then(results => results.rows[0]);
 
         await client.query(
@@ -214,74 +214,30 @@ async function createOrder(id, location, note, has_fee, is_takeaway) {
         );
 
         /*Doku request here so we can rollback if doku errors */
-        const clientID = config.secret.doku_client_id;
-        const requestID = "Create" + order.order_id;
-        let date = new Date();
-        const requestTimestamp = date.toISOString();
+        const date = (new Date()).toISOString();
+        const timestamp = date.substring(0, 19) + "Z";
+        const dokuReturns = await dokuCheckout(order.order_id, timestamp, Math.ceil(order.total_price));
 
-        const requestTarget = "/checkout/v1/payment";
+        const dokuResponse = dokuReturns.response;
 
-
-        let body = {
-            order: {
-                amount: Math.ceil(order.total_price),
-                invoice_number: "1829",
-            },
-            payment: {
-                payment_due_date: 30,
-                payment_method_types: ["QRIS"]
-            }
-        };
-
-        const digest = createHash('sha256').update(JSON.stringify(body)).digest('base64');
-        let rawSign = `Client-Id:${clientID}\nRequest-Id:${requestID}\nRequest-Timestamp:${requestTimestamp}\nRequest-Target:${requestTarget}\nDigest:${digest}`;
-        const sign = createHmac('sha256', config.secret.doku_secret_key).update(rawSign).digest('base64');
-
-        const headers = new Headers({
-            "Content-Type": "application/json",
-            "Client-Id": clientID,
-            "Request-Id": requestID,
-            "Request-TimeStamp": requestTimestamp,
-            "Signature": "HMACSHA256=" + sign
-        });
-
-        console.log(`Client ID : ${clientID}`);
-        console.log(`Request ID : ${requestID}`);
-        console.log(`requestTimeStamp : ${requestTimestamp}`);
-        console.log(`Body: ${body}`);
-        console.log(`BodyJSON: ${JSON.stringify(body)}`);
-        console.log(`digest: ${digest}`);
-        console.log(`rawSIgn: ${rawSign}`);
-        console.log(`sign: ${sign}`);
-        /* If we want and have the time, we could finish the whole list of optional attributes */
-        const dokuReturns = await fetch(
-            "https://api-sandbox.doku.com/checkout/v1/payment", {
-            method: 'POST',
-            headers,
-            body: JSON.stringify(body)
-        }
-        ).then(async (res) => {
-            if (res.status == 200) {
-                return await res.json();
-            } else {
-                console.log(await res.json());
-                console.log(res.status);
-                throw errorResponder(errors.DOKU_BAD_REQUEST, "Transaksi tidak dibuat oleh Doku!");
-            }
-        }).catch(err => {
-            throw errorResponder(errors.DOKU_BAD_REQUEST, "Error Doku!");
-        });
+        order = await client.query(
+            `UPDATE orders SET transaction_id=$1 WHERE order_id=$2 RETURNING *`,
+            [dokuResponse.order.invoice_number, order.order_id]
+        );
 
         res = {
-            order,
-            payment: dokuReturns.payment
+            order: order.rows[0],
+            payment: {
+                token: dokuResponse.payment.token_id,
+                url: dokuResponse.payment.url
+            }
         };
 
         await client.query('COMMIT');
     }).catch(async (err) => {
         await clientref.query('ROLLBACK');
         logger.error({ err }, 'Terjadi error database di restaurant!');
-        throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
+        throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Payment Gateway didn't respond properly");
     }).finally(async () => {
         await clientref.release();
     });

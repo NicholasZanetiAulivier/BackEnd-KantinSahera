@@ -15,17 +15,21 @@ tables = {
     orders: `CREATE TABLE IF NOT EXISTS orders(
         order_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
         total_price DECIMAL(9,2) NOT NULL CHECK (total_price >= 0),
-        location VARCHAR,
+        building VARCHAR,
+        floor VARCHAR,
+        extra VARCHAR,
         date TIMESTAMP NOT NULL DEFAULT NOW(),
         transaction_id VARCHAR UNIQUE,
-        transaction_status VARCHAR(14),
+        transaction_status VARCHAR(8),
         fulfilled BOOLEAN NOT NULL DEFAULT false,
         note VARCHAR(300),
         has_fee BOOLEAN NOT NULL,
         customer_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
+        contact_name VARCHAR(32) NOT NULL,
+        contact_number VARCHAR(16) NOT NULL,
         is_takeaway BOOLEAN,
 
-        CHECK (transaction_status IN ('capture','settlement','pending','deny','cancel','expire','failure','refund','partial refund','authorize'))
+        CHECK (transaction_status IN ('SUCCESS','FAILED'))
     );`,
     menus: `CREATE TABLE IF NOT EXISTS menus(
         menu_id SERIAL PRIMARY KEY,

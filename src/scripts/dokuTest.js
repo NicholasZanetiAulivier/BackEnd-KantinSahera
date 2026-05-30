@@ -1,4 +1,4 @@
-const { preAsymmetricSignToken, preAsymmetricSignTransaction, B2BGetToken, snap } = require('../utils/doku');
+const { preAsymmetricSignToken, preAsymmetricSignTransaction, B2BGetToken, snap, dokuCheckout } = require('../utils/doku');
 
 async function main() {
     const body = {
@@ -13,7 +13,11 @@ async function main() {
     const timestamp = date.substring(0, 19) + "Z";
     // const timestamp = date;
     console.log(timestamp);
-    await B2BGetToken(await preAsymmetricSignToken(timestamp), timestamp);
+    // await B2BGetToken(await preAsymmetricSignToken(timestamp), timestamp); //Successful
+
+    const res = await dokuCheckout("order100", timestamp, 100000);
+    console.log(res);
+
 }
 
 main();
