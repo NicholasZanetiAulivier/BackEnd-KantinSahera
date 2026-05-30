@@ -220,13 +220,13 @@ async function createOrder(id, location, note, has_fee, is_takeaway) {
 
         const dokuResponse = dokuReturns.response;
 
-        await client.query(
-            `UPDATE orders SET transaction_id=$1 WHERE order_id=$2`,
+        order = await client.query(
+            `UPDATE orders SET transaction_id=$1 WHERE order_id=$2 RETURNING *`,
             [dokuResponse.order.invoice_number, order.order_id]
         );
 
         res = {
-            order,
+            order: order.rows,
             payment: {
                 token: dokuResponse.payment.token_id,
                 url: dokuResponse.payment.url

@@ -14,7 +14,8 @@ route.delete('/cart', passportUserJwt, controller.deleteCustomerCart);
 
 route.post('/create', passportUserJwt, isAccountVerified, controller.createOrder);
 
-route.post('/notifications', controller.handleMidtransNotifications); //We might want to whitelist this, but we can easily check validity even without whitelisting
+route.post('/notifications/payments', controller.handleNonSnapDokuNotifications);
+//We might want to whitelist this, but we can easily check validity even without whitelisting
 //I think notification is vulnerable to man in the middle attacks, but of course so is every other route
 
 route.get('/user/:id', adminOrUser, controller.getOrderByUserID); // maybe make this more secure, but what are the chances anyone would know the specific order id of someone else's

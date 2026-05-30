@@ -18,14 +18,14 @@ tables = {
         location VARCHAR,
         date TIMESTAMP NOT NULL DEFAULT NOW(),
         transaction_id VARCHAR UNIQUE,
-        transaction_status VARCHAR(14),
+        transaction_status VARCHAR(8),
         fulfilled BOOLEAN NOT NULL DEFAULT false,
         note VARCHAR(300),
         has_fee BOOLEAN NOT NULL,
         customer_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
         is_takeaway BOOLEAN,
 
-        CHECK (transaction_status IN ('capture','settlement','pending','deny','cancel','expire','failure','refund','partial refund','authorize'))
+        CHECK (transaction_status IN ('SUCCESS','FAILED'))
     );`,
     menus: `CREATE TABLE IF NOT EXISTS menus(
         menu_id SERIAL PRIMARY KEY,

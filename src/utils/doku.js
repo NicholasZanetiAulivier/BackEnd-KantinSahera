@@ -84,6 +84,7 @@ async function nonSnapSignature(body, clientId, requestId, timestamp, target) {
 
     const hashedBody = crypto.createHash('sha256').update(minified).digest('base64');
     const textToSign = `Client-Id:${clientId}\nRequest-Id:${requestId}\nRequest-Timestamp:${timestamp}\nRequest-Target:${target}\nDigest:${hashedBody}`;
+    // console.log(textToSign);
 
     const signature = "HMACSHA256=" + crypto.createHmac('sha256', DOKU_SECRET_KEY).update(textToSign).digest("base64");
 

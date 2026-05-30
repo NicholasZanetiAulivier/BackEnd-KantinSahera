@@ -10,3 +10,4 @@ logs
 app.log
 *.key
 *.pem
+*.pub

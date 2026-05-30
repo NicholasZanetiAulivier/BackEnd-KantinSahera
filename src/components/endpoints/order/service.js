@@ -63,8 +63,8 @@ async function getOrders(offset, limit, paid, fulfilled) {
     return result.rows;
 }
 
-async function updateOrderTransaction(order_id, transaction_id, status) {
-    const result = await repository.updateOrderTransaction(order_id, transaction_id, status);
+async function updateOrderTransaction(order, transaction) {
+    const result = await repository.updateOrderTransaction(transaction.original_request_id, order.invoice_number, transaction.status);
     return result;
 }
 
