@@ -54,18 +54,25 @@ async function getOrderByID(id) {
 }
 
 async function getOrderByUserID(id, offset, limit) {
-    const result = await repository.getOrderByUserID(id, offset, limit);
+    const result = await repository.getOrderByUserID(id, isCompleted, offset, limit);
     return result.rows;
 }
 
-async function getOrders(offset, limit, paid, fulfilled) {
-    const result = await repository.getOrders(offset, limit, paid, fulfilled);
+async function getOrders(offset, limit, status) {
+    const result = await repository.getOrders(offset, limit, status);
     return result.rows;
 }
 
 async function updateOrderTransaction(order, transaction) {
-    const result = await repository.updateOrderTransaction(transaction.original_request_id, order.invoice_number, transaction.status);
-    return result;
+    const status = (await repository.getOrderStatus(transaction.original_request_id, order.invoice_number)).rows[0].order_status;
+    if (status === "PENDING") {
+        if (transaction.status === "SUCCESS") {
+            return await repository.updateOrderTransaction(transaction.original_request_id, order.invoice_number, "PROCESSING");
+        } else {
+            return await repository.updateOrderTransaction(transaction.original_request_id, order.invoice_number, "CANCELLED");
+        }
+    }
+    return [{}];
 }
 
 
