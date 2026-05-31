@@ -50,7 +50,11 @@ async function createOrder(id, building, floor, extra, note, has_fee, is_takeawa
 
 async function getOrderByID(id) {
     const result = await repository.getOrderByID(id);
-    return result.rows[0];
+    if (!result || !result.rows || result.rows.length === 0) return null;
+    const order = result.rows[0];
+    const itemsResult = await repository.getItemsByOrderID(id);
+    order.items = itemsResult ? itemsResult.rows : [];
+    return order;
 }
 
 async function getOrderByUserID(id, offset, limit) {
