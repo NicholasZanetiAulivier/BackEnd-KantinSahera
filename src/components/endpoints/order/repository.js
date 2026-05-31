@@ -295,14 +295,14 @@ async function getOrderByUserID(id, offset, limit) {
     return res;
 }
 
-async function updateOrderTransaction(order_id, transaction_id, status) {
+async function updateOrderTransaction(order_id, status) {
     let res, clientref;
 
     await db.connect().then(async (client) => {
         clientref = client;
         await client.query(
-            "UPDATE orders SET transaction_id = $1, order_status = $2 WHERE order_id = $3",
-            [transaction_id, status, order_id]
+            "UPDATE orders SET order_status = $1 WHERE order_id = $2",
+            [status, order_id]
         ).then(result => {
             res = result
         });
@@ -315,14 +315,14 @@ async function updateOrderTransaction(order_id, transaction_id, status) {
     return res;
 }
 
-async function getOrderStatus(order_id, transaction_id) {
+async function getOrderStatus(transaction_id) {
     let res, clientref;
 
     await db.connect().then(async (client) => {
         clientref = client;
         await client.query(
-            "SELECT order_status FROM orders WHERE order_id=$1 AND transaction_id=$2",
-            [order_id, transaction_id]
+            "SELECT order_status FROM orders WHERE transaction_id=$1",
+            [transaction_id]
         ).then(result => {
             res = result
         });

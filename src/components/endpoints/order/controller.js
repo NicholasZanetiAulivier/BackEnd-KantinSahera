@@ -217,7 +217,7 @@ const DOKU_TRANSACTION_STATUS = [
 async function handleNonSnapDokuNotifications(req, res, next) {
     try {
         const { order, transaction } = req.body;
-        console.log(req);
+        // console.log(req);
         const clientID = req.get("Client-Id");
         const requestID = req.get("Request-Id");
         const timestamp = req.get("Request-Timestamp");

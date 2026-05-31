@@ -64,12 +64,14 @@ async function getOrders(offset, limit, status) {
 }
 
 async function updateOrderTransaction(order, transaction) {
-    const status = (await repository.getOrderStatus(transaction.original_request_id, order.invoice_number)).rows[0].order_status;
+    const statusRows = (await repository.getOrderStatus(order.invoice_number)).rows;
+    if (!statusRows) return 0;
+    const status = statusRows[0].order_status;
     if (status === "PENDING") {
         if (transaction.status === "SUCCESS") {
-            return await repository.updateOrderTransaction(transaction.original_request_id, order.invoice_number, "PROCESSING");
+            return await repository.updateOrderTransaction(transaction.original_request_id, "PROCESSING");
         } else {
-            return await repository.updateOrderTransaction(transaction.original_request_id, order.invoice_number, "CANCELLED");
+            return await repository.updateOrderTransaction(transaction.original_request_id, "CANCELLED");
         }
     }
     return [{}];
