@@ -12,7 +12,9 @@ tables = {
         phone_no VARCHAR(16),
         profile_image_url VARCHAR(2048)
     );`,
-    orders: `CREATE TABLE IF NOT EXISTS orders(
+    orders: `
+    CREATE TYPE status_enum AS ENUM('PENDING', 'PROCESSING', 'READY', 'COMPLETED', 'CANCELLED');
+    CREATE TABLE IF NOT EXISTS orders(
         order_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
         total_price DECIMAL(9,2) NOT NULL CHECK (total_price >= 0),
         building VARCHAR,
@@ -20,16 +22,13 @@ tables = {
         extra VARCHAR,
         date TIMESTAMP NOT NULL DEFAULT NOW(),
         transaction_id VARCHAR UNIQUE,
-        transaction_status VARCHAR(8),
-        fulfilled BOOLEAN NOT NULL DEFAULT false,
+        order_status status_enum NOT NULL DEFAULT 'PENDING',
         note VARCHAR(300),
         has_fee BOOLEAN NOT NULL,
         customer_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
         contact_name VARCHAR(32) NOT NULL,
         contact_number VARCHAR(16) NOT NULL,
-        is_takeaway BOOLEAN,
-
-        CHECK (transaction_status IN ('SUCCESS','FAILED'))
+        is_takeaway BOOLEAN NOT NULL
     );`,
     menus: `CREATE TABLE IF NOT EXISTS menus(
         menu_id SERIAL PRIMARY KEY,
