@@ -99,8 +99,8 @@ async function getCartPrice(req, res, next) {
         const id = parseUserId(req.user.user_id);
         const { building } = req.query;
 
-        const price = await service.getCartPrice(id, building == undefined ? false : feeBuildings.includes(building));
-        return res.status(200).json({ price });
+        const price = await service.getCartPrice(id, building == undefined ? false : true); //We assume for now a flat fee. Although this should depend on the building
+        return res.status(200).json({ price: price });
     } catch (err) {
         return next(err);
     }
