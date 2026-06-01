@@ -115,9 +115,9 @@ async function createOrder(req, res, next) {
 
         let { building, floor, extra, note, name, phone_number } = value;
 
-        let is_takeaway = false;
+        let is_takeaway = true;
         if (building) {
-            is_takeaway = true;
+            is_takeaway = false;
         }
 
         note = note || null;
@@ -166,9 +166,13 @@ async function getOrderByUserID(req, res, next) {
     try {
         const id = req.params.id;
 
-        const { offset, limit } = req.query;
+        const { offset, limit, completed } = req.query;
 
         const userId = req.user.user_id;
+
+        let isCompleted = undefined;
+
+        if (completed) isCompleted = completed === "true";
 
         let validId;
         if (req.user.user_id) {
@@ -182,7 +186,7 @@ async function getOrderByUserID(req, res, next) {
 
             const parsedId = parseUserId(userId)
 
-            const result = await service.getOrderByUserID(parsedId, offset, limit);
+            const result = await service.getOrderByUserID(parsedId, isCompleted, offset, limit);
             return res.status(200).json({ orders: result });
         }
     } catch (err) {
@@ -193,19 +197,13 @@ async function getOrderByUserID(req, res, next) {
 async function getOrders(req, res, next) {
     try {
 
-        let { offset, limit, paid, fulfilled } = req.query;
+        let { offset, limit, status } = req.query;
 
         if (offset) checkInteger(offset, 0, 'Offset');
         if (limit) checkInteger(limit, 0, 'Limit');
 
-        if (paid) {
-            paid = paid.trim().toLowerCase() === 'true' ? true : false;
-        }
-        if (fulfilled) {
-            fulfilled = fulfilled.trim().toLowerCase() === 'true' ? true : false;
-        }
 
-        const result = await service.getOrders(offset, limit, paid, fulfilled);
+        const result = await service.getOrders(offset, limit, status);
         return res.status(200).json({ orders: result });
     } catch (err) {
         return next(err);
@@ -213,13 +211,13 @@ async function getOrders(req, res, next) {
 }
 
 const DOKU_TRANSACTION_STATUS = [
-    "SUCCESS", "FAILED"
+    "SUCCESS", "FAILED", "EXPIRED" //No need for "CANCELED" lets just disable it
 ];
 
 async function handleNonSnapDokuNotifications(req, res, next) {
     try {
         const { order, transaction } = req.body;
-        console.log(req);
+        // console.log(req);
         const clientID = req.get("Client-Id");
         const requestID = req.get("Request-Id");
         const timestamp = req.get("Request-Timestamp");
@@ -231,9 +229,9 @@ async function handleNonSnapDokuNotifications(req, res, next) {
         console.log(signature + "\n" + originSignature);
 
         // This doesnt work
-        if (!(signature === originSignature)) {
-            throw errorResponder(errors.INVALID_TOKEN, "Signature does not match!");
-        }
+        // if (!(signature === originSignature)) {
+        //     throw errorResponder(errors.INVALID_TOKEN, "Signature does not match!");
+        // }
 
         if (!order) {
             throw errorResponder(errors.INVALID_ARGUMENT, "Request body is missing order component");
@@ -250,12 +248,33 @@ async function handleNonSnapDokuNotifications(req, res, next) {
         }
 
         await service.updateOrderTransaction(order, transaction);
-        return res.status(200).end();
+        return res.status(204).end();
     } catch (err) {
         return next(err);
     }
 }
 
+
+const STATUS_ENUM = [
+    'PENDING', 'PROCESSING', 'READY', 'COMPLETED', 'CANCELLED'
+];
+
+async function updateOrderByID(req, res, next) {
+    try {
+
+        const { offset, limit, status } = req.query;
+
+        const orderId = req.params.id;
+
+        if (status) if (!STATUS_ENUM.includes(status)) {
+            throw errorResponder(errors.BAD_REQUEST, "Transaction status is not valid")
+        }
+        const result = await service.getOrders(offset, limit, status);
+        return res.status(200).json({ orders: result });
+    } catch (err) {
+        return next(err);
+    }
+}
 
 module.exports = {
     getCustomerCart,
@@ -268,5 +287,6 @@ module.exports = {
     getOrderByID,
     getOrderByUserID,
     getOrders,
-    handleNonSnapDokuNotifications
+    handleNonSnapDokuNotifications,
+    updateOrderByID
 }

@@ -281,7 +281,7 @@ async function getOrderByUserID(id, offset, limit) {
     await db.connect().then(async (client) => {
         clientref = client;
         await client.query(
-            "SELECT * FROM orders WHERE customer_id= $1" + offsetLimitString,
+            "SELECT * FROM orders WHERE customer_id= $1 ORDER BY date" + offsetLimitString,
             add
         ).then(result => {
             res = result
@@ -295,14 +295,14 @@ async function getOrderByUserID(id, offset, limit) {
     return res;
 }
 
-async function updateOrderTransaction(order_id, transaction_id, status) {
+async function updateOrderTransaction(order_id, status) {
     let res, clientref;
 
     await db.connect().then(async (client) => {
         clientref = client;
         await client.query(
-            "UPDATE orders SET transaction_id = $1, transaction_status = $2 WHERE order_id = $3",
-            [transaction_id, status, order_id]
+            "UPDATE orders SET order_status = $1 WHERE order_id = $2",
+            [status, order_id]
         ).then(result => {
             res = result
         });
@@ -315,21 +315,36 @@ async function updateOrderTransaction(order_id, transaction_id, status) {
     return res;
 }
 
-async function getOrders(offset, limit, paid, fulfilled) {
+async function getOrderStatus(transaction_id) {
+    let res, clientref;
+
+    await db.connect().then(async (client) => {
+        clientref = client;
+        await client.query(
+            "SELECT order_status FROM orders WHERE transaction_id=$1",
+            [transaction_id]
+        ).then(result => {
+            res = result
+        });
+    }).catch((err) => {
+        logger.error({ err }, 'Terjadi error database di restaurant!');
+        throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
+    }).finally(async () => {
+        await clientref.release();
+    });
+    return res;
+}
+
+async function getOrders(offset, limit, status) {
     let res, clientref;
     let offsetLimitString = "";
-    let whereString = " WHERE ";
-    let p;
+    let whereString = "";
     let add = [];
     let c = 1;
 
-    if ((typeof paid) == 'boolean') {//No need for prepared statement here cuz these are definitely booleans
-        whereString += ` transaction_status ${paid ? ' ' : ' NOT '} IN ('capture' , 'settlement') `;
-        p = true;
-    }
-    if ((typeof fulfilled) == 'boolean') {
-        whereString += ` ${p ? 'AND ' : ' '} fulfilled = ${fulfilled} `;
-        p = true;
+    if (typeof (status) == 'string') {
+        whereString += ` WHERE order_status = $` + c++;
+        add.push(status);
     }
     if (limit) {
         offsetLimitString += " LIMIT $" + c++;
@@ -344,7 +359,7 @@ async function getOrders(offset, limit, paid, fulfilled) {
     await db.connect().then(async (client) => {
         clientref = client;
         await client.query(
-            "SELECT * FROM orders " + (p ? whereString : '') + offsetLimitString,
+            "SELECT * FROM orders " + whereString + offsetLimitString,
             add
         ).then(result => {
             res = result
@@ -372,4 +387,5 @@ module.exports = {
     getOrderByUserID,
     getOrders,
     updateOrderTransaction,
+    getOrderStatus
 }
