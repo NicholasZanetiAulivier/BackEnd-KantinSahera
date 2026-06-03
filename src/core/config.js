@@ -25,9 +25,9 @@ module.exports = {
         doku_secret_key: process.env.DOKU_SECRET_KEY,
         doku_api_key: process.env.DOKU_API_KEY,
         doku_public_key: process.env.DOKU_PUBLIC_KEY,
-        ssl_private_key: process.env.SSL_PRIVATE_KEY || fs.readFileSync('./private.key').toString(),
-        ssl_encrypted_private_key: process.env.SSL_ENCRYPTED_PRIVATE_KEY || fs.readFileSync('./pkcs8.key').toString(),
-        ssl_public_key: process.env.SSL_PUBLIC_KEY || fs.readFileSync('./public.pem').toString()
+        // ssl_private_key: process.env.SSL_PRIVATE_KEY || fs.readFileSync('./private.key').toString(),
+        // ssl_encrypted_private_key: process.env.SSL_ENCRYPTED_PRIVATE_KEY || fs.readFileSync('./pkcs8.key').toString(),
+        // ssl_public_key: process.env.SSL_PUBLIC_KEY || fs.readFileSync('./public.pem').toString()
     },
     admin_account: {
         email: process.env.ADMIN_ACCOUNT_EMAIL,
@@ -39,7 +39,7 @@ module.exports = {
         host: process.env.HOST,
         port: process.env.PORT,
         name: process.env.DATABASE,
-        certificate: fs.existsSync('./ca.pem') ? fs.readFileSync('./ca.pem').toString() : process.env.CA_PEM,
+        // certificate: fs.existsSync('./ca.pem') ? fs.readFileSync('./ca.pem').toString() : process.env.CA_PEM,
         connectionString: process.env.CONNECTION_STRING,
         ssl: process.env.SSL_REQUIRE == 1 ? true : false,
     },
