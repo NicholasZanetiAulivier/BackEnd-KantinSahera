@@ -157,7 +157,7 @@ async function createOrder(req, res, next) {
     }
 
     const exists = await service.checkCustomerCartExists(id);
-    // console.log(exists);
+
     if (!exists) {
       throw errorResponder(
         errors.NOT_FOUND,
@@ -264,7 +264,6 @@ const DOKU_TRANSACTION_STATUS = [
 async function handleNonSnapDokuNotifications(req, res, next) {
   try {
     const { order, transaction } = req.body;
-    // console.log(req);
     const clientID = req.get("Client-Id");
     const requestID = req.get("Request-Id");
     const timestamp = req.get("Request-Timestamp");
@@ -278,7 +277,6 @@ async function handleNonSnapDokuNotifications(req, res, next) {
       target,
     );
     const originSignature = req.get("Signature");
-    console.log(signature + "\n" + originSignature);
 
     // This doesnt work
     // if (!(signature === originSignature)) {

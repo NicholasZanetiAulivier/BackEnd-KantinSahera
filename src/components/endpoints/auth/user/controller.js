@@ -98,8 +98,6 @@ async function changeProfile(req, res, next) {
 
         const result = await service.changeProfileWhereId({ username, profile_image_url, phone_number, user_id: id });
 
-        console.log(result);
-
         if (result.rowCount > 0) return res.status(204).end();
         else if (result.rowCount === 0) throw errorResponder(errors.NOT_FOUND, "Email yang diberikan tidak ada!");
     } catch (err) {

@@ -66,7 +66,6 @@ async function deleteOTP(email, is_admin) {
         ).then(result => {
             res = result
         }).catch((err) => {
-            console.log(err);
             logger.error({ err }, 'Terjadi error database di verifikasi!');
             throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
         }).finally(() => {

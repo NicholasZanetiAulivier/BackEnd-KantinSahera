@@ -12,12 +12,9 @@ async function main() {
     const date = (new Date()).toISOString();
     const timestamp = date.substring(0, 19) + "Z";
     // const timestamp = date;
-    console.log(timestamp);
     // await B2BGetToken(await preAsymmetricSignToken(timestamp), timestamp); //Successful
 
     const res = await dokuCheckout("order100", timestamp, 100000);
-    console.log(res);
-
 }
 
 main();
