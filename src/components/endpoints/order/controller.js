@@ -323,19 +323,18 @@ const STATUS_ENUM = [
 
 async function updateOrderByID(req, res, next) {
   try {
-    const { offset, limit, status } = req.query;
-
+    const { status } = req.body;
     const orderId = req.params.id;
 
-    if (status)
-      if (!STATUS_ENUM.includes(status)) {
-        throw errorResponder(
-          errors.BAD_REQUEST,
-          "Transaction status is not valid",
-        );
-      }
-    const result = await service.getOrders(offset, limit, status);
-    return res.status(200).json({ orders: result });
+    if (!status || !STATUS_ENUM.includes(status)) {
+      throw errorResponder(
+        errors.BAD_REQUEST,
+        "Transaction status is not valid",
+      );
+    }
+    
+    await service.updateOrderStatus(orderId, status);
+    return res.status(204).end();
   } catch (err) {
     return next(err);
   }

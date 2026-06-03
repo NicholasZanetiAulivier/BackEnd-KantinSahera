@@ -122,6 +122,10 @@ async function updateOrderTransaction(order, transaction) {
   return [{}];
 }
 
+async function updateOrderStatus(order_id, status) {
+  return await repository.updateOrderTransaction(order_id, status);
+}
+
 module.exports = {
   getCustomerCart,
   getCartPrice,
@@ -136,4 +140,5 @@ module.exports = {
   getOrderByUserID,
   getOrders,
   updateOrderTransaction,
+  updateOrderStatus,
 };
