@@ -379,7 +379,7 @@ async function getOrderItems(order_id) {
     await db.connect().then(async (client) => {
         clientref = client;
         await client.query(
-            `SELECT orders.order_id, order_items.menu_id, order_items.quantity 
+            `SELECT order_items.menu_id, order_items.quantity 
                 FROM orders 
                 INNER JOIN order_items ON orders.order_id=order_items.order_id
                 WHERE orders.order_id=$1;
