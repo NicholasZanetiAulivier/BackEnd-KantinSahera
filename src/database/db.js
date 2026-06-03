@@ -1,7 +1,7 @@
 const pg = require('pg');
 const config = require('../core/config');
 
-const CONNECTION_CONFIGURATION = {
+let configs = {
     user: config.database.user,
     password: config.database.password,
     host: config.database.host,
@@ -12,7 +12,15 @@ const CONNECTION_CONFIGURATION = {
         rejectUnauthorized: true,
         ca: config.database.certificate,
     } : null,
-};
+}
+
+if (config.database.connectionString) {
+    configs = {
+        connectionString: config.database.connectionString
+    }
+}
+
+const CONNECTION_CONFIGURATION = configs
 
 let db = new pg.Pool(CONNECTION_CONFIGURATION);
 db.connect(function (err) {

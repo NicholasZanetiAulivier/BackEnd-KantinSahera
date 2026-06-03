@@ -5,7 +5,7 @@ const {logger} = require('../../core/logger');
 const { errorMonitor } = require('nodemailer/lib/xoauth2');
 const { errorResponder, errors } = require('../../core/errors');
 
-const CONNECTION_CONFIGURATION = {
+let configs = {
     user: config.database.user,
     password: config.database.password,
     host: config.database.host,
@@ -16,7 +16,15 @@ const CONNECTION_CONFIGURATION = {
         rejectUnauthorized: true,
         ca: config.database.certificate,
     } : null,
-}; //Copy, karena males refactor kalo ganti module.exports di db.js
+}
+
+if (config.database.connectionString) {
+    configs = {
+        connectionString: config.database.connectionString
+    }
+}
+
+const CONNECTION_CONFIGURATION = configs
 
 const createLimiter = (prefix = "", requestLimit = 3) => ERT.rateLimit({
     windowMs: 60000 * 60, // sejam

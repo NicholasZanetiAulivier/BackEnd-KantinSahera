@@ -1,7 +1,11 @@
 const fs = require('fs');
 
 const { loadEnvFile } = require('node:process');
-loadEnvFile('.env');
+
+if (process.env.NODE_ENV !== 'production') { // for railway
+    loadEnvFile('.env');
+}
+
 process.env.NODE_ENV = (process.env.NODE_ENV || 'development').toLowerCase();
 module.exports = {
     name: 'Kirno-API',
@@ -36,7 +40,7 @@ module.exports = {
         port: process.env.PORT,
         name: process.env.DATABASE,
         certificate: fs.existsSync('./ca.pem') ? fs.readFileSync('./ca.pem').toString() : process.env.CA_PEM,
-        // connectionString: process.env.CONNECTION_STRING,
+        connectionString: process.env.CONNECTION_STRING,
         ssl: process.env.SSL_REQUIRE == 1 ? true : false,
     },
     keys_prefix: {
@@ -54,7 +58,8 @@ module.exports = {
         frontend_user: process.env.FE_USER_BASE_URL,
         frontend_another_user: process.env.FE_ANOTHER_USER_BASE_URL,
         backend: process.env.BE_BASE_URL,
-        doku_api: process.env.NODE_ENV === "development" ? "https://api-sandbox.doku.com" : "https://api.doku.com",
+        // doku_api: process.env.NODE_ENV === "development" ? "https://api-sandbox.doku.com" : "https://api.doku.com",
+        doku_api: process.env.DOKU_API_URL
     },
     cloudinary: {
         cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
