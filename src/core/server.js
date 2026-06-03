@@ -19,7 +19,6 @@ module.exports = (app) => {
       origin: [
         config.base_url.frontend_user,
         config.base_url.frontend_admin,
-        config.base_url.frontend_another_user,
       ],
       credentials: true,
     }),
