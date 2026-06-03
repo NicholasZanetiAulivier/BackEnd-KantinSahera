@@ -373,6 +373,31 @@ async function getOrders(offset, limit, status) {
     return res;
 }
 
+async function getOrderItems(order_id) {
+    let res, clientref;
+
+    await db.connect().then(async (client) => {
+        clientref = client;
+        await client.query(
+            `SELECT orders.order_id, order_items.* 
+                FROM orders 
+                INNER JOIN order_items ON orders.order_id=order_items.order_id
+                WHERE orders.order_id=$1;
+            `,
+            [order_id]
+        ).then(result => {
+            res = result
+        });
+    }).catch((err) => {
+        logger.error({ err }, 'Terjadi error database di restaurant!');
+        throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
+    }).finally(async () => {
+        await clientref.release();
+    });
+
+    return res.rows;
+}
+
 module.exports = {
     getCustomerCart,
     getItemsByOrderID,
@@ -387,5 +412,6 @@ module.exports = {
     getOrderByUserID,
     getOrders,
     updateOrderTransaction,
-    getOrderStatus
+    getOrderStatus,
+    getOrderItems
 }
