@@ -25,7 +25,6 @@ const CONNECTION_CONFIGURATION = configs
 let db = new pg.Pool(CONNECTION_CONFIGURATION);
 db.connect(function (err) {
     if (err) {
-        console.log(err);
         throw err;
     }
     db.query("SELECT VERSION()", [], function (err, result) {

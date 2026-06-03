@@ -117,7 +117,6 @@ const passportUserJwt = (req, res, next) => {
   })(req, res, next);
 };
 const passportAdminJwt = (req, res, next) => {
-  console.log(req);
   passport.authenticate(
     ["admin", "superadmin"],
     { session: false },

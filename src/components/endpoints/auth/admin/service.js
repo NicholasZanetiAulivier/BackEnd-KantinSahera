@@ -107,7 +107,6 @@ function decodeAdminPayload(accessToken) {
         payload = decoded;
     });
 
-        console.log(payload);
     return payload;
 }
 

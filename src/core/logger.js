@@ -17,7 +17,12 @@ const pinoProd = {
     target: 'pino/file',      // file — permanent record
     options: { destination: './logs/app.log', mkdir: true },
     level: config.pino_level || 'info' // save info and above to file
+
+    
 }
+
+const isProduction = process.env.NODE_ENV === 'production';
+const activeTransport = isProduction ? pinoProd : pinoPretty;
 
 const logger = pino({
     name: config.name,
@@ -30,11 +35,11 @@ const logger = pino({
     timestamp: pino.stdTimeFunctions.isoTime,
     level: config.pino_level || 'info',
     redact: {
-        paths: ['password', '*.password', 'token', 'auth'],
+        paths: ['req.headers.authorization', 'headers.authorization', 'authorization', 'password', '*.password', 'token', 'auth'],
         censor: '[REDACTED]',
     },
 },
-    pino.transport(pinoProd)
+    pino.transport(activeTransport)
 );
 
 module.exports = {

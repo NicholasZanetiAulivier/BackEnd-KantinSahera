@@ -15,7 +15,7 @@ async function preAsymmetricSignTransaction(body, httpMethod, target, timestamp)
         compressor: jsonMinify,
         content: json
     });
-    console.log(minified); // Works
+    // console.log(minified); // Works
 
     // Encrypt minified into SHA 256 Hex
     const hashedMinified = crypto.createHash('sha256').update(minified).digest('hex').toLowerCase();
@@ -34,7 +34,6 @@ async function preAsymmetricSignTransaction(body, httpMethod, target, timestamp)
 
 async function preAsymmetricSignToken(timestamp) {
     const stringToSign = DOKU_CLIENT_ID + "|" + timestamp;
-    console.log(stringToSign)
 
     //Generate Assymetric signature
     const sign = crypto.createSign('SHA256');
@@ -53,16 +52,9 @@ async function B2BGetToken(signature, timestamp) {
         "Content-Type": "application/json",
     });
 
-    // console.log('B2B TOKEN REQUEST HEADERS')
-    // console.log('passed signature ', signature); // UNDEFINED
-    // console.log(timestamp);
-    // console.log(DOKU_CLIENT_ID);
-
     const body = {
         "grantType": "client_credentials"
     };
-
-    console.log(`${API_URL}/authorization/v1/access-token/b2b`)
 
     const response = await fetch(
         API_URL + "/authorization/v1/access-token/b2b", {
@@ -84,7 +76,6 @@ async function nonSnapSignature(body, clientId, requestId, timestamp, target) {
 
     const hashedBody = crypto.createHash('sha256').update(minified).digest('base64');
     const textToSign = `Client-Id:${clientId}\nRequest-Id:${requestId}\nRequest-Timestamp:${timestamp}\nRequest-Target:${target}\nDigest:${hashedBody}`;
-    console.log(textToSign);
 
     const signature = "HMACSHA256=" + crypto.createHmac('sha256', DOKU_SECRET_KEY).update(textToSign).digest("base64");
 

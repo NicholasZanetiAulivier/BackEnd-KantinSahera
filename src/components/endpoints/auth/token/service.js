@@ -23,8 +23,7 @@ async function isInvalidJti(jti) {
 
 async function clearOneRefreshToken(token_id, account_id, is_admin) {
     const result = await repository.deleteRefreshToken(token_id, account_id, is_admin);
-    console.log(result);
-
+    
     if (result) return true;
 }
 
@@ -60,7 +59,6 @@ async function createRefreshToken(account_id = "", is_admin) {
 
     // send id as unique identifier (fast lookup) and unhashed opaque string, delimiter is . 
     const refreshTokenStr = `${tokenId}.${refreshToken}`
-    console.log(refreshTokenStr);
 
     return refreshTokenStr;
 }
@@ -86,8 +84,6 @@ async function verifyRefreshToken(id = "", token = "", account_id = "", is_admin
         throw errorResponder(errors.UNAUTHORIZED);
     }
 
-    console.log(token)
-    console.log(dbToken.token);
     const matched = await compareOpaqueStringHash(token, dbToken.token)
     if (!matched) throw errorResponder(errors.INVALID_TOKEN, "Token tidak sesuai!");    
     else {
