@@ -34,7 +34,7 @@ const logger = pino({
         censor: '[REDACTED]',
     },
 },
-    pino.transport(config.env == 'development' ? pinoPretty : pinoProd)
+    pino.transport(pinoProd)
 );
 
 module.exports = {
