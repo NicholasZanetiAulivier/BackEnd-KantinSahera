@@ -89,7 +89,16 @@ async function getOrderByUserID(id, isCompleted, offset, limit) {
 
 async function getOrders(offset, limit, status) {
   const result = await repository.getOrders(offset, limit, status);
-  return result.rows;
+  const orders = result.rows;
+
+  // menu yang dipesan (cart item jadi order item)
+  for (const order of orders) {
+    const items = await repository.getOrderItems(order.order_id);
+
+    order.items = items
+  }
+
+  return orders;
 }
 
 async function updateOrderTransaction(order, transaction) {
