@@ -32,6 +32,7 @@ async function sendOTP(email, is_admin = false) {
                 await transporter.verify();
             } catch (err) {
                 await repository.deleteOTP(email,  is_admin);
+                logger.error({err}, "Error inisialisasi node mailer!")
                 throw errorResponder(errors.INTERNAL_SERVER_ERROR,
                     "Terjadi error saat percobaan mengirim email OTP!");
             }
