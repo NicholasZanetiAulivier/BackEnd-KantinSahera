@@ -12,6 +12,8 @@ const { globalLimiterMinute } = require("../components/middlewares/limiter");
 
 module.exports = (app) => {
   // app.enable('trust proxy');
+  app.set('trust proxy', 1);
+  // kita set trust proxy dulu karena railway 
   // Trust proxy gak compatible dengan IP based rate limiting, karena bisa di bypass
 
   app.use(
