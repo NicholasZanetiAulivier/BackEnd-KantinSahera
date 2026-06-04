@@ -28,25 +28,25 @@ async function main() {
       client = c;
       await client.query("BEGIN");
       // dummy food data
-      for (let i = 0; i < 20; i++) {
-        let name = `Food ${i + 1}`;
-        let price = randPrices[getRandomInt(n, 0)];
-        await client.query(
-          `INSERT INTO menus (name, image_url, price) VALUES ($1, $2, $3)`,
-          [name, image_url, price],
-        );
-      }
-      await client
-        .query(
-          `INSERT INTO admins (email, password, super_admin) VALUES ($1,$2,$3)`,
-          [
-            config.admin_account.email,
-            await hashPassword(config.admin_account.password),
-            true,
-          ],
-        )
-        .then(() => console.log("Added super admin!"))
-        .catch((e) => console.log("Failed to add super admin"));
+      // for (let i = 0; i < 20; i++) {
+      //   let name = `Food ${i + 1}`;
+      //   let price = randPrices[getRandomInt(n, 0)];
+      //   await client.query(
+      //     `INSERT INTO menus (name, image_url, price) VALUES ($1, $2, $3)`,
+      //     [name, image_url, price],
+      //   );
+      // }
+      // await client
+      //   .query(
+      //     `INSERT INTO admins (email, password, super_admin) VALUES ($1,$2,$3)`,
+      //     [
+      //       config.admin_account.email,
+      //       await hashPassword(config.admin_account.password),
+      //       true,
+      //     ],
+      //   )
+      //   .then(() => console.log("Added super admin!"))
+      //   .catch((e) => console.log("Failed to add super admin"));
 
       //Temp, move to seeder if needed. (Restaurant Schedule)
       for (const p of days) {
