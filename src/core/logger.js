@@ -16,7 +16,7 @@ const pinoPretty = {
 const pinoProd = {
     target: 'pino/file',      // file — permanent record
     options: { destination: './logs/app.log', mkdir: true },
-    level: config.pino_level || 'info' // save info and above to file
+    level: config.pino_level || 'error' // save info and above to file
 
     
 }
@@ -33,7 +33,7 @@ const logger = pino({
         }),
     },
     timestamp: pino.stdTimeFunctions.isoTime,
-    level: config.pino_level || 'info',
+    level: config.pino_level || 'error',
     redact: {
         paths: ['req.headers.authorization', 'headers.authorization', 'authorization', 'password', '*.password', 'token', 'auth'],
         censor: '[REDACTED]',
