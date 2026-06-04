@@ -206,11 +206,12 @@ async function getOrderByID(req, res, next) {
 
 async function getOrderByUserID(req, res, next) {
   try {
-    const id = req.params.id;
+    // frontend kan ngambil user id dari jwt dengan prefix user, so do it like this
+    const id = parseUserId(req.params.id);
 
     const { offset, limit, completed } = req.query;
 
-    const userId = req.user.user_id;
+    const userId = parseUserId(req.user.user_id);
 
     let isCompleted = null; // DONT INITILIAZE UNDEFINED
 
@@ -219,17 +220,15 @@ async function getOrderByUserID(req, res, next) {
     let validId;
     if (req.user.user_id) {
       // checkUserParamsTokenID(req); // gak bisa kayak gini nikkkk
-      validId = checkUserParamsTokenID(userId, req.params.id);
+      validId = checkUserParamsTokenID(userId, id);
     }
 
     if (validId) {
       if (offset) checkInteger(offset, 0, "Offset");
       if (limit) checkInteger(limit, 0, "Limit");
 
-      const parsedId = parseUserId(userId);
-
       const result = await service.getOrderByUserID(
-        parsedId,
+        userId,
         isCompleted,
         offset,
         limit,

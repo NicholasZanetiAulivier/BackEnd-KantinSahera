@@ -14,7 +14,7 @@ route.patch("/profile", passportUserJwt, controller.changeProfile);
 route.get("/profile", passportUserJwt, controller.getProfile);
 route.post(
   "/otp/request",
-  createLimiter("userOTPRequest", 3),
+  createLimiter("userOTPRequest", 5),
   controller.requestUserOtp,
 );
 // untuk sekedar check OTP dengan OTP database, increment banyak percobaan jika otp client salah
