@@ -264,11 +264,20 @@ async function getOrderByID(id) {
     return res;
 }
 
-async function getOrderByUserID(id, offset, limit) {
+// ENUM('PENDING', 'PROCESSING', 'READY', 'COMPLETED', 'CANCELLED');
+async function getOrderByUserID(id, isCompleted, offset, limit) {
     let res, clientref;
     let offsetLimitString = "";
     let add = [id];
     let c = 2;
+
+    let andClause = ""
+
+    if (isCompleted) {
+        andClause = "AND order_status=$" + c++
+        add.push('COMPLETED');
+    }
+
     if (limit) {
         offsetLimitString += " LIMIT $" + c++;
         add.push(limit);
@@ -281,7 +290,7 @@ async function getOrderByUserID(id, offset, limit) {
     await db.connect().then(async (client) => {
         clientref = client;
         await client.query(
-            "SELECT * FROM orders WHERE customer_id= $1 ORDER BY date" + offsetLimitString,
+            `SELECT * FROM orders WHERE customer_id= $1 ${andClause} ORDER BY date ${offsetLimitString}`,
             add
         ).then(result => {
             res = result
