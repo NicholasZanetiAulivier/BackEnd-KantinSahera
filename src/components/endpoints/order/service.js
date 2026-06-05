@@ -84,7 +84,16 @@ async function getOrderByUserID(id, isCompleted, offset, limit) {
     offset,
     limit,
   );
-  return result.rows;
+
+  const orders = result.rows
+
+  for (const order of orders) {
+    const items = await repository.getItemsByOrderID(order.order_id);
+
+    order.items = items.rows
+  }
+
+  return orders;
 }
 
 async function getOrders(offset, limit, status) {
@@ -93,9 +102,9 @@ async function getOrders(offset, limit, status) {
 
   // menu yang dipesan (cart item jadi order item)
   for (const order of orders) {
-    const items = await repository.getOrderItems(order.order_id);
+    const items = await repository.getItemsByOrderID(order.order_id);
 
-    order.items = items
+    order.items = items.rows
   }
 
   return orders;

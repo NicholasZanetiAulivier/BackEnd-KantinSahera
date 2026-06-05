@@ -5,7 +5,7 @@ const {
 } = require("../../../core/errors");
 const service = require("./service");
 const validate = require("../../middlewares/validator");
-const { parseUserId } = require("../../../utils/id-parser");
+const { parseUserId, parseAdminId } = require("../../../utils/id-parser");
 const {
   checkInteger,
   checkUserParamsTokenID,
@@ -185,20 +185,21 @@ async function createOrder(req, res, next) {
 async function getOrderByID(req, res, next) {
   try {
     const orderId = req.params.id;
-    const userId = req.user.user_id;
+    const userId = req.user.user_id ? parseUserId(req.user.user_id) : null;
+    const adminId = req.user.admin_id ? parseAdminId(req.user.admin_id) : null;
 
     const order = await service.getOrderByID(orderId);
 
     const orderCustId = order.customer_id;
 
-    if (!req.user.admin_id && userId !== orderCustId) {
+    if (!adminId && userId !== orderCustId) {
       throw errorResponder(
         errors.INVALID_TOKEN,
         "Anda tidak diizinkan mengakses endpoint ini!",
       );
     }
 
-    return res.status(200).json({ order: order });
+    return res.status(200).json(order);
   } catch (err) {
     return next(err);
   }
