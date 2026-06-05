@@ -60,6 +60,21 @@ module.exports = (app) => {
 
   app.use(globalLimiterMinute(100));
 
+  // healthcheck endpoint
+  app.get('/', (req, res, next) => {
+    	const healthcheck = {
+        uptime: process.uptime(),
+        message: 'OK',
+        timestamp: Date.now()
+      };
+      try {
+        res.json(healthcheck);
+      } catch (e) {
+        healthcheck.message = e;
+        res.status(503).json();
+      }
+  })
+
   //Main Router
   app.use(config.api.prefix, router);
 
