@@ -17,8 +17,6 @@ const pinoProd = {
     target: 'pino/file',      // file — permanent record
     options: { destination: './logs/app.log', mkdir: true },
     level: config.pino_level || 'info' // save info and above to file
-
-    
 }
 
 const isProduction = process.env.NODE_ENV === 'production';
