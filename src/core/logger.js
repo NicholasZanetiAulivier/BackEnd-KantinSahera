@@ -18,7 +18,7 @@ const pinoProd = {
     options: { destination: './logs/app.log', mkdir: true },
     level: config.pino_level || 'error' // save info and above to file
 
-    
+
 }
 
 const isProduction = process.env.NODE_ENV === 'production';

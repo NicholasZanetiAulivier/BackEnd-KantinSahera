@@ -15,10 +15,10 @@
   "type": "commonjs",
   "main": "src/index.js",
   "scripts": {
-    "start": "node src/index.js",
+    "build": "node src/index.js",
     "dev": "nodemon --trace-warnings --env-file=.env src/index.js",
     "migrate": "node src/scripts/migration.js",
-    "seed": "node src/scripts/seeder.js",
+    "seed": "node src/scripts/seeder.js && node src/scripts/accountSeeder.js",
     "test-doku": "node src/scripts/dokuTest.js",
     "test": "npm run migrate && npm run seed && mocha --env-file=.env"
   },

@@ -113,6 +113,10 @@ async function main() {
                 .catch((e) => console.log(`Error dropping table ${i}:\n ${e}`));
         }
 
+        await client.query(`DROP TYPE IF EXISTS STATUS_ENUM;`)
+            .then(() => console.log(`Status enum dropped`))
+            .catch((e) => console.log(`Error dropping status enum:\n ${e}`));
+
         for (let tableName in tables) {
             const instruction = tables[tableName];
             await client.query(instruction)

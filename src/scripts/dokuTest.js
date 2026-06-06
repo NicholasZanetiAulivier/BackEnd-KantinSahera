@@ -14,7 +14,8 @@ async function main() {
     // const timestamp = date;
     // await B2BGetToken(await preAsymmetricSignToken(timestamp), timestamp); //Successful
 
-    const res = await dokuCheckout("order100", timestamp, 100000);
+    const res = await dokuCheckout("order14300", timestamp, 100000);
+    console.log(res);
 }
 
 main();

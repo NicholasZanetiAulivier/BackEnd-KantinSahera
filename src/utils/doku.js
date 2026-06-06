@@ -111,10 +111,7 @@ async function dokuCheckout(orderId, timestamp, orderAmount) {
         body: JSON.stringify(body)
     })
         .then(res => {
-            if (res.ok)
-                return res.json();
-            else
-                throw new Error("Doku returned an error. Util side");
+            return res.json();
         })
         .catch(e => { throw e });
 
