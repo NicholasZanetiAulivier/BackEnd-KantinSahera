@@ -42,7 +42,7 @@ async function getItemsByOrderID(id) {
     await db.connect().then(async (client) => {
         clientref = client;
         await client.query(
-            `SELECT quantity, order_items.menu_id "menu_id", name, price FROM order_items 
+            `SELECT order_items.menu_id "menu_id", quantity, name, image_url, price FROM order_items 
                 JOIN menus ON order_items.menu_id=menus.menu_id WHERE order_items.order_id= $1`,
             [id]
         ).then(result => {
@@ -264,11 +264,20 @@ async function getOrderByID(id) {
     return res;
 }
 
-async function getOrderByUserID(id, offset, limit) {
+// ENUM('PENDING', 'PROCESSING', 'READY', 'COMPLETED', 'CANCELLED');
+async function getOrderByUserID(id, isCompleted, offset, limit) {
     let res, clientref;
     let offsetLimitString = "";
     let add = [id];
     let c = 2;
+
+    let andClause = ""
+
+    if (isCompleted) {
+        andClause = "AND order_status=$" + c++
+        add.push('COMPLETED');
+    }
+
     if (limit) {
         offsetLimitString += " LIMIT $" + c++;
         add.push(limit);
@@ -281,7 +290,7 @@ async function getOrderByUserID(id, offset, limit) {
     await db.connect().then(async (client) => {
         clientref = client;
         await client.query(
-            "SELECT * FROM orders WHERE customer_id= $1 ORDER BY date" + offsetLimitString,
+            `SELECT * FROM orders WHERE customer_id= $1 ${andClause} ORDER BY date ${offsetLimitString}`,
             add
         ).then(result => {
             res = result
@@ -373,34 +382,6 @@ async function getOrders(offset, limit, status) {
     return res;
 }
 
-async function getOrderItems(order_id) {
-    let res, clientref;
-
-    await db.connect().then(async (client) => {
-        clientref = client;
-        await client.query(
-            `SELECT order_items.menu_id, order_items.quantity, menus.* 
-                FROM orders 
-                INNER JOIN order_items 
-                    ON orders.order_id=order_items.order_id
-                INNER JOIN menus
-                    ON menus.menu_id=order_items.menu_id
-                WHERE orders.order_id=$1
-            `,
-            [order_id]
-        ).then(result => {
-            res = result
-        });
-    }).catch((err) => {
-        logger.error({ err }, 'Terjadi error database di restaurant!');
-        throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
-    }).finally(async () => {
-        await clientref.release();
-    });
-
-    return res.rows;
-}
-
 module.exports = {
     getCustomerCart,
     getItemsByOrderID,
@@ -416,5 +397,4 @@ module.exports = {
     getOrders,
     updateOrderTransaction,
     getOrderStatus,
-    getOrderItems
 }

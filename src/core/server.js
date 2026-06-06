@@ -12,6 +12,8 @@ const { globalLimiterMinute } = require("../components/middlewares/limiter");
 
 module.exports = (app) => {
   // app.enable('trust proxy');
+  app.set('trust proxy', 1);
+  // kita set trust proxy dulu karena railway 
   // Trust proxy gak compatible dengan IP based rate limiting, karena bisa di bypass
 
   app.use(
@@ -57,6 +59,21 @@ module.exports = (app) => {
   });
 
   app.use(globalLimiterMinute(100));
+
+  // healthcheck endpoint
+  app.get('/', (req, res, next) => {
+    	const healthcheck = {
+        uptime: process.uptime(),
+        message: 'OK',
+        timestamp: Date.now()
+      };
+      try {
+        res.json(healthcheck);
+      } catch (e) {
+        healthcheck.message = e;
+        res.status(503).json();
+      }
+  })
 
   //Main Router
   app.use(config.api.prefix, router);
