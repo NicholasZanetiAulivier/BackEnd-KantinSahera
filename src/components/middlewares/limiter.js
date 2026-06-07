@@ -35,7 +35,7 @@ const createLimiter = (prefix = "", requestLimit = 3) => ERT.rateLimit({
     ipv6Subnet: 56, // Default, ubah kalo perluh,
     logger: logger,
     handler: (req, res, next) => {
-        return next(errorResponder(errors.TOO_MANY_REQUEST));
+        return next(errorResponder(errors.TOO_MANY_REQUEST, "Terlalu banyak percobaan, silakan coba lagi nanti!"));
     }
 })
 
