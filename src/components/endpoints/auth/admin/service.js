@@ -36,9 +36,8 @@ async function getAllAdmins() {
  
 }
 
-async function updateAdmin(admin_id, email) {
- 
-    const res = await repository.updateAdmin(admin_id, email);
+async function updateAdmin(admin_id, email, super_admin) {
+    const res = await repository.updateAdmin(admin_id, email, super_admin);
  
     return res;
  
@@ -68,8 +67,6 @@ async function refreshAccessToken(accessToken, refreshToken) {
 
         payload = decoded;
     });
-
-    console.log(payload)
 
     const splittedRefreshToken = refreshToken.split('.');
     const refreshId = splittedRefreshToken[0];

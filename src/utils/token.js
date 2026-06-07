@@ -16,7 +16,7 @@ async function generateUserJwt(user) {
 
 async function generateAdminJwt(admin) {
   return jwt.sign(adminPayload(admin), config.secret.admin, {
-    expiresIn: "10s",
+    expiresIn: "15m",
     jwtid: uuidv4(),
   });
 }

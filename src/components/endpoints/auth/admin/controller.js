@@ -7,6 +7,7 @@ const { hashPassword, passwordMatched } = require('../../../../utils/password');
 const { generateAdminJwt, refreshAdminJwt, REFRESH_TOKEN_EXPIRY_SECONDS } = require('../../../../utils/token');
 const {parseAdminId} = require('../../../../utils/id-parser')
 const { auth } = require('google-auth-library');
+const jwt= require('jsonwebtoken');
 
 async function register(req, res, next) {
     try {
@@ -275,7 +276,9 @@ async function editAdmin(req, res, next) {
 
         processJoiValidationError(error);
 
-        const { username, email } = value;
+        const { email, super_admin } = value;
+
+        console.log(value)
 
         // Cek target admin ada
         const target = await service.findById(parseAdminId(targetId));
@@ -292,7 +295,7 @@ async function editAdmin(req, res, next) {
             }
         }
 
-        const result = await service.updateAdmin(parseAdminId(targetId), username, email);
+        const result = await service.updateAdmin(parseAdminId(targetId), email, super_admin);
  
         if (result && result.rowCount > 0) {
             return res.status(200).json({ message: "Data admin berhasil diperbarui." });
