@@ -91,16 +91,13 @@ async function requestAdminOtp(req, res, next) {
 
         const admin = await service.findByEmail(email);
 
-        // kasus request otp pada akun yang tidak terdaftar
-        // simulasikan lama proses pengiriman email via nodemailer (pake setTimeout)
         if (!admin) {
-            // 3 - 5 detik
-            min = Math.ceil(3000);
-            max = Math.floor(5000);
+            min = Math.ceil(1000);
+            max = Math.floor(3000);
             const simulatedTime = Math.floor(Math.random() * (max - min + 1)) + min;
 
             setTimeout(() => {
-                return res.status(204).end();
+                return res.status(202).json({message: "Permintaan OTP telah dikirim! Silakan cek email Anda."})
             }, simulatedTime);
         }
 
