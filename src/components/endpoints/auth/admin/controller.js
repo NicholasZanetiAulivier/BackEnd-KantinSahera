@@ -104,7 +104,7 @@ async function requestAdminOtp(req, res, next) {
             }, simulatedTime);
         }
 
-        const mailed = await otpService.sendOTP(email, true);
+        otpService.sendOTP(email, true);
 
         return res.status(202).json({message: "Permintaan OTP telah dikirim! Silakan cek email Anda."})
     } catch (err) {
