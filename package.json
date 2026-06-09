@@ -28,7 +28,6 @@
     "@node-minify/jsonminify": "^10.5.0",
     "bcrypt": "^6.0.0",
     "body-parser": "^2.2.2",
-    "cloudinary": "^2.10.0",
     "compression": "^1.8.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
