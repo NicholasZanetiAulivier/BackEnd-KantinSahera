@@ -29,7 +29,7 @@ async function generateRefreshToken() {
 const cookieOptions = {
   httpOnly: true,
   secure: true,
-  sameSite: "lax",
+  sameSite: "none",
   path: "/",
   maxAge: REFRESH_TOKEN_EXPIRY_SECONDS * 1000,
 };
