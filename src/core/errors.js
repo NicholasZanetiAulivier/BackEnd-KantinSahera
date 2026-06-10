@@ -1,136 +1,142 @@
 const errors = {
-    ROUTE_NOT_FOUND: {
-        description: "Route not found!",
-        status: 404,
-        code: 'ROUTE_NOT_FOUND_ERROR',
-    },
-    NOT_FOUND: {
-        description: "Empty response, not found!",
-        status: 404,
-        code: 'NOT_FOUND_ERROR',
-    },
-    NO_ARGUMENT: {
-        description: 'Required arguments not supplied',
-        status: 500,
-        code: 'NO_ARGUMENT_ERROR',
-    },
-    INVALID_ARGUMENT: {
-        description: 'Required arguments not valid',
-        status: 500,
-        code: 'INVALID_ARGUMENT',
-    },
-    INVALID_TOKEN: {
-        description: "Invalid token",
-        status: 401,
-        code: 'INVALID_TOKEN_ERROR'
-    },
-    DB: {
-        description: 'Database error occurred',
-        status: 500,
-        code: 'DB_ERROR',
-    },
-    VALIDATION: {
-        description: 'Invalid request',
-        status: 400,
-        code: 'VALIDATION_ERROR',
-    },
-    BAD_REQUEST: {
-        description: 'Bad request',
-        status: 400,
-        code: 'BAD_REQUEST_ERROR',
-    },
-    BAD_ID: {
-        description: 'Provided ID is not a valid ID for corresponding resource!',
-        status: 400,
-        code: 'BAD_ID'
-    },
-    DB_DUPLICATE_CONFLICT: {
-        description: 'Duplicate conflict. Resource already exists',
-        status: 409,
-        code: 'DB_DUPLICATE_CONFLICT_ERROR',
-    },
-    INVALID_CREDENTIALS: {
-        description: 'Invalid credentials',
-        status: 401,
-        code: 'INVALID_CREDENTIALS_ERROR',
-    },
-    TOKEN_EXPIRED: {
-        description: 'Provided token has expired!',
-        status: 401,
-        code: 'TOKEN_EXPIRED_ERROR',
-    },
-    UNPROCESSABLE_ENTITY: {
-        description: 'Unprocessable entity',
-        status: 422,
-        code: 'UNPROCESSABLE_ENTITY_ERROR',
-    },
-    INTERNAL_SERVER_ERROR: {
-        description: 'An error has occured at application level!',
-        status: 500,
-        code: 'INTERNAL_SERVER ERROR',
-    },
-    GOOGLE_ACCOUNT_UNVERIFIED: {
-        description: 'Provided Google Account has unverified email!',
-        status: 401,
-        code: 'GOOGLE_ACCOUNT_UNVERIFIED_ERROR'
-    },
-    INVALID_CLIENT: {
-        description: 'Client is not allowed to communicate with server!',
-        status: 401,
-        code: 'INVALID_CLIENT_ERROR',
-    },
-    TOO_MANY_REQUEST: {
-        description: 'Maximun amount of requests has reached!',
-        status: 429,
-        code: 'TOO_MANY_REQUEST_ERROR'
-    },
-    UNAUTHORIZED: {
-        description: 'Unauthorized access!',
-        status: 401,
-        code: 'UNAUTHORIZED_ERROR'
-    },
-    DOKU_BAD_REQUEST: {
-        description: 'Doku returned a rejection and or error',
-        status: 400,
-        code: 'DOKU_ERROR'
-    },
-    SECURITY: {
-        description: 'User\'s account security breach detected!',
-        status: 403,
-        code: 'SECURITY_ERROR'
-    },
-    TOO_MANY_REQUESTS: {
-        description: 'Too many request is made! Please try again later.',
-        status: 429,
-        code: 'TOO_MANY_REQUESTS_ERROR'
-    },
-    ACCOUNT_UNVERIFIED: {
-        description: 'Provided Account has unverified email!',
-        status: 401,
-        code: 'ACCOUNT_UNVERIFIED_ERROR'
-    }
+  ROUTE_NOT_FOUND: {
+    description: "Route not found!",
+    status: 404,
+    code: "ROUTE_NOT_FOUND_ERROR",
+  },
+  NOT_FOUND: {
+    description: "Empty response, not found!",
+    status: 404,
+    code: "NOT_FOUND_ERROR",
+  },
+  NO_ARGUMENT: {
+    description: "Required arguments not supplied",
+    status: 500,
+    code: "NO_ARGUMENT_ERROR",
+  },
+  INVALID_ARGUMENT: {
+    description: "Required arguments not valid",
+    status: 500,
+    code: "INVALID_ARGUMENT",
+  },
+  INVALID_TOKEN: {
+    description: "Invalid token",
+    status: 401,
+    code: "INVALID_TOKEN_ERROR",
+  },
+  DB: {
+    description: "Database error occurred",
+    status: 500,
+    code: "DB_ERROR",
+  },
+  VALIDATION: {
+    description: "Invalid request",
+    status: 400,
+    code: "VALIDATION_ERROR",
+  },
+  BAD_REQUEST: {
+    description: "Bad request",
+    status: 400,
+    code: "BAD_REQUEST_ERROR",
+  },
+  BAD_ID: {
+    description: "Provided ID is not a valid ID for corresponding resource!",
+    status: 400,
+    code: "BAD_ID",
+  },
+  DB_DUPLICATE_CONFLICT: {
+    description: "Duplicate conflict. Resource already exists",
+    status: 409,
+    code: "DB_DUPLICATE_CONFLICT_ERROR",
+  },
+  INVALID_CREDENTIALS: {
+    description: "Invalid credentials",
+    status: 401,
+    code: "INVALID_CREDENTIALS_ERROR",
+  },
+  TOKEN_EXPIRED: {
+    description: "Provided token has expired!",
+    status: 401,
+    code: "TOKEN_EXPIRED_ERROR",
+  },
+  UNPROCESSABLE_ENTITY: {
+    description: "Unprocessable entity",
+    status: 422,
+    code: "UNPROCESSABLE_ENTITY_ERROR",
+  },
+  INTERNAL_SERVER_ERROR: {
+    description: "An error has occured at application level!",
+    status: 500,
+    code: "INTERNAL_SERVER ERROR",
+  },
+  GOOGLE_ACCOUNT_UNVERIFIED: {
+    description: "Provided Google Account has unverified email!",
+    status: 401,
+    code: "GOOGLE_ACCOUNT_UNVERIFIED_ERROR",
+  },
+  INVALID_CLIENT: {
+    description: "Client is not allowed to communicate with server!",
+    status: 401,
+    code: "INVALID_CLIENT_ERROR",
+  },
+  TOO_MANY_REQUEST: {
+    description: "Maximun amount of requests has reached!",
+    status: 429,
+    code: "TOO_MANY_REQUEST_ERROR",
+  },
+  UNAUTHORIZED: {
+    description: "Unauthorized access!",
+    status: 401,
+    code: "UNAUTHORIZED_ERROR",
+  },
+  DOKU_BAD_REQUEST: {
+    description: "Doku returned a rejection and or error",
+    status: 400,
+    code: "DOKU_ERROR",
+  },
+  SECURITY: {
+    description: "User's account security breach detected!",
+    status: 403,
+    code: "SECURITY_ERROR",
+  },
+  TOO_MANY_REQUESTS: {
+    description: "Too many request is made! Please try again later.",
+    status: 429,
+    code: "TOO_MANY_REQUESTS_ERROR",
+  },
+  ACCOUNT_UNVERIFIED: {
+    description: "Provided Account has unverified email!",
+    status: 401,
+    code: "ACCOUNT_UNVERIFIED_ERROR",
+  },
+  RESTAURANT_CLOSED: {
+    description:
+      "Restaurant can not process order because it is currently closed.",
+    status: 422,
+    code: "RESTAURANT_CLOSED_ERROR",
+  },
 };
 
 function errorResponder(code, status, description, message = "") {
-    const err = new Error(message);
+  const err = new Error(message);
 
-    err.code = code;
-    err.status = status;
-    err.description = description;
+  err.code = code;
+  err.status = status;
+  err.description = description;
 
-    return err;
+  return err;
 }
 
 function errorResponder(type, message = "") {
-    const error = new Error(message);
+  const error = new Error(message);
 
-    if (type) {
-        error.code = type.code || 'UNKNOWN_ERROR';
-        error.status = type.status || 500;
-        error.description = type.description || 'Unknown error occurred';
-    }
+  if (type) {
+    error.code = type.code || "UNKNOWN_ERROR";
+    error.status = type.status || 500;
+    error.description = type.description || "Unknown error occurred";
+  }
 
-    return error;
+  return error;
 }
 
 /**
@@ -140,20 +146,22 @@ function errorResponder(type, message = "") {
  * @returns {undefined} if data is already valid, so passed error object is undefined
  */
 function processJoiValidationError(error) {
-    if (error) {
-        const errorType = error.details[0].type;
-        if (errorType === 'any.required' || errorType === 'any.only'
-        ) {
-            throw errorResponder(errors.BAD_REQUEST, error.details[0].message);
-        } else {
-            // anggap ini field ada tapi tidak lolos validasi
-            throw errorResponder(errors.UNPROCESSABLE_ENTITY, error.details[0].message);
-        }
+  if (error) {
+    const errorType = error.details[0].type;
+    if (errorType === "any.required" || errorType === "any.only") {
+      throw errorResponder(errors.BAD_REQUEST, error.details[0].message);
+    } else {
+      // anggap ini field ada tapi tidak lolos validasi
+      throw errorResponder(
+        errors.UNPROCESSABLE_ENTITY,
+        error.details[0].message,
+      );
     }
+  }
 }
 
 module.exports = {
-    errorResponder,
-    errors,
-    processJoiValidationError,
+  errorResponder,
+  errors,
+  processJoiValidationError,
 };
