@@ -151,7 +151,7 @@ async function createOrder(req, res, next) {
     const restaurantStatus = await restaurantService.getRestaurantStatus();
     if (restaurantStatus.status === "close") {
       throw errorResponder(
-        errors.SERVICE_UNAVAILABLE,
+        errors.RESTAURANT_CLOSED,
         "Restoran sedang tutup, tidak bisa melakukan pemesanan!",
       );
     }
@@ -332,7 +332,7 @@ async function updateOrderByID(req, res, next) {
         "Transaction status is not valid",
       );
     }
-    
+
     await service.updateOrderStatus(orderId, status);
     return res.status(204).end();
   } catch (err) {
