@@ -105,7 +105,7 @@ async function login(req, res, next) {
           "Terjadi error pada saat proses login!",
         );
 
-      res.cookie("refresh_token", cookieOptions);
+      res.cookie("refresh_token", refreshTokenStr, cookieOptions);
 
       return res.status(200).json({ token: token });
     } else {
