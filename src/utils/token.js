@@ -30,6 +30,7 @@ const cookieOptions = {
   httpOnly: true,
   secure: true,
   sameSite: "none",
+  partitioned: true,
   path: "/",
   maxAge: REFRESH_TOKEN_EXPIRY_SECONDS * 1000,
 };
