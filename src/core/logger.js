@@ -1,5 +1,17 @@
 const pino = require('pino');
-const config = require('./config')
+const config = require('./config');
+const path = require('path');
+const fs = require('fs');
+
+// root dir
+const logDir = path.join(__dirname, '..', '..', 'logs');
+const file = path.join(logDir, 'app.log');
+
+if (!fs.existsSync(logDir)) {
+    fs.mkdirSync(logDir, { 
+        recursive: true 
+    });
+}
 
 // Print the log to STDOUT with colors and formatting for easier read
 const pinoPretty = {
@@ -15,10 +27,11 @@ const pinoPretty = {
 // if env production, use this
 const pinoProd = {
     target: 'pino/file',      // file — permanent record
-    options: { destination: './logs/app.log', mkdir: true },
+    options: { 
+        destination: file, 
+        mkdir: true 
+    },
     level: config.pino_level || 'error' // save info and above to file
-
-
 }
 
 const isProduction = process.env.NODE_ENV === 'production';
