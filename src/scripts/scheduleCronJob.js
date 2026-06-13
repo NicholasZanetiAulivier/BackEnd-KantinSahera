@@ -3,13 +3,13 @@ const db = require('../database/db');
 
 async function setStatus(status) {
     await db.connect().then(async (client) => {
-        clientref = client;
+        let clientref = client;
         await client.query(
             "UPDATE restaurant_datas SET value = $1 WHERE key = 'status'",
             [status]
         ).catch((err) => {
-            logger.error({ err }, 'Terjadi error database di restaurant!');
-            throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Error nice GODJOB");
+            logger.error({ err }, 'Cron job database manipulation errored!: ' + status);
+            throw err;
         }).finally(() => {
             clientref.release();
         });
@@ -40,9 +40,9 @@ function exitHandler() {
     closeTask.stop();
     closeTask.destroy();
     console.log("Exiting");
-    process.exit(0);
 }
 
 // do something when app is closing
 process.on('exit', exitHandler);
-process.on('SIGINT', exitHandler);
+process.on('SIGINT', () => { exitHandler; process.exit(0); });
+process.on('uncaughtException', () => { exitHandler; process.exit(0); });
