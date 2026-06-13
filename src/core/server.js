@@ -91,7 +91,8 @@ module.exports = (app) => {
       description: error.description,
     };
 
-    logger.error({ err: error, ...ctx });
+    // only log server errors
+    if (error.status > 500) logger.error({ err: error, ...ctx });
 
     return next(error);
   });

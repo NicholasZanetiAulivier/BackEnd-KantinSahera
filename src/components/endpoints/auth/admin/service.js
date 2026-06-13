@@ -3,7 +3,8 @@ const { parseAdminId } = require('../../../../utils/id-parser');
 const jwt = require('jsonwebtoken');
 const config = require('../../../../core/config');
 const { refreshAdminJwt } = require('../../../../utils/token')
-const tokenService = require('../token/service')
+const tokenService = require('../token/service');
+const {generateAdminJwt} = require('../../../../utils/token')
 const {logger} = require('../../../../core/logger');
 const {errors, errorResponder} = require('../../../../core/errors')
 
@@ -35,9 +36,8 @@ async function getAllAdmins() {
  
 }
 
-async function updateAdmin(admin_id, email) {
- 
-    const res = await repository.updateAdmin(admin_id, email);
+async function updateAdmin(admin_id, email, super_admin) {
+    const res = await repository.updateAdmin(admin_id, email, super_admin);
  
     return res;
  
@@ -57,7 +57,7 @@ async function refreshAccessToken(accessToken, refreshToken) {
         if (err) {
             // bolehkan jwt yg expired, karena tujuan kita generate access token baru (jwt baru)
             if (err.name === 'TokenExpiredError') {
-                payload = jwt.decode(accessToken);
+                decoded = jwt.decode(accessToken);
             }
             else {
                 logger.error({err}, "Terjadi error saat validasi token refresh!");
@@ -76,17 +76,17 @@ async function refreshAccessToken(accessToken, refreshToken) {
     const data = await repository.findById(payloadAdminId);
     const admin = data.rows[0];
 
-    if (!admin) throw errorResponder(errors.NOT_FOUND, "User tidak ditemukan!");
+    if (!admin) throw errorResponder(errors.NOT_FOUND, "Admin tidak ditemukan!");
 
     await tokenService.verifyRefreshToken(refreshId, opaqueStr, admin.admin_id, true);
 
-    const newAccessToken = await generateUserJwt(admin);
+    const newAccessToken = await generateAdminJwt(admin);
 
     if (!newAccessToken) throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Terjadi error pada saat proses refresh token!");
 
     return {
         accessToken: newAccessToken,
-        adminId: admin.user_id,
+        adminId: admin.admin_id,
     };
 }
 

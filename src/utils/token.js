@@ -26,9 +26,19 @@ async function generateRefreshToken() {
   return crypto.randomBytes(32).toString("hex");
 }
 
+const cookieOptions = {
+  httpOnly: true,
+  secure: true,
+  sameSite: "none",
+  partitioned: true,
+  path: "/",
+  maxAge: REFRESH_TOKEN_EXPIRY_SECONDS * 1000,
+};
+
 module.exports = {
   generateUserJwt,
   generateAdminJwt,
   generateRefreshToken,
   REFRESH_TOKEN_EXPIRY_SECONDS,
+  cookieOptions,
 };

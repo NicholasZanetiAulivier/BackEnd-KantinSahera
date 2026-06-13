@@ -5,7 +5,8 @@ const userPayload = user => ({
     username: user.username || 'Tanpa Nama',
     profile_image_url: user.profile_image_url,
     email: user.email,
-    verified: user.verified
+    verified: user.verified,
+    phone_no: user.phone_no
 }) 
 
 const adminPayload = admin => ({ 

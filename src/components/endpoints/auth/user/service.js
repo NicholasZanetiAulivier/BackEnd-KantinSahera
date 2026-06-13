@@ -128,13 +128,7 @@ async function handleGoogleAuth(googlePayload) {
         else returnMessage = status['register'];
     }
 
-    const token = await generateUserJwt({
-        user_id: user.user_id,
-        username: user.username,
-        email: user.email,
-        verified: user.verified,
-        profile_image_url: user.profile_image_url
-    });
+    const token = await generateUserJwt(user);
 
     if (!token) {
         throw errorResponder(errors.INTERNAL_SERVER_ERROR, "Proses login gagal!");

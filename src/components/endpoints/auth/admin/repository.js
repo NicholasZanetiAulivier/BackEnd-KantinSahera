@@ -63,7 +63,7 @@ async function getAllAdmins() {
     return res;
 }
 
-async function updateAdmin(admin_id, email) {
+async function updateAdmin(admin_id, email, super_admin) {
     let res, clientref;
 
     const sets = [];
@@ -72,6 +72,12 @@ async function updateAdmin(admin_id, email) {
     if (email !== undefined) {
         sets.push(`email = $${c++}`);
         values.push(email);
+    }
+
+    // we surely wants to acccept false value
+    if (super_admin || super_admin === false) {
+        sets.push(`super_admin = $${c++}`);
+        values.push(super_admin);
     }
     if (sets.length === 0) return null;
     values.push(admin_id);

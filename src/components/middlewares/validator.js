@@ -113,6 +113,7 @@ const verifyOtpSchema = Joi.object({
 
 const adminEditSchema = Joi.object({
   email: emailSchema.optional(),
+  super_admin: Joi.boolean().optional()
 })
   .or("email")
   .messages({
