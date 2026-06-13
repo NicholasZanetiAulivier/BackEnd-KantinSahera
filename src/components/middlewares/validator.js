@@ -33,7 +33,7 @@ const passwordSchema = Joi.string()
     "any.required": "Password wajib ada!",
     "string.min": "Panjang password harus 12 karakter ke atas!",
     "string.pattern.base":
-      "Password harus memiliki huruf besar, huruf kecil, dan karakter spesial, dengan panjang 3-30 karakter!",
+      "Password harus memiliki huruf besar, huruf kecil, dan karakter spesial (#@$!%*?&), dengan panjang 12-30 karakter!",
     "any.only": "Password dan confirm password tidak sesuai!",
   });
 
@@ -130,7 +130,7 @@ const menuNameSchema = Joi.string().trim(true).min(1).messages({
 const menuPriceSchema = Joi.number().precision(2).min(0).required().messages({
   "number.min": "Harga harus berupa angka positif",
   "number.precision":
-    "Harga harus memiliki angka desimal 2 posisi di belakang koma",
+    "Harga harus berupa angka yang memiliki maksimal 2 posisi di belakang koma",
 });
 
 const menuSchema = Joi.object({
