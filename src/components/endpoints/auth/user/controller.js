@@ -3,6 +3,8 @@ const {
   errors,
   processJoiValidationError,
 } = require("../../../../core/errors");
+const cloudinary = require("cloudinary").v2;
+const multer = require("multer");
 const validate = require("../../../middlewares/validator");
 const service = require("./service");
 const otpService = require("../verify/service");
@@ -23,6 +25,62 @@ const { parseUserId } = require("../../../../utils/id-parser");
 const config = require("../../../../core/config");
 const jwt = require("jsonwebtoken");
 const { addRefreshToken } = require("../token/repository");
+
+cloudinary.config({
+  cloud_name: config.cloudinary.cloud_name,
+  api_key: config.cloudinary.api_key,
+  api_secret: config.cloudinary.api_secret,
+});
+
+const storage = multer.memoryStorage();
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: (req, file, cb) => {
+    if (!file.mimetype || !file.mimetype.startsWith("image/")) {
+      return cb(new Error("Hanya file gambar yang diizinkan."));
+    }
+    cb(null, true);
+  },
+});
+
+async function uploadProfileImage(req, res, next) {
+  upload.single("profile_image")(req, res, async (err) => {
+    try {
+      if (err) return next(err);
+      if (!req.file) {
+        throw errorResponder(errors.BAD_REQUEST, "File gambar tidak ditemukan!");
+      }
+
+      // upload ke cloudinary
+      await new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            folder: config.cloudinary.upload_folder || "profile",
+            upload_preset: config.cloudinary.upload_preset,
+            resource_type: "image",
+          },
+          (uploadErr, uploadRes) => {
+            if (uploadErr) return reject(uploadErr);
+
+            const secureUrl =
+              uploadRes && uploadRes.secure_url ? uploadRes.secure_url : null;
+            const url = uploadRes && uploadRes.url ? uploadRes.url : null;
+
+            return res.status(200).json({
+              profile_image_url: secureUrl || url,
+            });
+          },
+        );
+
+        uploadStream.end(req.file.buffer);
+        return resolve();
+      });
+    } catch (e) {
+      return next(e);
+    }
+  });
+}
 
 async function register(req, res, next) {
   try {
@@ -415,4 +473,5 @@ module.exports = {
   refresh,
   logout,
   authMe,
+  uploadProfileImage,
 };

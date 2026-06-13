@@ -13,6 +13,11 @@ route.post("/login", createLimiter("userLogin", 5), controller.login);
 route.patch("/profile", passportUserJwt, controller.changeProfile);
 route.get("/profile", passportUserJwt, controller.getProfile);
 route.post(
+  "/profile-image",
+  passportUserJwt,
+  controller.uploadProfileImage,
+);
+route.post(
   "/otp/request",
   createLimiter("userOTPRequest", 5),
   controller.requestUserOtp,
