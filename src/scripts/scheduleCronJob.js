@@ -1,5 +1,6 @@
 const cron = require('node-cron');
 const db = require('../database/db');
+const { logger } = require('../core/logger');
 
 async function setStatus(status) {
     await db.connect().then(async (client) => {
