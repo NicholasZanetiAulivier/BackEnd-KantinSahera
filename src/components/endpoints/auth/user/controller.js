@@ -49,7 +49,10 @@ async function uploadProfileImage(req, res, next) {
     try {
       if (err) return next(err);
       if (!req.file) {
-        throw errorResponder(errors.BAD_REQUEST, "File gambar tidak ditemukan!");
+        throw errorResponder(
+          errors.BAD_REQUEST,
+          "File gambar tidak ditemukan!",
+        );
       }
 
       // upload ke cloudinary
@@ -57,7 +60,7 @@ async function uploadProfileImage(req, res, next) {
         const uploadStream = cloudinary.uploader.upload_stream(
           {
             folder: config.cloudinary.upload_folder || "profile",
-            upload_preset: config.cloudinary.upload_preset,
+            // upload_preset: config.cloudinary.upload_preset,
             resource_type: "image",
           },
           (uploadErr, uploadRes) => {
