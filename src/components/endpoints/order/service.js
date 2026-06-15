@@ -72,7 +72,6 @@ async function getOrderByID(id) {
   const result = await repository.getOrderByID(id);
   if (!result || !result.rows || result.rows.length === 0) return null;
   const order = result.rows[0];
-  order.created_at = order.date;
   const itemsResult = await repository.getItemsByOrderID(id);
   order.items = itemsResult ? itemsResult.rows : [];
   return order;
@@ -89,7 +88,6 @@ async function getOrderByUserID(id, isCompleted, offset, limit) {
   const orders = result.rows
 
   for (const order of orders) {
-    order.created_at = order.date;
     const items = await repository.getItemsByOrderID(order.order_id);
 
     order.items = items.rows
@@ -104,7 +102,6 @@ async function getOrders(offset, limit, status) {
 
   // menu yang dipesan (cart item jadi order item)
   for (const order of orders) {
-    order.created_at = order.date;
     const items = await repository.getItemsByOrderID(order.order_id);
 
     order.items = items.rows
