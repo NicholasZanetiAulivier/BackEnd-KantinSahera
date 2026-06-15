@@ -290,7 +290,7 @@ async function getOrderByUserID(id, isCompleted, offset, limit) {
     await db.connect().then(async (client) => {
         clientref = client;
         await client.query(
-            `SELECT * FROM orders WHERE customer_id= $1 ${andClause} ORDER BY date ${offsetLimitString}`,
+            `SELECT * FROM orders WHERE customer_id= $1 ${andClause} ORDER BY date DESC ${offsetLimitString}`,
             add
         ).then(result => {
             res = result
@@ -368,7 +368,7 @@ async function getOrders(offset, limit, status) {
     await db.connect().then(async (client) => {
         clientref = client;
         await client.query(
-            "SELECT * FROM orders " + whereString + offsetLimitString,
+            "SELECT * FROM orders " + whereString + " ORDER BY date DESC" + offsetLimitString,
             add
         ).then(result => {
             res = result
