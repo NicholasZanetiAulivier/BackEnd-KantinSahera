@@ -32,7 +32,7 @@ module.exports = (app) => {
   // buat GSI
   app.use(cookieParser());
 
-  app.use(bodyParser.json({ limit: "1mb" })); // ini gk kegedean?
+  app.use(bodyParser.json({ limit: "5mb" })); 
 
   app.use(bodyParser.urlencoded({ extended: false }));
 
