@@ -194,7 +194,7 @@ async function createOrder(id, building, floor, extra, note, has_fee, is_takeawa
         let price = await getCartPrice(id, has_fee);
         let order = await client.query(`
             INSERT INTO orders(total_price,building,floor,extra,note,has_fee,customer_id,is_takeaway,contact_name,contact_number)
-            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *;`,
+            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *, date AS created_at;`,
             [price, building, floor, extra, note, has_fee, id, is_takeaway, contact_name, contact_number]
         ).then(results => results.rows[0]);
 
@@ -250,7 +250,7 @@ async function getOrderByID(id) {
     await db.connect().then(async (client) => {
         clientref = client;
         let price = await client.query(
-            `SELECT * FROM orders WHERE order_id = $1`,
+            `SELECT *, date AS created_at FROM orders WHERE order_id = $1`,
             [id]
         ).then(result => {
             res = result;
@@ -290,7 +290,7 @@ async function getOrderByUserID(id, isCompleted, offset, limit) {
     await db.connect().then(async (client) => {
         clientref = client;
         await client.query(
-            `SELECT * FROM orders WHERE customer_id= $1 ${andClause} ORDER BY date DESC ${offsetLimitString}`,
+            `SELECT *, date AS created_at FROM orders WHERE customer_id= $1 ${andClause} ORDER BY date DESC ${offsetLimitString}`,
             add
         ).then(result => {
             res = result
@@ -368,7 +368,7 @@ async function getOrders(offset, limit, status) {
     await db.connect().then(async (client) => {
         clientref = client;
         await client.query(
-            "SELECT * FROM orders " + whereString + " ORDER BY date DESC" + offsetLimitString,
+            "SELECT *, date AS created_at FROM orders " + whereString + " ORDER BY date DESC" + offsetLimitString,
             add
         ).then(result => {
             res = result
